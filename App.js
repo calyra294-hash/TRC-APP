@@ -19,6 +19,8 @@ export default function App() {
           tabBarStyle: {
             height: 65,
             paddingBottom: 10,
+
+            
             paddingTop: 8,
             backgroundColor: '#FFFFFF',
             borderTopWidth: 1,
