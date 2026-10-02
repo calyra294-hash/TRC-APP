@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, FlatList, 
-  ScrollView, ActivityIndicator 
+  ScrollView, ActivityIndicator, Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import VehicleCard from '../components/VehicleCard';
+import DetalleVehiculoScreen from './DetalleVehiculoScreen'; // 1. Importas tu vista por aparte
 import { useVehiculos, useCategorias } from '../hooks';
 import { styles } from './VehiculosScreen.styles.js';
 
-export default function VehiculosScreen() {
+const e = React.createElement;
+
+export default function VehiculosScreen({ navigation }) {
   const { 
     vehiculos, 
     loading, 
@@ -20,6 +23,11 @@ export default function VehiculosScreen() {
   } = useVehiculos();
 
   const { categorias, loadingCategorias } = useCategorias();
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
+
+  const handleSeleccionarVehiculo = (vehiculo) => {
+    setVehiculoSeleccionado(vehiculo);
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -92,9 +100,12 @@ export default function VehiculosScreen() {
         ) : (
           <FlatList
             data={vehiculos}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <VehicleCard vehiculo={item} onSelect={(v) => console.log('Seleccionado:', v.nombre)} />
+              <VehicleCard 
+                vehiculo={item} 
+                onSelect={handleSeleccionarVehiculo} 
+              />
             )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
@@ -103,6 +114,21 @@ export default function VehiculosScreen() {
             refreshing={loading}
           />
         )}
+
+        {/* 4. El Modal superpuesto que carga tu vista por aparte */}
+        <Modal
+          visible={vehiculoSeleccionado !== null}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setVehiculoSeleccionado(null)}
+        >
+          <DetalleVehiculoScreen
+            route={{ params: { vehiculo: vehiculoSeleccionado } }}
+            navigation={{
+              goBack: () => setVehiculoSeleccionado(null)
+            }}
+          />
+        </Modal>
 
       </View>
     </SafeAreaView>

@@ -1,0 +1,188 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 320,
+  },
+  vehicleImage: {
+    width: '100%',
+    height: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  badge4x4: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    elevation: 3,
+  },
+  badge4x4Text: {
+    fontWeight: 'bold',
+    fontSize: 12,
+    color: '#111827',
+  },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -24,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 2,
+  },
+  ratingText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginLeft: 6,
+  },
+  reviewsText: {
+    fontWeight: 'normal',
+    color: '#6B7280',
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+  },
+  priceText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#E53935',
+  },
+  perDayText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  gridItem: {
+    width: (width - 52) / 2,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  gridTextContainer: {
+    marginLeft: 10,
+  },
+  gridLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#9CA3AF',
+    letterSpacing: 0.5,
+  },
+  gridValue: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 2,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 22,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerSubText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  footerPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#E53935',
+  },
+  currencyText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: 'normal',
+  },
+  reserveButton: {
+    backgroundColor: '#E53935',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 12,
+  },
+  reserveButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 50,
+    color: '#E53935',
+  },
+});

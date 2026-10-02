@@ -4,16 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { styles } from './VehicleCard.styles.js';
 
 export default function VehicleCard({ vehiculo, onSelect }) {
-  const { 
-    nombre, 
-    categoria, 
-    rating = 5.0, 
-    resenas = 0, 
-    precio, 
-    imagen, 
-    pasajeros = 5, 
-    transmision = 'Manual', 
-    combustible = 'Gasolina' 
+  const {
+    nombre,
+    categoria,
+    rating = 5.0,
+    resenas = 0,
+    precio,
+    imagen,
+    pasajeros = 5,
+    transmision = 'Manual',
+    combustible = 'Gasolina'
   } = vehiculo;
 
   return (
@@ -21,13 +21,13 @@ export default function VehicleCard({ vehiculo, onSelect }) {
       {/* Imagen y Badges Flotantes */}
       <View style={styles.imageContainer}>
         <Image source={{ uri: imagen }} style={styles.image} resizeMode="cover" />
-        
-        {/* Badge Categoria (Top Left) */}
+
+        {/* Badge Categoria */}
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{categoria}</Text>
         </View>
 
-        {/* Badge Rating (Bottom Left) */}
+        {/* Badge Rating */}
         <View style={styles.ratingBadge}>
           <Ionicons name="star" size={14} color="#FFB800" />
           <Text style={styles.ratingText}>{Number(rating).toFixed(1)}</Text>
@@ -63,11 +63,11 @@ export default function VehicleCard({ vehiculo, onSelect }) {
           </View>
         </View>
 
-        {/* Botón Acción */}
-        <TouchableOpacity 
-          style={styles.selectButton} 
-          activeOpacity={0.8} 
-          onPress={() => onSelect(vehiculo)}
+        {/* Botón Acción - Llama a la prop onSelect pasándole el objeto vehiculo */}
+        <TouchableOpacity
+          style={styles.selectButton}
+          activeOpacity={0.8}
+          onPress={() => onSelect && onSelect(vehiculo)}
         >
           <Text style={styles.selectButtonText}>SELECCIONAR</Text>
         </TouchableOpacity>
