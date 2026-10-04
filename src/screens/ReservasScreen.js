@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Image,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -26,7 +27,11 @@ export default function ReservasScreen() {
     return (
       <View style={styles.center}>
         <Ionicons name="alert-circle-outline" size={50} color="#D62828" />
-        <Text style={styles.errorTitle}>No se pudieron cargar las reservas</Text>
+
+        <Text style={styles.errorTitle}>
+          No se pudieron cargar las reservas
+        </Text>
+
         <Text style={styles.errorText}>{error}</Text>
 
         <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
@@ -40,7 +45,9 @@ export default function ReservasScreen() {
     return (
       <View style={styles.center}>
         <Ionicons name="calendar-outline" size={60} color="#999" />
+
         <Text style={styles.emptyTitle}>No tienes reservas</Text>
+
         <Text style={styles.emptyText}>
           Cuando realices una reserva, aparecerá aquí.
         </Text>
@@ -50,7 +57,7 @@ export default function ReservasScreen() {
 
   const reserva = reservas[0];
 
-  const estado = reserva.estado_aprobacion || 'Pendiente';
+  const estado = reserva.estado_aprobacion || 'pendiente';
 
   const obtenerEstado = () => {
     const estadoNormalizado = String(estado).toLowerCase();
@@ -110,17 +117,11 @@ export default function ReservasScreen() {
   const estadoVisual = obtenerEstado();
 
   const formatearFecha = (fecha) => {
-    if (!fecha) return 'Sin fecha';
-
-    let fechaReal;
-
-    if (fecha._seconds) {
-      fechaReal = new Date(fecha._seconds * 1000);
-    } else if (fecha.seconds) {
-      fechaReal = new Date(fecha.seconds * 1000);
-    } else {
-      fechaReal = new Date(fecha);
+    if (!fecha) {
+      return 'Sin fecha';
     }
+
+    const fechaReal = new Date(`${fecha}T00:00:00`);
 
     if (isNaN(fechaReal.getTime())) {
       return 'Sin fecha';
@@ -133,47 +134,14 @@ export default function ReservasScreen() {
     });
   };
 
-  const formatearHora = (fecha) => {
-    if (!fecha) return '--:--';
-
-    let fechaReal;
-
-    if (fecha._seconds) {
-      fechaReal = new Date(fecha._seconds * 1000);
-    } else if (fecha.seconds) {
-      fechaReal = new Date(fecha.seconds * 1000);
-    } else {
-      fechaReal = new Date(fecha);
-    }
-
-    if (isNaN(fechaReal.getTime())) {
-      return '--:--';
-    }
-
-    return fechaReal.toLocaleTimeString('es-NI', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const vehiculo = reserva.vehiculos_resumen || {};
+  const vehiculo = reserva.coche || {};
 
   const nombreVehiculo =
-    vehiculo.nombre ||
     `${vehiculo.marca || 'Vehículo'} ${vehiculo.modelo || ''}`.trim();
 
-  const categoria =
-    vehiculo.categoria ||
-    vehiculo.categoria_nombre ||
-    'Vehículo';
+  const precio = Number(vehiculo.valor_dia || 0);
 
-  const transmision = vehiculo.transmision || 'Manual';
-
-  const precio =
-    vehiculo.valor_dia ||
-    vehiculo.precio ||
-    reserva.monto_total ||
-    0;
+  const imagenVehiculo = vehiculo.url_imagen || null;
 
   return (
     <View style={styles.container}>
@@ -181,24 +149,24 @@ export default function ReservasScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ENCABEZADO */}
         <View style={styles.header}>
           <Text style={styles.title}>Mi Reserva</Text>
+
           <Text style={styles.subtitle}>
             Detalles de tu reserva activa
           </Text>
         </View>
 
-        {/* TARJETA PRINCIPAL */}
         <View style={styles.card}>
 
-          {/* ESTADO */}
           <View style={styles.statusRow}>
             <View style={styles.statusLeft}>
               <View
                 style={[
                   styles.statusCircle,
-                  { backgroundColor: estadoVisual.color },
+                  {
+                    backgroundColor: estadoVisual.color,
+                  },
                 ]}
               >
                 <Ionicons
@@ -216,7 +184,9 @@ export default function ReservasScreen() {
                 <Text
                   style={[
                     styles.statusSubtitle,
-                    { color: estadoVisual.color },
+                    {
+                      color: estadoVisual.color,
+                    },
                   ]}
                 >
                   {estadoVisual.subtitulo}
@@ -224,17 +194,42 @@ export default function ReservasScreen() {
               </View>
             </View>
 
-            <View style={[styles.idBadge, { backgroundColor: estadoVisual.fondo }]}>
-              <Text style={[styles.idBadgeText, { color: estadoVisual.color }]}>
-                #{String(reserva.id).substring(0, 8)}
+            <View
+              style={[
+                styles.idBadge,
+                {
+                  backgroundColor: estadoVisual.fondo,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.idBadgeText,
+                  {
+                    color: estadoVisual.color,
+                  },
+                ]}
+              >
+                #{String(reserva.id_reserva)}
               </Text>
             </View>
           </View>
 
-          {/* VEHÍCULO */}
           <View style={styles.vehicleCard}>
             <View style={styles.vehicleImage}>
-              <Ionicons name="car-sport-outline" size={38} color="#999" />
+              {imagenVehiculo ? (
+                <Image
+                  source={{ uri: imagenVehiculo }}
+                  style={styles.vehicleImageReal}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Ionicons
+                  name="car-sport-outline"
+                  size={38}
+                  color="#999"
+                />
+              )}
             </View>
 
             <View style={styles.vehicleInfo}>
@@ -243,18 +238,18 @@ export default function ReservasScreen() {
               </Text>
 
               <Text style={styles.vehicleDetails}>
-                {categoria} · {transmision}
+                {vehiculo.placa
+                  ? `Placa: ${vehiculo.placa}`
+                  : 'Vehículo reservado'}
               </Text>
 
               <Text style={styles.vehiclePrice}>
-                ${Number(precio).toFixed(2)}/día
+                ${precio.toFixed(2)}/día
               </Text>
             </View>
           </View>
 
-          {/* FECHAS */}
           <View style={styles.datesRow}>
-
             <View style={styles.dateBox}>
               <Text style={styles.dateLabel}>RECOGIDA</Text>
 
@@ -263,7 +258,7 @@ export default function ReservasScreen() {
               </Text>
 
               <Text style={styles.timeValue}>
-                {formatearHora(reserva.fecha_inicio)}
+                Fecha de inicio
               </Text>
             </View>
 
@@ -275,13 +270,29 @@ export default function ReservasScreen() {
               </Text>
 
               <Text style={styles.timeValue}>
-                {formatearHora(reserva.fecha_fin)}
+                Fecha de devolución
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.totalBlock}>
+            <View>
+              <Text style={styles.sectionLabel}>
+                TOTAL DE LA RESERVA
+              </Text>
+
+              <Text style={styles.totalText}>
+                ${Number(reserva.monto_total || 0).toFixed(2)}
               </Text>
             </View>
 
+            <Ionicons
+              name="receipt-outline"
+              size={30}
+              color="#D62828"
+            />
           </View>
 
-          {/* LUGAR DE RECOGIDA */}
           <View style={styles.locationBlock}>
             <Text style={styles.sectionLabel}>
               LUGAR DE RECOGIDA
@@ -306,7 +317,6 @@ export default function ReservasScreen() {
             </View>
           </View>
 
-          {/* QR - SOLO ESPACIO VISUAL POR AHORA */}
           <View style={styles.qrBlock}>
             <Text style={styles.sectionLabel}>
               CÓDIGO DE IDENTIFICACIÓN
@@ -321,7 +331,7 @@ export default function ReservasScreen() {
             </View>
 
             <Text style={styles.qrText}>
-              {String(reserva.id)}
+              {String(reserva.id_reserva)}
             </Text>
 
             <Text style={styles.qrHint}>
@@ -329,9 +339,7 @@ export default function ReservasScreen() {
             </Text>
           </View>
 
-          {/* BOTONES */}
           <View style={styles.buttonsRow}>
-
             <TouchableOpacity style={styles.outlineButton}>
               <Text style={styles.outlineButtonText}>
                 Ver detalles
@@ -343,7 +351,6 @@ export default function ReservasScreen() {
                 Reg. entrega
               </Text>
             </TouchableOpacity>
-
           </View>
 
         </View>
@@ -511,6 +518,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+
+  vehicleImageReal: {
+    width: 82,
+    height: 65,
+    borderRadius: 10,
   },
 
   vehicleInfo: {
@@ -570,6 +584,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#777',
+  },
+
+  totalBlock: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFF7F7',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#F3D1D1',
+  },
+
+  totalText: {
+    marginTop: 3,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#D62828',
   },
 
   locationBlock: {
