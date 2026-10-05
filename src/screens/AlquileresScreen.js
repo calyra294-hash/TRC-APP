@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { useAlquileres } from '../hooks/useAlquileres';
 import { styles } from './AlquileresScreen.styles';
@@ -54,10 +55,24 @@ const obtenerColorEstado = (estado) => {
         };
     }
 
-    if (estadoNormalizado.includes('cancelado')) {
+    if (
+        estadoNormalizado.includes('cancelado') ||
+        estadoNormalizado.includes('cancelada')
+    ) {
         return {
             fondo: '#F2F4F7',
             texto: '#667085',
+        };
+    }
+
+    if (
+        estadoNormalizado.includes('alquilado') ||
+        estadoNormalizado.includes('en curso') ||
+        estadoNormalizado.includes('activo')
+    ) {
+        return {
+            fondo: '#FFF4E5',
+            texto: '#D97706',
         };
     }
 
@@ -72,15 +87,25 @@ const formatearEstado = (estado) => {
 
     const texto = String(estado).toLowerCase();
 
-    if (texto === 'alquilado') {
+    if (
+        texto === 'alquilado' ||
+        texto === 'activo' ||
+        texto === 'en curso'
+    ) {
         return 'En curso';
     }
 
-    if (texto === 'completado' || texto === 'finalizado') {
+    if (
+        texto === 'completado' ||
+        texto === 'finalizado'
+    ) {
         return 'Completado';
     }
 
-    if (texto === 'cancelado') {
+    if (
+        texto === 'cancelado' ||
+        texto === 'cancelada'
+    ) {
         return 'Cancelado';
     }
 
@@ -95,11 +120,18 @@ export default function AlquileresScreen({ navigation }) {
         refrescar,
     } = useAlquileres();
 
+    useFocusEffect(
+        useCallback(() => {
+            refrescar();
+        }, [refrescar])
+    );
+
     const renderAlquiler = ({ item }) => {
         const estado = formatearEstado(item.estado_alquiler);
         const coloresEstado = obtenerColorEstado(estado);
 
-        const nombreVehiculo = `${item.vehiculo.marca} ${item.vehiculo.modelo}`.trim();
+        const nombreVehiculo =
+            `${item.vehiculo?.marca || ''} ${item.vehiculo?.modelo || ''}`.trim();
 
         return (
             <TouchableOpacity
@@ -112,28 +144,40 @@ export default function AlquileresScreen({ navigation }) {
                 }
             >
                 <View style={styles.imageContainer}>
-                    {item.vehiculo.foto_principal ? (
+                    {item.vehiculo?.foto_principal ? (
                         <Image
-                            source={{ uri: item.vehiculo.foto_principal }}
+                            source={{
+                                uri: item.vehiculo.foto_principal,
+                            }}
                             style={styles.vehicleImage}
                             resizeMode="cover"
                         />
                     ) : (
                         <View style={styles.imagePlaceholder}>
-                            <Ionicons name="car-outline" size={50} color="#D1D5DB" />
+                            <Ionicons
+                                name="car-outline"
+                                size={50}
+                                color="#D1D5DB"
+                            />
                         </View>
                     )}
 
                     <View
                         style={[
                             styles.statusBadge,
-                            { backgroundColor: coloresEstado.fondo },
+                            {
+                                backgroundColor:
+                                    coloresEstado.fondo,
+                            },
                         ]}
                     >
                         <Text
                             style={[
                                 styles.statusText,
-                                { color: coloresEstado.texto },
+                                {
+                                    color:
+                                        coloresEstado.texto,
+                                },
                             ]}
                         >
                             {estado}
@@ -141,7 +185,10 @@ export default function AlquileresScreen({ navigation }) {
                     </View>
 
                     <View style={styles.imageOverlay}>
-                        <Text style={styles.vehicleName} numberOfLines={1}>
+                        <Text
+                            style={styles.vehicleName}
+                            numberOfLines={1}
+                        >
                             {nombreVehiculo || 'Vehículo'}
                         </Text>
                     </View>
@@ -150,38 +197,86 @@ export default function AlquileresScreen({ navigation }) {
                 <View style={styles.cardBody}>
                     <View style={styles.infoRow}>
                         <View style={styles.infoColumn}>
-                            <Text style={styles.label}>ID DEL ALQUILER</Text>
-                            <Text style={styles.value} numberOfLines={1}>
+                            <Text style={styles.label}>
+                                ID DEL ALQUILER
+                            </Text>
+
+                            <Text
+                                style={styles.value}
+                                numberOfLines={1}
+                            >
                                 {item.id}
                             </Text>
                         </View>
 
                         <View style={styles.infoColumnRight}>
-                            <Text style={styles.label}>MONTO FINAL</Text>
+                            <Text style={styles.label}>
+                                MONTO FINAL
+                            </Text>
+
                             <Text style={styles.price}>
-                                ${item.monto_final.toFixed(2)}
+                                ${Number(
+                                    item.monto_final || 0
+                                ).toFixed(2)}
                             </Text>
                         </View>
                     </View>
 
+                    {item.vehiculo?.placa ? (
+                        <View style={styles.infoRow}>
+                            <View style={styles.infoColumn}>
+                                <Text style={styles.label}>
+                                    PLACA
+                                </Text>
+
+                                <Text style={styles.value}>
+                                    {item.vehiculo.placa}
+                                </Text>
+                            </View>
+
+                            <View style={styles.infoColumnRight}>
+                                <Text style={styles.label}>
+                                    DÍAS
+                                </Text>
+
+                                <Text style={styles.value}>
+                                    {item.cantidad_dias || 0}
+                                </Text>
+                            </View>
+                        </View>
+                    ) : null}
+
                     <View style={styles.dateRow}>
                         <View style={styles.dateBox}>
-                            <Text style={styles.dateLabel}>ENTREGA</Text>
+                            <Text style={styles.dateLabel}>
+                                ENTREGA
+                            </Text>
+
                             <Text style={styles.dateValue}>
-                                {formatearFecha(item.fecha_entrega)}
+                                {formatearFecha(
+                                    item.fecha_entrega
+                                )}
                             </Text>
                         </View>
 
                         <View style={styles.dateBox}>
-                            <Text style={styles.dateLabel}>DEVOLUCIÓN</Text>
+                            <Text style={styles.dateLabel}>
+                                DEVOLUCIÓN
+                            </Text>
+
                             <Text style={styles.dateValue}>
-                                {formatearFecha(item.fecha_devolucion)}
+                                {formatearFecha(
+                                    item.fecha_devolucion
+                                )}
                             </Text>
                         </View>
                     </View>
 
                     <View style={styles.detailButton}>
-                        <Text style={styles.detailText}>Ver detalles</Text>
+                        <Text style={styles.detailText}>
+                            Ver detalles
+                        </Text>
+
                         <Ionicons
                             name="chevron-forward"
                             size={18}
@@ -195,10 +290,16 @@ export default function AlquileresScreen({ navigation }) {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <Ionicons name="car-outline" size={64} color="#D1D5DB" />
+            <Ionicons
+                name="car-outline"
+                size={64}
+                color="#D1D5DB"
+            />
 
             <Text style={styles.emptyTitle}>
-                {error ? 'Error de conexión' : 'No tienes alquileres'}
+                {error
+                    ? 'Error de conexión'
+                    : 'No tienes alquileres'}
             </Text>
 
             <Text style={styles.emptySubtitle}>
@@ -213,7 +314,9 @@ export default function AlquileresScreen({ navigation }) {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Mis Alquileres</Text>
+                    <Text style={styles.title}>
+                        Mis Alquileres
+                    </Text>
 
                     <Text style={styles.subtitle}>
                         Consulta tus alquileres y su estado
@@ -222,7 +325,11 @@ export default function AlquileresScreen({ navigation }) {
 
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#E53935" />
+                        <ActivityIndicator
+                            size="large"
+                            color="#E53935"
+                        />
+
                         <Text style={styles.loadingText}>
                             Cargando alquileres...
                         </Text>
@@ -230,11 +337,12 @@ export default function AlquileresScreen({ navigation }) {
                 ) : (
                     <FlatList
                         data={alquileres}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => String(item.id)}
                         renderItem={renderAlquiler}
                         contentContainerStyle={[
                             styles.listContent,
-                            alquileres.length === 0 && styles.emptyListContent,
+                            alquileres.length === 0 &&
+                            styles.emptyListContent,
                         ]}
                         showsVerticalScrollIndicator={false}
                         ListEmptyComponent={renderEmptyState}

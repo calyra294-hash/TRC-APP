@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,28 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useReservas } from '../hooks/useReservas';
 
 export default function ReservasScreen() {
   const { reservas, loading, error, refrescar } = useReservas();
 
+  // VOLVER A CONSULTAR LAS RESERVAS CADA VEZ QUE
+  // EL USUARIO ENTRE A ESTA PANTALLA
+  useFocusEffect(
+    useCallback(() => {
+      refrescar();
+    }, [refrescar])
+  );
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#D62828" />
-        <Text style={styles.loadingText}>Cargando tu reserva...</Text>
+
+        <Text style={styles.loadingText}>
+          Cargando tu reserva...
+        </Text>
       </View>
     );
   }
@@ -26,16 +38,27 @@ export default function ReservasScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Ionicons name="alert-circle-outline" size={50} color="#D62828" />
+        <Ionicons
+          name="alert-circle-outline"
+          size={50}
+          color="#D62828"
+        />
 
         <Text style={styles.errorTitle}>
           No se pudieron cargar las reservas
         </Text>
 
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>
+          {error}
+        </Text>
 
-        <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
-          <Text style={styles.retryText}>Intentar nuevamente</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={refrescar}
+        >
+          <Text style={styles.retryText}>
+            Intentar nuevamente
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -44,9 +67,15 @@ export default function ReservasScreen() {
   if (!reservas || reservas.length === 0) {
     return (
       <View style={styles.center}>
-        <Ionicons name="calendar-outline" size={60} color="#999" />
+        <Ionicons
+          name="calendar-outline"
+          size={60}
+          color="#999"
+        />
 
-        <Text style={styles.emptyTitle}>No tienes reservas</Text>
+        <Text style={styles.emptyTitle}>
+          No tienes reservas
+        </Text>
 
         <Text style={styles.emptyText}>
           Cuando realices una reserva, aparecerá aquí.
@@ -57,10 +86,12 @@ export default function ReservasScreen() {
 
   const reserva = reservas[0];
 
-  const estado = reserva.estado_aprobacion || 'pendiente';
+  const estado =
+    reserva.estado_aprobacion || 'pendiente';
 
   const obtenerEstado = () => {
-    const estadoNormalizado = String(estado).toLowerCase();
+    const estadoNormalizado =
+      String(estado).toLowerCase();
 
     if (
       estadoNormalizado.includes('acept') ||
@@ -75,7 +106,9 @@ export default function ReservasScreen() {
       };
     }
 
-    if (estadoNormalizado.includes('rechaz')) {
+    if (
+      estadoNormalizado.includes('rechaz')
+    ) {
       return {
         titulo: 'Reserva Rechazada',
         subtitulo: 'No disponible',
@@ -85,7 +118,9 @@ export default function ReservasScreen() {
       };
     }
 
-    if (estadoNormalizado.includes('cancel')) {
+    if (
+      estadoNormalizado.includes('cancel')
+    ) {
       return {
         titulo: 'Reserva Cancelada',
         subtitulo: 'No disponible',
@@ -95,7 +130,9 @@ export default function ReservasScreen() {
       };
     }
 
-    if (estadoNormalizado.includes('complet')) {
+    if (
+      estadoNormalizado.includes('complet')
+    ) {
       return {
         titulo: 'Reserva Completada',
         subtitulo: 'Finalizada',
@@ -121,27 +158,34 @@ export default function ReservasScreen() {
       return 'Sin fecha';
     }
 
-    const fechaReal = new Date(`${fecha}T00:00:00`);
+    const fechaReal =
+      new Date(`${fecha}T00:00:00`);
 
     if (isNaN(fechaReal.getTime())) {
       return 'Sin fecha';
     }
 
-    return fechaReal.toLocaleDateString('es-NI', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    return fechaReal.toLocaleDateString(
+      'es-NI',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }
+    );
   };
 
   const vehiculo = reserva.coche || {};
 
   const nombreVehiculo =
-    `${vehiculo.marca || 'Vehículo'} ${vehiculo.modelo || ''}`.trim();
+    `${vehiculo.marca || 'Vehículo'} ${vehiculo.modelo || ''
+      }`.trim();
 
-  const precio = Number(vehiculo.valor_dia || 0);
+  const precio =
+    Number(vehiculo.valor_dia || 0);
 
-  const imagenVehiculo = vehiculo.url_imagen || null;
+  const imagenVehiculo =
+    vehiculo.url_imagen || null;
 
   return (
     <View style={styles.container}>
@@ -150,7 +194,9 @@ export default function ReservasScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Mi Reserva</Text>
+          <Text style={styles.title}>
+            Mi Reserva
+          </Text>
 
           <Text style={styles.subtitle}>
             Detalles de tu reserva activa
@@ -158,14 +204,14 @@ export default function ReservasScreen() {
         </View>
 
         <View style={styles.card}>
-
           <View style={styles.statusRow}>
             <View style={styles.statusLeft}>
               <View
                 style={[
                   styles.statusCircle,
                   {
-                    backgroundColor: estadoVisual.color,
+                    backgroundColor:
+                      estadoVisual.color,
                   },
                 ]}
               >
@@ -185,7 +231,8 @@ export default function ReservasScreen() {
                   style={[
                     styles.statusSubtitle,
                     {
-                      color: estadoVisual.color,
+                      color:
+                        estadoVisual.color,
                     },
                   ]}
                 >
@@ -198,7 +245,8 @@ export default function ReservasScreen() {
               style={[
                 styles.idBadge,
                 {
-                  backgroundColor: estadoVisual.fondo,
+                  backgroundColor:
+                    estadoVisual.fondo,
                 },
               ]}
             >
@@ -206,7 +254,8 @@ export default function ReservasScreen() {
                 style={[
                   styles.idBadgeText,
                   {
-                    color: estadoVisual.color,
+                    color:
+                      estadoVisual.color,
                   },
                 ]}
               >
@@ -219,7 +268,9 @@ export default function ReservasScreen() {
             <View style={styles.vehicleImage}>
               {imagenVehiculo ? (
                 <Image
-                  source={{ uri: imagenVehiculo }}
+                  source={{
+                    uri: imagenVehiculo,
+                  }}
                   style={styles.vehicleImageReal}
                   resizeMode="contain"
                 />
@@ -251,10 +302,14 @@ export default function ReservasScreen() {
 
           <View style={styles.datesRow}>
             <View style={styles.dateBox}>
-              <Text style={styles.dateLabel}>RECOGIDA</Text>
+              <Text style={styles.dateLabel}>
+                RECOGIDA
+              </Text>
 
               <Text style={styles.dateValue}>
-                {formatearFecha(reserva.fecha_inicio)}
+                {formatearFecha(
+                  reserva.fecha_inicio
+                )}
               </Text>
 
               <Text style={styles.timeValue}>
@@ -263,10 +318,14 @@ export default function ReservasScreen() {
             </View>
 
             <View style={styles.dateBox}>
-              <Text style={styles.dateLabel}>DEVOLUCIÓN</Text>
+              <Text style={styles.dateLabel}>
+                DEVOLUCIÓN
+              </Text>
 
               <Text style={styles.dateValue}>
-                {formatearFecha(reserva.fecha_fin)}
+                {formatearFecha(
+                  reserva.fecha_fin
+                )}
               </Text>
 
               <Text style={styles.timeValue}>
@@ -282,7 +341,10 @@ export default function ReservasScreen() {
               </Text>
 
               <Text style={styles.totalText}>
-                ${Number(reserva.monto_total || 0).toFixed(2)}
+                $
+                {Number(
+                  reserva.monto_total || 0
+                ).toFixed(2)}
               </Text>
             </View>
 
@@ -305,12 +367,20 @@ export default function ReservasScreen() {
                 color="#D62828"
               />
 
-              <View style={styles.locationTextContainer}>
-                <Text style={styles.locationTitle}>
+              <View
+                style={
+                  styles.locationTextContainer
+                }
+              >
+                <Text
+                  style={styles.locationTitle}
+                >
                   Juigalpa, Chontales, Nicaragua
                 </Text>
 
-                <Text style={styles.locationSubtitle}>
+                <Text
+                  style={styles.locationSubtitle}
+                >
                   Oficina principal Tito's Rent a Car
                 </Text>
               </View>
@@ -340,19 +410,26 @@ export default function ReservasScreen() {
           </View>
 
           <View style={styles.buttonsRow}>
-            <TouchableOpacity style={styles.outlineButton}>
-              <Text style={styles.outlineButtonText}>
+            <TouchableOpacity
+              style={styles.outlineButton}
+            >
+              <Text
+                style={styles.outlineButtonText}
+              >
                 Ver detalles
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+            >
+              <Text
+                style={styles.primaryButtonText}
+              >
                 Reg. entrega
               </Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </ScrollView>
     </View>
