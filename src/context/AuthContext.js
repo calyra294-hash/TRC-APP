@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Carga inicial al abrir la aplicación
+  // Carga inicial y sincronización del estado fresco al abrir la aplicación
   useEffect(() => {
     const loadStoredSession = async () => {
       try {
@@ -18,7 +18,29 @@ export const AuthProvider = ({ children }) => {
         if (storedData) {
           const { session: savedSession, user: savedUser } = JSON.parse(storedData);
           setSession(savedSession);
-          setUser(savedUser);
+
+          // Identificamos el ID de usuario (puede venir como id_usuario o id)
+          const userId = savedUser.id_usuario || savedUser.id;
+
+          if (userId) {
+            try {
+              // Consultamos a la BD de forma directa y ultraliviana
+              const perfilFresco = await authService.obtenerPerfil(userId);
+              
+              // Fusionamos los datos locales con el estado_aprobacion actualizado de la BD
+              const usuarioSincronizado = {
+                ...savedUser,
+                estado_aprobacion: perfilFresco.estado_aprobacion,
+              };
+
+              setUser(usuarioSincronizado);
+            } catch (err) {
+              console.warn('No se pudo sincronizar el perfil fresco, usando caché local:', err.message);
+              setUser(savedUser); // Fallback por si no hay red
+            }
+          } else {
+            setUser(savedUser);
+          }
         }
       } catch (error) {
         console.error('Error al restaurar sesión desde AsyncStorage:', error);

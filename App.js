@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/login/LoginScreen';
-import PendingApprovalScreen from './src/screens/PendingApprovalScreen'; 
 
 import {
   InicioScreen,
@@ -22,7 +21,7 @@ import {
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// 1. Stack Anidado para Alquileres (Tu código original)
+// 1. Stack Anidado para Alquileres
 function AlquileresStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -32,7 +31,7 @@ function AlquileresStack() {
   );
 }
 
-// 2. Tab Navigator Principal de la App (Tu código original)
+// 2. Tab Navigator Principal (Usuarios APROBADOS)
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -54,18 +53,11 @@ function MainTabs() {
         },
         tabBarIcon: ({ focused, color }) => {
           let iconName;
-
-          if (route.name === 'Inicio') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Vehículos') {
-            iconName = focused ? 'car' : 'car-outline';
-          } else if (route.name === 'Alquileres') {
-            iconName = focused ? 'document-text' : 'document-text-outline';
-          } else if (route.name === 'Reservas') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'Perfil') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
+          if (route.name === 'Inicio') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Vehículos') iconName = focused ? 'car' : 'car-outline';
+          else if (route.name === 'Alquileres') iconName = focused ? 'document-text' : 'document-text-outline';
+          else if (route.name === 'Reservas') iconName = focused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Perfil') iconName = focused ? 'person' : 'person-outline';
 
           return <Ionicons name={iconName} size={24} color={color} />;
         },
@@ -80,11 +72,10 @@ function MainTabs() {
   );
 }
 
-// 3. Enrutador Condicional
-function AppRouter() {
+// 3. Enrutador Interno (Sin duplicar NavigationContainer)
+function AppNavigatorContent() {
   const { user, session, loading } = useAuth();
 
-  // A) Mientras valida la sesión en AsyncStorage
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -93,30 +84,30 @@ function AppRouter() {
     );
   }
 
-  // B) Si no hay sesión iniciada -> Muestra LoginScreen por defecto
+  console.log('Estado actual de Auth -> Session:', !!session, '| User:', user?.email, '| Estado:', user?.estado_aprobacion);
+
+  // A) Sin sesión -> Muestra Login
   if (!session || !user) {
     return <LoginScreen />;
   }
 
-  // C) Si el usuario está autenticado pero su cuenta NO está aprobada
+  // B) Pendiente de aprobación -> Muestra pantalla de revisión sin Tabs
   if (user.estado_aprobacion === 'pendiente') {
-    return <PendingApprovalScreen />;
+    return <PerfilScreen modoRevision={true} />;
   }
 
-  // D) Si está autenticado y APROBADO -> Renderiza toda la App
-  return (
-    <NavigationContainer>
-      <MainTabs />
-    </NavigationContainer>
-  );
+  // C) Aprobado -> Muestra la App principal con sus Tabs
+  return <MainTabs />;
 }
 
-// 4. Raíz de la Aplicación
+// 4. Raíz de la Aplicación (ÚNICO NavigationContainer global)
 export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <AppRouter />
+        <NavigationContainer>
+          <AppNavigatorContent />
+        </NavigationContainer>
       </AuthProvider>
     </SafeAreaProvider>
   );
