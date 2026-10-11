@@ -14,13 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import VehicleCard from '../components/VehicleCard';
-import DetalleVehiculoScreen from './DetalleVehiculoScreen';
+import VehicleCard from '../../../components/VehicleCard.js';
+import DetalleVehiculoScreen from './DetalleVehiculoScreen.js';
 
-import { useVehiculos, useCategorias } from '../hooks';
+import { useVehiculos, useCategorias } from '../../../hooks/index.js';
 
-import { getReservas } from '../services/reservas.service';
-import { getAlquileres } from '../services/alquileres.service';
+import { getReservas } from '../../../services/reservas.service.js';
+import { getAlquileres } from '../../../services/alquileres.service.js';
 
 import { styles } from './VehiculosScreen.styles.js';
 

@@ -19,7 +19,7 @@ import { styles } from './DetalleVehiculoScreen.styles.js';
 import {
   crearReserva,
   getReservas,
-} from '../services/reservas.service';
+} from '../../../services/reservas.service.js';
 
 const e = React.createElement;
 

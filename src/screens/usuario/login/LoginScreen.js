@@ -12,10 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './LoginScreen.styles';
 
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 
-import logoTitos from '../../../assets/logo_titos.png';
-import RegistrarUsuarioScreen from '../../components/usuarios/RegistrarUsuario'; 
+import logoTitos from '../../../../assets/logo_titos.png';
+import RegistrarUsuarioScreen from '../../../components/usuarios/RegistrarUsuario'; 
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();

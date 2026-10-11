@@ -13,10 +13,10 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getVehiculos } from '../../services/vehiculos.service.js';
-import VehicleCard from '../../components/VehicleCard.js';
-import DetalleVehiculoScreen from '../DetalleVehiculoScreen.js';
-import { styles } from './InicioScreen.styles';
+import { getVehiculos } from '../../../services/vehiculos.service.js';
+import VehicleCard from '../../../components/VehicleCard.js';
+import DetalleVehiculoScreen from '../vehiculo/DetalleVehiculoScreen.js';
+import { styles } from './InicioScreen.styles.js';
 
 export default function InicioScreen({ navigation }) {
   const [vehiculos, setVehiculos] = useState([]);
@@ -80,7 +80,7 @@ export default function InicioScreen({ navigation }) {
         <View style={styles.headerBar}>
           <View style={styles.logoContainer}>
             <Image 
-              source={require('../../../assets/logo_titos.png')} 
+              source={require('../../../../assets/logo_titos.png')} 
               style={styles.logoImage} 
               resizeMode="contain" 
             />

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useReservas } from '../hooks/useReservas';
+import { useReservas } from '../../../hooks/useReservas';
 
 export default function ReservasScreen() {
   const { reservas, loading, error, refrescar } = useReservas();
