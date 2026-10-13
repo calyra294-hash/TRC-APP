@@ -81,17 +81,21 @@ export default function PerfilScreen({ navigation }) {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: cerrarSesion,
+        onPress: confirmarCerrarSesion,
       },
     ]
     );
   };
 
-  const cerrarSesion = async () => {
+  const ejecutarCierreSesion = async () => {
     try {
-    await logout();
+      setLoading(true);
+      await logout();
     } catch (error) {
-    Alert.alert('Error', 'No fue posible cerrar la sesión correctamente.');
+      console.error(error);
+      Alert.alert('Error', 'No fue posible cerrar la sesión correctamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,12 +185,22 @@ export default function PerfilScreen({ navigation }) {
         <OptionRow icon="settings-outline" text="Configuración" last />
       </View>
 
-      <Pressable style={styles.logoutButton} onPress={confirmarCerrarSesion}>
+      <Pressable 
+        style={[styles.logoutButton, loading && styles.disabledButton]} 
+        onPress={confirmarCerrarSesion}
+        disabled={loading}
+      >
         <View style={styles.logoutIcon}>
-          <Ionicons name="log-out-outline" size={20} color="#D71920" />
+          {loading ? (
+            <ActivityIndicator size="small" color="#D71920" />
+          ) : (
+            <Ionicons name="log-out-outline" size={20} color="#D71920" />
+          )}
         </View>
 
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
+        <Text style={styles.logoutText}>
+          {loading ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        </Text>
       </Pressable>
 
       <Text style={styles.footerText}>Tito's Rent a Car</Text>

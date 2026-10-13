@@ -281,6 +281,10 @@ export const styles = StyleSheet.create({
         borderColor: '#FAD5D5',
     },
 
+    disabledButton: {
+        opacity: 0.7,
+    },
+
     logoutIcon: {
         width: 30,
         height: 30,

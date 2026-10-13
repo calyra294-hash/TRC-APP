@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './LoginScreen.styles';
@@ -47,7 +48,8 @@ export default function LoginScreen({ navigation }) {
       );
     } finally {
       setLoading(false);
-    }  };
+    }  
+  };
 
   const handleNavigateToRegister = () => {
     setMostrarRegistro(true);

@@ -22,10 +22,10 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 // 1. Stack Anidado para Alquileres
-function AlquileresStack() {
+function AlquileresNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Alquileres" component={AlquileresScreen} />
+      <Stack.Screen name="AlquileresMain" component={AlquileresScreen} />
       <Stack.Screen name="DetalleAlquiler" component={DetalleAlquilerScreen} />
     </Stack.Navigator>
   );
@@ -65,7 +65,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Inicio" component={InicioScreen} />
       <Tab.Screen name="Vehículos" component={VehiculosScreen} />
-      <Tab.Screen name="Alquileres" component={AlquileresStack} />
+      <Tab.Screen name="Alquileres" component={AlquileresNavigator} />
       <Tab.Screen name="Reservas" component={ReservasScreen} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>
@@ -93,11 +93,21 @@ function AppNavigatorContent() {
 
   // B) Pendiente de aprobación -> Muestra pantalla de revisión sin Tabs
   if (user.estado_aprobacion === 'pendiente') {
-    return <PerfilScreen modoRevision={true} />;
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Revision">
+          {(props) => <PerfilScreen {...props} modoRevision={true} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    );
   }
 
   // C) Aprobado -> Muestra la App principal con sus Tabs
-  return <MainTabs />;
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+    </Stack.Navigator>
+  );
 }
 
 // 4. Raíz de la Aplicación (ÚNICO NavigationContainer global)

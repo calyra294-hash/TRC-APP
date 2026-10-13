@@ -187,7 +187,7 @@ export default function DetalleAlquilerScreen({ route, navigation }) {
                                 </Text>
 
                                 <Text style={styles.amount}>
-                                    ${esCancelado ? '0.00' : alquiler.monto_final.toFixed(2)}
+                                    ${esCancelado ? '0.00' : Number(alquiler.monto_final || 0).toFixed(2)}
                                 </Text>
                             </View>
                         </View>
