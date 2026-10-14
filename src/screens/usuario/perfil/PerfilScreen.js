@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { styles } from './PerfilScreen.styles';
 
 export default function PerfilScreen({ navigation }) {
-  const { user, loading, logout } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { user, logout } = useAuth();
 
   // Cargando usuario
   if (loading) {
@@ -81,7 +82,7 @@ export default function PerfilScreen({ navigation }) {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: confirmarCerrarSesion,
+        onPress: ejecutarCierreSesion,
       },
     ]
     );
