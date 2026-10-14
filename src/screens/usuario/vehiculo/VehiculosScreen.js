@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 
 import {
   View,
@@ -33,6 +33,39 @@ export default function VehiculosScreen({ navigation }) {
     setCategoriaActiva,
     refrescar,
   } = useVehiculos();
+
+  const [busqueda, setBusqueda] = useState('');
+
+  const vehiculosFiltrados = useMemo(() => {
+    if (!vehiculos) return [];
+
+    return vehiculos.filter((item) => {
+      // Normalizamos el texto de búsqueda (sin espacios extra y en minúsculas)
+      const query = busqueda.toLowerCase().trim();
+
+      if (!query) return true; // Si no hay búsqueda, pasa el filtro base
+
+      // Campos por los cuales queremos permitir la búsqueda global
+      const marca = (item.marca || '').toLowerCase();
+      const modelo = (item.modelo || '').toLowerCase();
+      const nombre = (item.nombre || '').toLowerCase();
+      const categoria = (item.categoria || '').toLowerCase();
+      const color = (item.color || '').toLowerCase();
+      const transmision = (item.transmision || '').toLowerCase();
+      const combustible = (item.combustible || '').toLowerCase();
+
+      // Verificamos si la consulta coincide con alguno de los campos
+      return (
+        marca.includes(query) ||
+        modelo.includes(query) ||
+        nombre.includes(query) ||
+        categoria.includes(query) ||
+        color.includes(query) ||
+        transmision.includes(query) ||
+        combustible.includes(query)
+      );
+    });
+  }, [vehiculos, busqueda]);
 
   const { categorias, loadingCategorias } =
     useCategorias();
@@ -512,6 +545,9 @@ export default function VehiculosScreen({ navigation }) {
                 style={
                   styles.searchInput
                 }
+                value={busqueda}
+                onChangeText={setBusqueda}
+                clearButtonMode="while-editing"
               />
             </View>
 
@@ -620,7 +656,7 @@ export default function VehiculosScreen({ navigation }) {
           </View>
         ) : (
           <FlatList
-            data={vehiculos}
+            data={vehiculosFiltrados}
             keyExtractor={(
               item
             ) =>

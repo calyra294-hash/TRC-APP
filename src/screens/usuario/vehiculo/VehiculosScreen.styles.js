@@ -37,6 +37,8 @@ export const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
+    marginLeft: 8,
+    height: 40,
     color: '#1F2937',
   },
   filterButton: {
@@ -90,6 +92,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 60,
     gap: 12,
+    padding: 20,
   },
   emptyTitle: {
     fontSize: 18,
