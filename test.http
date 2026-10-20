@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:3000/api
+# Coloca aquí tu API Key pública de la consola web de Firebase
+@firebaseApiKey = "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC97XjAyQrCD6p2\ngVGCM6S47L19aBhLk4CtQ/uZBmKYJBQNBjOJQzu1pGA4hokTHlNgDnuUGX19vYdy\nFBIvJi8K91cxfy/iPkJvlgf7OFiyq0eGHNJzdJoSS2PxWW2S7278hDvVm1dwll92\naWyuLQFPccCdURD+84txDcJdUNB4Y3Oar86TP26fzR8/psZaXLRErfy3n4ZMunXK\nhN5dM1I63NJ+e90kyrAyl82qiyqjVyfBme6YCKc9vKbEIgklrhRtzVfffdqaOx7g\nLdQJ7oXjzGPbFchOG9C/rlBdzhPxEMVCuMpsEPAG1gHWvkKo/3yD/2BhY7lX5T4h\nHOeskREnAgMBAAECggEASxtIJ9C48OIaEm/0SC1dBAYWryuFhAmKFrquGacVQT3v\nMfFUWwEb8SpWJLRLK6TP6sn/Y6Mq5ZkYIWw/fqa2brs+H2RBDtJ5GkB12oo/RTSH\nfckTDjY7oWVv2eb39mW5+aDfOosKKotEqAJryHsirAR7W5rNwkyURXpf9N/6+MgI\nmsAtSAg9NZZ1Vg+5PC+6MfyduvjGfgQgB+RIiUtBbJwNI8n0q4xqJMwyeN1myYap\nhVP385dpCMPAJOyHEajfiejwrlUPpVVp9wK6xYG5Vyn4olOyVlDkKcYyNKbLi6SZ\nj/95sb0YIir11fYb8+Is9xLbrtEjNLzuYGNBhy0WmQKBgQDqeXm+QAXFeABzzSjX\nGG+USczQsIISm3vtDZ6K4YnQXKQyL0LIlCVg1XAzB+q+xFJW5ziNwktjYNibe3Jc\nNj3UZle0NDXvGJrRh1gWlWvcxIG7aLqbcg27Lw7asoyNOxqF7epzk3HlZCMHz1ve\n7CPjfBryxW75hjCmONnHonmKjwKBgQDPXRLCiiktWQ3KVc0RevYlA/5oie7Cch+c\naNX73taMWtDn8gY1rPW4DrJAkC+W/ma9XTVBhsHWWZxqYafjC2IxIqxco7ZLqeDA\nmQ8X2aUkEDrPmYODzfZDkct4gWN5euA+DRZaHReDbfSNCYDxVlB1oYjXx6NGvghE\ni3LIJE076QKBgQDMtEEVV8+yFpJOh06gezTuwX+Osorcs+H9k2ZW2ZD31+mB5sDn\nXG9FmxHZe4/1/G/mbvdwy7AFkweItr2gw7o3NSJcsThlBZYkV4UQMmN42hZpB4Xj\nMC/Mu8i8JiWPJ4qAYrXNMWy+WC49I0uR05eBg1gDm1rHfd/7PqbjI3X5AQKBgQDO\nMJAM3PCg5OIvhS2J6iiDGfuI206MDoqcLipIboYLvenoGOJP0RHr2MEqLbUEgSaL\nuPjRlTt89lHv/fbAbntOvFmDLE6B4gNXv1ogrwvkVjcEYnNBRjVPbtNRmebdzm7X\nhI/rPu44g8cdzotmbhtHPD4jwaD7IM57yeVyWZZqsQKBgQCbwFJ70gnRPwFGR+0S\npnM+O5jkUPyU+ZFqyFpt+U6QbnEtrngLe/aYodEu2cqz78Ob9TgtPn9zqgR7hV8h\ne9YtZzIIKwuqR7gjGtk0yJpD+T5dV/RyqOHLyf4SjKaX1RRWxGep91iHw+W4jUSC\nZvCqS84V/FOsvk76iV+uLt4o0A==\n-----END PRIVATE KEY-----\n"
+
+### ----------------------------------------------------
+### PASO 1: Obtener el ID Token simulando al Frontend
+### ----------------------------------------------------
+# @name loginFirebase
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebaseApiKey}}
+Content-Type: application/json
+
+{
+  "email": "correo_de_tu_usuario@ejemplo.com",
+  "password": "tu_contraseña",
+  "returnSecureToken": true
+}
+
+### ----------------------------------------------------
+### PASO 2: Probar el endpoint de tu Backend con el Token anterior
+### ----------------------------------------------------
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "idToken": "{{loginFirebase.response.body.idToken}}"
+}
