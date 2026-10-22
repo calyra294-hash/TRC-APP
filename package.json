@@ -21,6 +21,7 @@
     "expo-image-manipulator": "~57.0.21",
     "expo-image-picker": "~57.0.20",
     "expo-status-bar": "~57.0.1",
+    "firebase": "^13.1.0",
     "install": "^0.13.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

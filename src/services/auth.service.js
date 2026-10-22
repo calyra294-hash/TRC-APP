@@ -1,47 +1,91 @@
+import {
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+
+import { auth } from '../config/firebase';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+async function verificarToken(idToken) {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ idToken }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(
+      result.error || result.message || 'No se pudo verificar el perfil.'
+    );
+  }
+
+  return result.data;
+}
 
 export const authService = {
   async login(email, password) {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email: email.trim(), password }),
-    });
+    let credencial;
 
-    const result = await response.json();
+    try {
+      credencial = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || result.message || 'Error al iniciar sesión');
+      const idToken = await credencial.user.getIdToken();
+      const perfil = await verificarToken(idToken);
+
+      return {
+        user: {
+          ...perfil,
+          uid: credencial.user.uid,
+          email: credencial.user.email,
+          rol: String(perfil.rol || '').toLowerCase().trim(),
+        },
+        session: {
+          uid: credencial.user.uid,
+        },
+      };
+    } catch (error) {
+      if (credencial) {
+        await signOut(auth).catch(() => { });
+      }
+
+      if (error.code === 'auth/invalid-credential') {
+        throw new Error('Correo o contraseña incorrectos.');
+      }
+
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('No existe una cuenta con ese correo.');
+      }
+
+      if (error.code === 'auth/too-many-requests') {
+        throw new Error('Demasiados intentos. Probá más tarde.');
+      }
+
+      throw error;
     }
-
-    return result.data;
   },
 
-  // Método ultraliviano para consultar el perfil fresco usando el ID
-  async obtenerPerfil(id_usuario) {
-    const response = await fetch(`${API_URL}/usuarios/${id_usuario}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  async obtenerPerfilActual(firebaseUser) {
+    const idToken = await firebaseUser.getIdToken();
+    const perfil = await verificarToken(idToken);
 
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || 'Error al obtener el perfil fresco');
-    }
-
-    return result.data; // Retorna el objeto del usuario actualizado con su estado_aprobacion
+    return {
+      ...perfil,
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      rol: String(perfil.rol || '').toLowerCase().trim(),
+    };
   },
 
   async logout() {
-    try {
-      await fetch(`${API_URL}/auth/logout`, { method: 'POST' });
-    } catch (error) {
-      console.warn('Error silenciado al notificar logout al backend:', error);
-    }
+    await signOut(auth);
   },
 };
