@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   View,
@@ -6,42 +7,52 @@ import {
   StyleSheet,
   Alert,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 
-export default function OtraScreenAdmin({ navigation }) {
+export default function OtraScreenAdmin() {
   const { user, logout } = useAuth();
 
-  const handleCerrarSesion = () => {
-    Alert.alert(
-      "Cerrar sesión",
-      "¿Deseas salir de tu cuenta de administrador?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Cerrar sesión",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await logout();
-              // Reseteamos la navegación al Login limpiando el Stack principal
-              navigation.getParent()?.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              Alert.alert("Error", "No se pudo cerrar la sesión.");
-            }
+  const handleCerrarSesion = async () => {
+    const confirmar = async () => {
+      try {
+        await logout();
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        if (Platform.OS === "web") {
+          window.alert("No se pudo cerrar la sesión. Intenta nuevamente.");
+        } else {
+          Alert.alert("Error", "No se pudo cerrar la sesión.");
+        }
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (window.confirm("¿Deseas cerrar la sesión de administrador?")) {
+        await confirmar();
+      }
+    } else {
+      Alert.alert(
+        "Cerrar sesión",
+        "¿Deseas salir de tu cuenta de administrador?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Cerrar sesión",
+            style: "destructive",
+            onPress: confirmar,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.titulo}>Panel de Administración</Text>
+
         <Text style={styles.subtitulo}>
           Administrador: {user?.email || "Admin"}
         </Text>

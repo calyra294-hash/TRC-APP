@@ -1,21 +1,28 @@
+import { auth } from "../config/firebase";
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // OBTENER TODAS LAS RESERVAS
 export const getReservas = async () => {
-    try {
-        const response = await fetch(`${API_URL}/reserva`);
+    const usuario = auth.currentUser;
 
-        if (!response.ok) {
-            throw new Error(`Error en la petición: ${response.status}`);
-        }
-
-        const json = await response.json();
-
-        return json.data || [];
-    } catch (error) {
-        console.error('Error al consumir /reserva:', error);
-        throw error;
+    if (!usuario) {
+        throw new Error("Debes iniciar sesión nuevamente.");
     }
+
+    const token = await usuario.getIdToken();
+
+    const response = await fetch(`${API_URL}/reserva`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.status}`);
+    }
+
+    const json = await response.json();
+    return json.data || [];
 };
 
 // OBTENER UNA RESERVA
