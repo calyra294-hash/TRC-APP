@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,16 +11,98 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import QRCode from 'react-native-qrcode-svg';
 import { useReservas } from '../../../hooks/useReservas';
+import { getQRAlquiler } from '../../../services/reservas.service';
 
 export default function ReservasScreen() {
   const { reservas, loading, error, refrescar } = useReservas();
 
+  const [qrToken, setQrToken] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState('');
+  const [qrVersion, setQrVersion] = useState(0);
+
+  const reserva = reservas?.[0];
+
+  const estado = String(
+    reserva?.estado_aprobacion || 'pendiente'
+  ).toLowerCase().trim();
+
+  const esAprobada = [
+    'aprobada',
+    'aprobado',
+    'aceptada',
+    'aceptado',
+    'confirmada',
+    'confirmado',
+  ].includes(estado);
+
+  const idAlquiler = reserva?.id_alquiler;
+
+  // Actualizar reservas cada vez que se abre esta pantalla.
   useFocusEffect(
     useCallback(() => {
       refrescar();
+      setQrVersion(version => version + 1);
     }, [refrescar])
   );
+
+  // Solicitar un QR seguro al backend cuando exista un alquiler aprobado.
+  useEffect(() => {
+    let activo = true;
+
+    setQrToken(null);
+    setQrError('');
+
+    if (!esAprobada || !idAlquiler) {
+      setQrLoading(false);
+      return () => {
+        activo = false;
+      };
+    }
+
+    const cargarQR = async () => {
+      try {
+        setQrLoading(true);
+
+        const resultado = await getQRAlquiler(idAlquiler);
+
+        if (activo) {
+          setQrToken(resultado?.token || null);
+
+          if (!resultado?.token) {
+            setQrError('El servidor no devolvió un código QR.');
+          }
+        }
+      } catch (err) {
+        if (activo) {
+          setQrError(err.message || 'No se pudo generar el código QR.');
+        }
+      } finally {
+        if (activo) {
+          setQrLoading(false);
+        }
+      }
+    };
+
+    cargarQR();
+
+    return () => {
+      activo = false;
+    };
+  }, [idAlquiler, esAprobada, qrVersion]);
+
+  const actualizarQR = () => {
+    setQrToken(null);
+    setQrError('');
+    setQrVersion(version => version + 1);
+  };
+
+  const actualizarReserva = async () => {
+    await refrescar();
+    actualizarQR();
+  };
 
   if (loading) {
     return (
@@ -38,6 +121,7 @@ export default function ReservasScreen() {
           No se pudieron cargar las reservas
         </Text>
         <Text style={styles.errorText}>{error}</Text>
+
         <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
           <Text style={styles.retryText}>Intentar nuevamente</Text>
         </TouchableOpacity>
@@ -57,21 +141,20 @@ export default function ReservasScreen() {
     );
   }
 
-  const reserva = reservas[0];
-
-  // Firestore devuelve el identificador como "id".
-  const idReserva =
-    reserva.id ?? reserva.id_reserva ?? 'Sin código';
-
-  // Normalizar el estado recibido desde el backend.
-  const estado = String(
-    reserva.estado_aprobacion || 'pendiente'
-  ).toLowerCase().trim();
+  const idReserva = reserva.id ?? reserva.id_reserva ?? 'Sin código';
 
   const obtenerEstado = () => {
     if (
-      ['aprobada', 'aprobado', 'aceptada', 'aceptado',
-        'activo', 'activa', 'confirmada', 'confirmado'].includes(estado)
+      [
+        'aprobada',
+        'aprobado',
+        'aceptada',
+        'aceptado',
+        'activo',
+        'activa',
+        'confirmada',
+        'confirmado',
+      ].includes(estado)
     ) {
       return {
         titulo: 'Reserva Confirmada',
@@ -271,6 +354,7 @@ export default function ReservasScreen() {
                 ${Number(reserva.monto_total || 0).toFixed(2)}
               </Text>
             </View>
+
             <Ionicons
               name="receipt-outline"
               size={30}
@@ -282,12 +366,14 @@ export default function ReservasScreen() {
             <Text style={styles.sectionLabel}>
               LUGAR DE RECOGIDA
             </Text>
+
             <View style={styles.locationRow}>
               <Ionicons
                 name="location-outline"
                 size={22}
                 color="#D62828"
               />
+
               <View style={styles.locationTextContainer}>
                 <Text style={styles.locationTitle}>
                   Juigalpa, Chontales, Nicaragua
@@ -301,37 +387,113 @@ export default function ReservasScreen() {
 
           <View style={styles.qrBlock}>
             <Text style={styles.sectionLabel}>
-              CÓDIGO DE IDENTIFICACIÓN
+              CÓDIGO QR DE ENTREGA
             </Text>
-            <View style={styles.qrPlaceholder}>
-              <Ionicons
-                name="qr-code-outline"
-                size={90}
-                color="#333"
-              />
-            </View>
-            <Text style={styles.qrText}>{idReserva}</Text>
-            <Text style={styles.qrHint}>Código de reserva</Text>
+
+            {!esAprobada ? (
+              <View style={styles.qrMessage}>
+                <Ionicons
+                  name="time-outline"
+                  size={35}
+                  color="#EF6C00"
+                />
+                <Text style={styles.qrMessageTitle}>
+                  QR pendiente
+                </Text>
+                <Text style={styles.qrMessageText}>
+                  El código estará disponible cuando el administrador
+                  apruebe tu reserva.
+                </Text>
+              </View>
+            ) : !idAlquiler ? (
+              <View style={styles.qrMessage}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={35}
+                  color="#D62828"
+                />
+                <Text style={styles.qrMessageTitle}>
+                  Alquiler pendiente de registro
+                </Text>
+                <Text style={styles.qrMessageText}>
+                  Tu reserva está aprobada, pero todavía no tiene un
+                  alquiler asociado.
+                </Text>
+              </View>
+            ) : qrLoading ? (
+              <View style={styles.qrMessage}>
+                <ActivityIndicator size="large" color="#D62828" />
+                <Text style={styles.qrMessageText}>
+                  Generando tu código QR...
+                </Text>
+              </View>
+            ) : qrToken ? (
+              <>
+                <View style={styles.qrContainer}>
+                  <QRCode
+                    value={qrToken}
+                    size={160}
+                    backgroundColor="#FFFFFF"
+                    color="#111111"
+                  />
+                </View>
+
+                <Text style={styles.qrText}>
+                  Reserva #{idReserva}
+                </Text>
+
+                <Text style={styles.qrHint}>
+                  Presenta este código al administrador para registrar
+                  la entrega del vehículo.
+                </Text>
+              </>
+            ) : (
+              <View style={styles.qrMessage}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={35}
+                  color="#D62828"
+                />
+                <Text style={styles.qrMessageTitle}>
+                  No se pudo generar el QR
+                </Text>
+                <Text style={styles.qrMessageText}>
+                  {qrError || 'Intenta generar el código nuevamente.'}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.qrRetryButton}
+                  onPress={actualizarQR}
+                >
+                  <Text style={styles.qrRetryText}>
+                    Generar nuevamente
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.buttonsRow}>
             <TouchableOpacity
               style={styles.outlineButton}
-              onPress={refrescar}
+              onPress={actualizarReserva}
             >
               <Text style={styles.outlineButtonText}>
                 Actualizar reserva
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={refrescar}
-            >
-              <Text style={styles.primaryButtonText}>
-                Actualizar estado
-              </Text>
-            </TouchableOpacity>
+            {esAprobada && idAlquiler && (
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={actualizarQR}
+                disabled={qrLoading}
+              >
+                <Text style={styles.primaryButtonText}>
+                  Renovar QR
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -583,28 +745,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  qrPlaceholder: {
-    width: 130,
-    height: 130,
+  qrContainer: {
+    width: 190,
+    height: 190,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#DDDDDD',
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 5,
   },
-  qrText: {
-    marginTop: 10,
+  qrMessage: {
+    width: '100%',
+    minHeight: 140,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 18,
+  },
+  qrMessageTitle: {
+    marginTop: 9,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+  },
+  qrMessageText: {
+    marginTop: 7,
     fontSize: 12,
+    color: '#777',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  qrText: {
+    marginTop: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#333',
     textAlign: 'center',
   },
   qrHint: {
-    marginTop: 3,
+    marginTop: 5,
     fontSize: 11,
-    color: '#999',
+    color: '#777',
+    textAlign: 'center',
+    lineHeight: 17,
+  },
+  qrRetryButton: {
+    marginTop: 12,
+    backgroundColor: '#D62828',
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 20,
+  },
+  qrRetryText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   buttonsRow: {
     flexDirection: 'row',

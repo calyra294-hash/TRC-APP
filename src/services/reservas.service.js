@@ -41,11 +41,14 @@ export const getReservaPorId = async (id) => {
 
     const token = await usuario.getIdToken();
 
-    const response = await fetch(`${API_URL}/reserva/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    const response = await fetch(
+        `${API_URL}/reserva/${encodeURIComponent(id)}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
 
     const json = await response.json();
 
@@ -58,7 +61,7 @@ export const getReservaPorId = async (id) => {
     return json.data;
 };
 
-// CREAR RESERVA EN FIREBASE A TRAVÉS DEL BACKEND
+// CREAR RESERVA
 export const crearReserva = async (datos) => {
     const usuario = auth.currentUser;
 
@@ -90,7 +93,7 @@ export const crearReserva = async (datos) => {
     return json.data;
 };
 
-// ACTUALIZAR ESTADO
+// ACTUALIZAR ESTADO DE RESERVA
 export const actualizarEstadoReserva = async (id, estado) => {
     const usuario = auth.currentUser;
 
@@ -100,14 +103,17 @@ export const actualizarEstadoReserva = async (id, estado) => {
 
     const token = await usuario.getIdToken();
 
-    const response = await fetch(`${API_URL}/reserva/${id}/estado`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ estado }),
-    });
+    const response = await fetch(
+        `${API_URL}/reserva/${encodeURIComponent(id)}/estado`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ estado }),
+        }
+    );
 
     const json = await response.json();
 
@@ -131,12 +137,15 @@ export const eliminarReserva = async (id) => {
 
     const token = await usuario.getIdToken();
 
-    const response = await fetch(`${API_URL}/reserva/${id}`, {
-        method: "DELETE",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    const response = await fetch(
+        `${API_URL}/reserva/${encodeURIComponent(id)}`,
+        {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
 
     const json = await response.json();
 
@@ -148,4 +157,40 @@ export const eliminarReserva = async (id) => {
     }
 
     return true;
+};
+
+// OBTENER TOKEN QR DEL ALQUILER
+export const getQRAlquiler = async (idAlquiler) => {
+    const usuario = auth.currentUser;
+
+    if (!usuario) {
+        throw new Error("Debes iniciar sesión nuevamente.");
+    }
+
+    if (!idAlquiler) {
+        throw new Error("No se encontró el alquiler de esta reserva.");
+    }
+
+    const token = await usuario.getIdToken();
+
+    const response = await fetch(
+        `${API_URL}/alquiler/${encodeURIComponent(idAlquiler)}/qr`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    const json = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            json.mensaje ||
+            `Error al generar el código QR: ${response.status}`
+        );
+    }
+
+    return json.data;
 };

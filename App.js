@@ -12,6 +12,8 @@ import OtraScreenAdmin from './src/screens/administrador/OtraScreenAdmin';
 import ReservasAdminScreen from './src/screens/administrador/ReservasAdminScreen';
 import InicioAdminScreen from './src/screens/administrador/InicioAdminScreen';
 import AlquileresAdminScreen from './src/screens/administrador/AlquileresAdminScreen';
+import EscanearQRScreen from './src/screens/administrador/EscanearQRScreen';
+
 import { saludService } from './src/services/salud.service';
 
 import {
@@ -29,8 +31,14 @@ const Stack = createNativeStackNavigator();
 function AlquileresNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="AlquileresMain" component={AlquileresScreen} />
-      <Stack.Screen name="DetalleAlquiler" component={DetalleAlquilerScreen} />
+      <Stack.Screen
+        name="AlquileresMain"
+        component={AlquileresScreen}
+      />
+      <Stack.Screen
+        name="DetalleAlquiler"
+        component={DetalleAlquilerScreen}
+      />
     </Stack.Navigator>
   );
 }
@@ -62,20 +70,31 @@ function MainTabs() {
           } else if (route.name === 'Vehículos') {
             iconName = focused ? 'car' : 'car-outline';
           } else if (route.name === 'Alquileres') {
-            iconName = focused ? 'document-text' : 'document-text-outline';
+            iconName = focused
+              ? 'document-text'
+              : 'document-text-outline';
           } else if (route.name === 'Reservas') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Perfil') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={24} color={color} />;
+          return (
+            <Ionicons
+              name={iconName}
+              size={24}
+              color={color}
+            />
+          );
         },
       })}
     >
       <Tab.Screen name="Inicio" component={InicioScreen} />
       <Tab.Screen name="Vehículos" component={VehiculosScreen} />
-      <Tab.Screen name="Alquileres" component={AlquileresNavigator} />
+      <Tab.Screen
+        name="Alquileres"
+        component={AlquileresNavigator}
+      />
       <Tab.Screen name="Reservas" component={ReservasScreen} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>
@@ -91,14 +110,14 @@ function AdminTabs() {
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           height: 65,
-          paddingBottom: 10,
-          paddingTop: 8,
+          paddingBottom: 8,
+          paddingTop: 7,
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F0F0F0',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '500',
         },
         tabBarIcon: ({ color, size, focused }) => {
@@ -111,12 +130,22 @@ function AdminTabs() {
           } else if (route.name === 'Reservas') {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Alquileres') {
-            iconName = focused ? 'document-text' : 'document-text-outline';
+            iconName = focused
+              ? 'document-text'
+              : 'document-text-outline';
+          } else if (route.name === 'Escanear QR') {
+            iconName = focused ? 'qr-code' : 'qr-code-outline';
           } else if (route.name === 'Mi perfil') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} color={color} size={size} />;
+          return (
+            <Ionicons
+              name={iconName}
+              color={color}
+              size={size}
+            />
+          );
         },
       })}
     >
@@ -124,6 +153,10 @@ function AdminTabs() {
       <Tab.Screen name="Vehículos" component={VehiculosScreen} />
       <Tab.Screen name="Reservas" component={ReservasAdminScreen} />
       <Tab.Screen name="Alquileres" component={AlquileresAdminScreen} />
+      <Tab.Screen
+        name="Escanear QR"
+        component={EscanearQRScreen}
+      />
       <Tab.Screen name="Mi perfil" component={OtraScreenAdmin} />
     </Tab.Navigator>
   );
@@ -146,13 +179,24 @@ function AppNavigatorContent() {
     return <LoginScreen />;
   }
 
-  const esAdministrador = ['admin', 'administrador'].includes(rolActual);
+  const esAdministrador = [
+    'admin',
+    'administrador',
+  ].includes(rolActual);
 
-  if (!esAdministrador && user.estado_aprobacion === 'pendiente') {
+  if (
+    !esAdministrador &&
+    user.estado_aprobacion === 'pendiente'
+  ) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Revision">
-          {(props) => <PerfilScreen {...props} modoRevision={true} />}
+          {(props) => (
+            <PerfilScreen
+              {...props}
+              modoRevision={true}
+            />
+          )}
         </Stack.Screen>
       </Stack.Navigator>
     );
@@ -161,9 +205,15 @@ function AppNavigatorContent() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {esAdministrador ? (
-        <Stack.Screen name="AdminTabs" component={AdminTabs} />
+        <Stack.Screen
+          name="AdminTabs"
+          component={AdminTabs}
+        />
       ) : (
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen
+          name="MainTabs"
+          component={MainTabs}
+        />
       )}
     </Stack.Navigator>
   );
