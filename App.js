@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -10,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/login/LoginScreen';
 import OtraScreenAdmin from './src/screens/administrador/OtraScreenAdmin';
+import ReservasAdminScreen from './src/screens/administrador/ReservasAdminScreen';
+import InicioAdminScreen from './src/screens/administrador/InicioAdminScreen';
+import AlquileresAdminScreen from './src/screens/administrador/AlquileresAdminScreen';
 import { saludService } from './src/services/salud.service';
 
 import {
@@ -38,7 +40,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#E53935',
+        tabBarActiveTintColor: '#D31A24',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           height: 65,
@@ -85,33 +87,44 @@ function AdminTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#E53935',
+        tabBarActiveTintColor: '#D31A24',
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           height: 65,
           paddingBottom: 10,
           paddingTop: 8,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#F0F0F0',
         },
-        tabBarIcon: ({ color, size }) => {
-          const iconName =
-            route.name === 'ProductosTab'
-              ? 'car-outline'
-              : 'person-outline';
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+        },
+        tabBarIcon: ({ color, size, focused }) => {
+          let iconName = 'person-outline';
+
+          if (route.name === 'Inicio') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Vehículos') {
+            iconName = focused ? 'car' : 'car-outline';
+          } else if (route.name === 'Reservas') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Alquileres') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
+          } else if (route.name === 'Mi perfil') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
 
           return <Ionicons name={iconName} color={color} size={size} />;
         },
       })}
     >
-      <Tab.Screen
-        name="ProductosTab"
-        component={VehiculosScreen}
-        options={{ title: 'Vehículos' }}
-      />
-      <Tab.Screen
-        name="OtraScreenAdmin"
-        component={OtraScreenAdmin}
-        options={{ title: 'Mi perfil' }}
-      />
+      <Tab.Screen name="Inicio" component={InicioAdminScreen} />
+      <Tab.Screen name="Vehículos" component={VehiculosScreen} />
+      <Tab.Screen name="Reservas" component={ReservasAdminScreen} />
+      <Tab.Screen name="Alquileres" component={AlquileresAdminScreen} />
+      <Tab.Screen name="Mi perfil" component={OtraScreenAdmin} />
     </Tab.Navigator>
   );
 }
@@ -124,7 +137,7 @@ function AppNavigatorContent() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E53935" />
+        <ActivityIndicator size="large" color="#D31A24" />
       </View>
     );
   }
