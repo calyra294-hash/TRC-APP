@@ -19,6 +19,14 @@ import { useVehiculos, useCategorias } from '../../../hooks/index.js';
 import { getDisponibilidadVehiculos } from '../../../services/alquileres.service.js';
 import { styles } from './VehiculosScreen.styles.js';
 
+const FILTROS_INICIALES = {
+  transmision: 'Todas',
+  combustible: 'Todos',
+  pasajeros: 'Todos',
+  precioMin: '',
+  precioMax: '',
+};
+
 export default function VehiculosScreen({ navigation }) {
   const {
     vehiculos,
@@ -35,6 +43,10 @@ export default function VehiculosScreen({ navigation }) {
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
   const [disponibilidades, setDisponibilidades] = useState([]);
   const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(true);
+
+  const [modalFiltrosVisible, setModalFiltrosVisible] = useState(false);
+  const [filtrosAplicados, setFiltrosAplicados] = useState(FILTROS_INICIALES);
+  const [filtrosTemporales, setFiltrosTemporales] = useState(FILTROS_INICIALES);
 
   const cargarDisponibilidad = useCallback(async () => {
     try {
@@ -70,8 +82,6 @@ export default function VehiculosScreen({ navigation }) {
 
     const query = busqueda.toLowerCase().trim();
 
-    if (!query) return vehiculos;
-
     return vehiculos.filter((item) => {
       const campos = [
         item.marca,
@@ -84,11 +94,88 @@ export default function VehiculosScreen({ navigation }) {
         item.combustible,
       ];
 
-      return campos.some((campo) =>
-        String(campo || '').toLowerCase().includes(query)
+      const coincideBusqueda =
+        !query ||
+        campos.some((campo) =>
+          String(campo || '').toLowerCase().includes(query)
+        );
+
+      const transmision = String(item.transmision || 'Manual')
+        .trim()
+        .toLowerCase();
+
+      const combustible = String(item.combustible || 'Gasolina')
+        .trim()
+        .toLowerCase();
+
+      const pasajeros = Number(item.pasajeros || 5);
+      const precio = Number(item.precio ?? item.valor_dia ?? 0);
+
+      const coincideTransmision =
+        filtrosAplicados.transmision === 'Todas' ||
+        transmision.includes(filtrosAplicados.transmision.toLowerCase());
+
+      const coincideCombustible =
+        filtrosAplicados.combustible === 'Todos' ||
+        combustible.includes(filtrosAplicados.combustible.toLowerCase());
+
+      const coincidePasajeros =
+        filtrosAplicados.pasajeros === 'Todos' ||
+        pasajeros === Number(filtrosAplicados.pasajeros);
+
+      const precioMin = filtrosAplicados.precioMin.trim() === ''
+        ? null
+        : Number(filtrosAplicados.precioMin);
+
+      const precioMax = filtrosAplicados.precioMax.trim() === ''
+        ? null
+        : Number(filtrosAplicados.precioMax);
+
+      const coincidePrecioMin =
+        precioMin === null || precio >= precioMin;
+
+      const coincidePrecioMax =
+        precioMax === null || precio <= precioMax;
+
+      return (
+        coincideBusqueda &&
+        coincideTransmision &&
+        coincideCombustible &&
+        coincidePasajeros &&
+        coincidePrecioMin &&
+        coincidePrecioMax
       );
     });
-  }, [vehiculos, busqueda]);
+  }, [vehiculos, busqueda, filtrosAplicados]);
+
+  const actualizarFiltro = (campo, valor) => {
+    setFiltrosTemporales((actuales) => ({
+      ...actuales,
+      [campo]: valor,
+    }));
+  };
+
+  const abrirFiltros = () => {
+    setFiltrosTemporales({ ...filtrosAplicados });
+    setModalFiltrosVisible(true);
+  };
+
+  const aplicarFiltros = () => {
+    setFiltrosAplicados({ ...filtrosTemporales });
+    setModalFiltrosVisible(false);
+  };
+
+  const limpiarFiltros = () => {
+    setFiltrosTemporales({ ...FILTROS_INICIALES });
+    setFiltrosAplicados({ ...FILTROS_INICIALES });
+  };
+
+  const filtrosActivos =
+    filtrosAplicados.transmision !== 'Todas' ||
+    filtrosAplicados.combustible !== 'Todos' ||
+    filtrosAplicados.pasajeros !== 'Todos' ||
+    filtrosAplicados.precioMin !== '' ||
+    filtrosAplicados.precioMax !== '';
 
   const handleSeleccionarVehiculo = (vehiculo) => {
     setVehiculoSeleccionado(vehiculo);
@@ -106,12 +193,52 @@ export default function VehiculosScreen({ navigation }) {
       <Ionicons name="car-outline" size={64} color="#D1D5DB" />
 
       <Text style={styles.emptyTitle}>
-        {error ? 'Error de conexión' : 'No hay vehículos disponibles'}
+        {error ? 'Error de conexión' : 'No se encontraron vehículos'}
       </Text>
 
       <Text style={styles.emptySubtitle}>
-        {error || 'Intenta cambiando los filtros o vuelve más tarde.'}
+        {error || 'Prueba cambiando la búsqueda o los filtros.'}
       </Text>
+
+      {filtrosActivos && (
+        <TouchableOpacity
+          style={styles.clearEmptyButton}
+          onPress={limpiarFiltros}
+        >
+          <Text style={styles.clearEmptyButtonText}>
+            Limpiar filtros
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderOption = (campo, opciones, valorActual) => (
+    <View style={styles.optionsContainer}>
+      {opciones.map((opcion) => {
+        const seleccionado = valorActual === opcion;
+
+        return (
+          <TouchableOpacity
+            key={opcion}
+            activeOpacity={0.8}
+            onPress={() => actualizarFiltro(campo, opcion)}
+            style={[
+              styles.optionChip,
+              seleccionado && styles.optionChipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                seleccionado && styles.optionChipTextActive,
+              ]}
+            >
+              {opcion}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 
@@ -144,15 +271,33 @@ export default function VehiculosScreen({ navigation }) {
             </View>
 
             <TouchableOpacity
-              style={styles.filterButton}
+              style={[
+                styles.filterButton,
+                filtrosActivos && styles.filterButtonActive,
+              ]}
               activeOpacity={0.8}
+              onPress={abrirFiltros}
             >
-              <Ionicons name="options-outline" size={18} color="#D31A24" />
+              <Ionicons
+                name="options-outline"
+                size={18}
+                color="#D31A24"
+              />
+
               <Text style={styles.filterButtonText}>Filtros</Text>
+
+              {filtrosActivos && (
+                <View style={styles.filterIndicator} />
+              )}
             </TouchableOpacity>
           </View>
 
-          
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>Categorías</Text>
+            <Text style={styles.categorySubtitle}>
+              Explora nuestra selección
+            </Text>
+          </View>
 
           {loadingCategorias ? (
             <ActivityIndicator
@@ -192,8 +337,6 @@ export default function VehiculosScreen({ navigation }) {
               })}
             </ScrollView>
           )}
-
-          
         </View>
 
         {loading || loadingDisponibilidad ? (
@@ -211,9 +354,7 @@ export default function VehiculosScreen({ navigation }) {
               String(item.id_coche || item.id || index)
             }
             renderItem={({ item }) => {
-              const idCoche = String(
-                item.id_coche || item.id || ''
-              );
+              const idCoche = String(item.id_coche || item.id || '');
 
               return (
                 <VehicleCard
@@ -232,6 +373,145 @@ export default function VehiculosScreen({ navigation }) {
             refreshing={loading || loadingDisponibilidad}
           />
         )}
+
+        <Modal
+          visible={modalFiltrosVisible}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setModalFiltrosVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.filterModal}>
+              <View style={styles.modalHandle} />
+
+              <View style={styles.modalHeader}>
+                <View>
+                  <Text style={styles.modalTitle}>Filtrar vehículos</Text>
+                  <Text style={styles.modalSubtitle}>
+                    Encuentra lo que necesitas
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setModalFiltrosVisible(false)}
+                >
+                  <Ionicons name="close" size={22} color="#333333" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.modalContent}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View style={styles.filterSection}>
+                  <View style={styles.filterSectionTitleRow}>
+                    <Ionicons name="settings-outline" size={18} color="#D31A24" />
+                    <Text style={styles.filterSectionTitle}>
+                      Transmisión
+                    </Text>
+                  </View>
+
+                  {renderOption(
+                    'transmision',
+                    ['Todas', 'Automática', 'Manual'],
+                    filtrosTemporales.transmision
+                  )}
+                </View>
+
+                <View style={styles.filterSection}>
+                  <View style={styles.filterSectionTitleRow}>
+                    <Ionicons name="speedometer-outline" size={18} color="#D31A24" />
+                    <Text style={styles.filterSectionTitle}>
+                      Combustible
+                    </Text>
+                  </View>
+
+                  {renderOption(
+                    'combustible',
+                    ['Todos', 'Gasolina', 'Diésel'],
+                    filtrosTemporales.combustible
+                  )}
+                </View>
+
+                <View style={styles.filterSection}>
+                  <View style={styles.filterSectionTitleRow}>
+                    <Ionicons name="people-outline" size={18} color="#D31A24" />
+                    <Text style={styles.filterSectionTitle}>
+                      Capacidad de pasajeros
+                    </Text>
+                  </View>
+
+                  {renderOption(
+                    'pasajeros',
+                    ['Todos', '2', '5', '7'],
+                    filtrosTemporales.pasajeros
+                  )}
+                </View>
+
+                <View style={styles.filterSection}>
+                  <View style={styles.filterSectionTitleRow}>
+                    <Ionicons name="cash-outline" size={18} color="#D31A24" />
+                    <Text style={styles.filterSectionTitle}>
+                      Precio por día
+                    </Text>
+                  </View>
+
+                  <View style={styles.priceInputsRow}>
+                    <View style={styles.priceInputContainer}>
+                      <Text style={styles.priceInputLabel}>Mínimo</Text>
+                      <TextInput
+                        style={styles.priceInput}
+                        placeholder="C$ 0"
+                        placeholderTextColor="#A0A0A0"
+                        keyboardType="numeric"
+                        value={filtrosTemporales.precioMin}
+                        onChangeText={(value) =>
+                          actualizarFiltro('precioMin', value.replace(/[^0-9]/g, ''))
+                        }
+                      />
+                    </View>
+
+                    <View style={styles.priceInputContainer}>
+                      <Text style={styles.priceInputLabel}>Máximo</Text>
+                      <TextInput
+                        style={styles.priceInput}
+                        placeholder="Sin límite"
+                        placeholderTextColor="#A0A0A0"
+                        keyboardType="numeric"
+                        value={filtrosTemporales.precioMax}
+                        onChangeText={(value) =>
+                          actualizarFiltro('precioMax', value.replace(/[^0-9]/g, ''))
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={limpiarFiltros}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.clearButtonText}>Limpiar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  onPress={aplicarFiltros}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.applyButtonText}>
+                    Aplicar filtros
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <Modal
           visible={vehiculoSeleccionado !== null}

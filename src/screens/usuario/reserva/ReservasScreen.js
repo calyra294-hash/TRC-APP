@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
+
 import { useReservas } from '../../../hooks/useReservas';
 import { getQRAlquiler } from '../../../services/reservas.service';
 
@@ -40,7 +41,6 @@ export default function ReservasScreen() {
 
   const idAlquiler = reserva?.id_alquiler;
 
-  // Actualizar reservas cada vez que se abre esta pantalla.
   useFocusEffect(
     useCallback(() => {
       refrescar();
@@ -48,7 +48,6 @@ export default function ReservasScreen() {
     }, [refrescar])
   );
 
-  // Solicitar un QR seguro al backend cuando exista un alquiler aprobado.
   useEffect(() => {
     let activo = true;
 
@@ -104,44 +103,32 @@ export default function ReservasScreen() {
     actualizarQR();
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#D62828" />
-        <Text style={styles.loadingText}>Cargando tu reserva...</Text>
-      </View>
-    );
-  }
+  const formatearFecha = (fecha) => {
+    if (!fecha) return 'Sin fecha';
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Ionicons name="alert-circle-outline" size={50} color="#D62828" />
-        <Text style={styles.errorTitle}>
-          No se pudieron cargar las reservas
-        </Text>
-        <Text style={styles.errorText}>{error}</Text>
+    let fechaReal;
 
-        <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
-          <Text style={styles.retryText}>Intentar nuevamente</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+    if (fecha._seconds) {
+      fechaReal = new Date(fecha._seconds * 1000);
+    } else if (fecha.seconds) {
+      fechaReal = new Date(fecha.seconds * 1000);
+    } else {
+      const texto = String(fecha);
+      fechaReal = new Date(
+        /^\d{4}-\d{2}-\d{2}$/.test(texto)
+          ? `${texto}T00:00:00`
+          : texto
+      );
+    }
 
-  if (!reservas || reservas.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Ionicons name="calendar-outline" size={60} color="#999" />
-        <Text style={styles.emptyTitle}>No tienes reservas</Text>
-        <Text style={styles.emptyText}>
-          Cuando realices una reserva, aparecerá aquí.
-        </Text>
-      </View>
-    );
-  }
+    if (isNaN(fechaReal.getTime())) return 'Sin fecha';
 
-  const idReserva = reserva.id ?? reserva.id_reserva ?? 'Sin código';
+    return fechaReal.toLocaleDateString('es-NI', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   const obtenerEstado = () => {
     if (
@@ -157,69 +144,102 @@ export default function ReservasScreen() {
       ].includes(estado)
     ) {
       return {
-        titulo: 'Reserva Confirmada',
-        subtitulo: 'Activa · Vigente',
-        color: '#2E7D32',
-        fondo: '#E8F5E9',
-        icono: 'checkmark',
+        titulo: 'Reserva confirmada',
+        subtitulo: 'Tu reserva ha sido aprobada',
+        color: '#16834A',
+        fondo: '#EAF7EF',
+        icono: 'checkmark-circle',
       };
     }
 
     if (['rechazada', 'rechazado'].includes(estado)) {
       return {
-        titulo: 'Reserva Rechazada',
-        subtitulo: 'No disponible',
-        color: '#C62828',
-        fondo: '#FFEBEE',
-        icono: 'close',
+        titulo: 'Reserva rechazada',
+        subtitulo: 'La reserva no fue aprobada',
+        color: '#D62828',
+        fondo: '#FDECEC',
+        icono: 'close-circle',
       };
     }
 
     if (['cancelada', 'cancelado'].includes(estado)) {
       return {
-        titulo: 'Reserva Cancelada',
-        subtitulo: 'No disponible',
-        color: '#757575',
-        fondo: '#EEEEEE',
-        icono: 'close',
+        titulo: 'Reserva cancelada',
+        subtitulo: 'Esta reserva ya no está activa',
+        color: '#777777',
+        fondo: '#F0F0F0',
+        icono: 'remove-circle',
       };
     }
 
     if (['completada', 'completado'].includes(estado)) {
       return {
-        titulo: 'Reserva Completada',
-        subtitulo: 'Finalizada',
-        color: '#1565C0',
-        fondo: '#E3F2FD',
-        icono: 'checkmark',
+        titulo: 'Reserva completada',
+        subtitulo: 'El proceso ha finalizado',
+        color: '#526477',
+        fondo: '#EEF2F6',
+        icono: 'checkmark-done-circle',
       };
     }
 
     return {
-      titulo: 'Reserva Pendiente',
-      subtitulo: 'En espera de aprobación',
-      color: '#EF6C00',
-      fondo: '#FFF3E0',
+      titulo: 'Reserva pendiente',
+      subtitulo: 'Esperando aprobación del administrador',
+      color: '#D97706',
+      fondo: '#FFF4E5',
       icono: 'time',
     };
   };
 
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#D31A24" />
+        <Text style={styles.loadingText}>Cargando tu reserva...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="cloud-offline-outline" size={42} color="#D31A24" />
+        </View>
+
+        <Text style={styles.emptyTitle}>
+          No se pudieron cargar las reservas
+        </Text>
+
+        <Text style={styles.emptyText}>{error}</Text>
+
+        <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
+          <Ionicons name="refresh-outline" size={17} color="#FFFFFF" />
+          <Text style={styles.retryText}>Intentar nuevamente</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!reservas || reservas.length === 0) {
+    return (
+      <View style={styles.center}>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="calendar-outline" size={48} color="#D31A24" />
+        </View>
+
+        <Text style={styles.emptyTitle}>Todavía no tienes reservas</Text>
+
+        <Text style={styles.emptyText}>
+          Cuando reserves uno de nuestros vehículos, podrás consultar aquí
+          todos los detalles de tu reserva.
+        </Text>
+      </View>
+    );
+  }
+
+  const idReserva = reserva.id ?? reserva.id_reserva ?? 'Sin código';
   const estadoVisual = obtenerEstado();
-
-  const formatearFecha = (fecha) => {
-    if (!fecha) return 'Sin fecha';
-
-    const fechaReal = new Date(`${fecha}T00:00:00`);
-
-    if (isNaN(fechaReal.getTime())) return 'Sin fecha';
-
-    return fechaReal.toLocaleDateString('es-NI', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
   const vehiculo = reserva.coche || {};
 
   const nombreVehiculo =
@@ -239,25 +259,27 @@ export default function ReservasScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Mi Reserva</Text>
-          <Text style={styles.subtitle}>
-            Detalles de tu reserva
-          </Text>
+          <View style={styles.headerText}>
+            <Text style={styles.eyebrow}>TITO'S RENT A CAR</Text>
+            <Text style={styles.title}>Mi reserva</Text>
+            <Text style={styles.subtitle}>
+              Consulta el estado y los detalles de tu reservación.
+            </Text>
+          </View>
+
+          <View style={styles.headerIcon}>
+            <Ionicons name="calendar-outline" size={25} color="#D31A24" />
+          </View>
         </View>
 
         <View style={styles.card}>
           <View style={styles.statusRow}>
             <View style={styles.statusLeft}>
-              <View
-                style={[
-                  styles.statusCircle,
-                  { backgroundColor: estadoVisual.color },
-                ]}
-              >
+              <View style={[styles.statusIcon, { backgroundColor: estadoVisual.fondo }]}>
                 <Ionicons
                   name={estadoVisual.icono}
-                  size={17}
-                  color="#FFFFFF"
+                  size={23}
+                  color={estadoVisual.color}
                 />
               </View>
 
@@ -265,32 +287,24 @@ export default function ReservasScreen() {
                 <Text style={styles.statusTitle}>
                   {estadoVisual.titulo}
                 </Text>
-                <Text
-                  style={[
-                    styles.statusSubtitle,
-                    { color: estadoVisual.color },
-                  ]}
-                >
+                <Text style={styles.statusSubtitle}>
                   {estadoVisual.subtitulo}
                 </Text>
               </View>
             </View>
 
-            <View
-              style={[
-                styles.idBadge,
-                { backgroundColor: estadoVisual.fondo },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.idBadgeText,
-                  { color: estadoVisual.color },
-                ]}
-              >
+            <View style={[styles.statusBadge, { backgroundColor: estadoVisual.fondo }]}>
+              <Text style={[styles.statusBadgeText, { color: estadoVisual.color }]}>
                 {estadoVisual.titulo.replace('Reserva ', '')}
               </Text>
             </View>
+          </View>
+
+          <View style={styles.separator} />
+
+          <View style={styles.sectionHeading}>
+            <Ionicons name="car-sport-outline" size={19} color="#D31A24" />
+            <Text style={styles.sectionTitle}>Vehículo reservado</Text>
           </View>
 
           <View style={styles.vehicleCard}>
@@ -302,77 +316,83 @@ export default function ReservasScreen() {
                   resizeMode="contain"
                 />
               ) : (
-                <Ionicons
-                  name="car-sport-outline"
-                  size={38}
-                  color="#999"
-                />
+                <Ionicons name="car-sport-outline" size={42} color="#B8B8B8" />
               )}
             </View>
 
             <View style={styles.vehicleInfo}>
-              <Text style={styles.vehicleName}>
+              <Text style={styles.vehicleName} numberOfLines={2}>
                 {nombreVehiculo}
               </Text>
-              <Text style={styles.vehicleDetails}>
-                {vehiculo.placa
-                  ? `Placa: ${vehiculo.placa}`
-                  : 'Vehículo reservado'}
-              </Text>
+
+              <View style={styles.plateRow}>
+                <Ionicons name="card-outline" size={14} color="#888888" />
+                <Text style={styles.vehicleDetails}>
+                  {vehiculo.placa || 'Vehículo reservado'}
+                </Text>
+              </View>
+
               <Text style={styles.vehiclePrice}>
-                ${precio.toFixed(2)}/día
+                ${precio.toFixed(2)}
+                <Text style={styles.perDay}> / día</Text>
               </Text>
             </View>
           </View>
 
+          <View style={styles.separator} />
+
+          <View style={styles.sectionHeading}>
+            <Ionicons name="calendar-outline" size={19} color="#D31A24" />
+            <Text style={styles.sectionTitle}>Periodo de alquiler</Text>
+          </View>
+
           <View style={styles.datesRow}>
             <View style={styles.dateBox}>
+              <View style={styles.dateIcon}>
+                <Ionicons name="log-in-outline" size={18} color="#D31A24" />
+              </View>
               <Text style={styles.dateLabel}>RECOGIDA</Text>
               <Text style={styles.dateValue}>
                 {formatearFecha(reserva.fecha_inicio)}
               </Text>
-              <Text style={styles.timeValue}>Fecha de inicio</Text>
+              <Text style={styles.dateDescription}>Inicio del alquiler</Text>
             </View>
 
             <View style={styles.dateBox}>
+              <View style={styles.dateIcon}>
+                <Ionicons name="log-out-outline" size={18} color="#D31A24" />
+              </View>
               <Text style={styles.dateLabel}>DEVOLUCIÓN</Text>
               <Text style={styles.dateValue}>
                 {formatearFecha(reserva.fecha_fin)}
               </Text>
-              <Text style={styles.timeValue}>
-                Fecha de devolución
-              </Text>
+              <Text style={styles.dateDescription}>Fin del alquiler</Text>
             </View>
           </View>
 
           <View style={styles.totalBlock}>
             <View>
-              <Text style={styles.sectionLabel}>
-                TOTAL DE LA RESERVA
-              </Text>
+              <Text style={styles.totalLabel}>TOTAL DE LA RESERVA</Text>
               <Text style={styles.totalText}>
                 ${Number(reserva.monto_total || 0).toFixed(2)}
               </Text>
             </View>
 
-            <Ionicons
-              name="receipt-outline"
-              size={30}
-              color="#D62828"
-            />
+            <View style={styles.totalIcon}>
+              <Ionicons name="receipt-outline" size={24} color="#D31A24" />
+            </View>
           </View>
 
           <View style={styles.locationBlock}>
-            <Text style={styles.sectionLabel}>
-              LUGAR DE RECOGIDA
-            </Text>
+            <View style={styles.sectionHeading}>
+              <Ionicons name="location-outline" size={19} color="#D31A24" />
+              <Text style={styles.sectionTitle}>Lugar de recogida</Text>
+            </View>
 
-            <View style={styles.locationRow}>
-              <Ionicons
-                name="location-outline"
-                size={22}
-                color="#D62828"
-              />
+            <View style={styles.locationCard}>
+              <View style={styles.locationIcon}>
+                <Ionicons name="location" size={21} color="#FFFFFF" />
+              </View>
 
               <View style={styles.locationTextContainer}>
                 <Text style={styles.locationTitle}>
@@ -385,21 +405,23 @@ export default function ReservasScreen() {
             </View>
           </View>
 
+          <View style={styles.separator} />
+
           <View style={styles.qrBlock}>
-            <Text style={styles.sectionLabel}>
-              CÓDIGO QR DE ENTREGA
-            </Text>
+            <View style={styles.qrHeading}>
+              <View style={styles.sectionHeading}>
+                <Ionicons name="qr-code-outline" size={20} color="#D31A24" />
+                <Text style={styles.sectionTitle}>Código QR de entrega</Text>
+              </View>
+              <Text style={styles.qrSmallLabel}>ACCESO DE ENTREGA</Text>
+            </View>
 
             {!esAprobada ? (
               <View style={styles.qrMessage}>
-                <Ionicons
-                  name="time-outline"
-                  size={35}
-                  color="#EF6C00"
-                />
-                <Text style={styles.qrMessageTitle}>
-                  QR pendiente
-                </Text>
+                <View style={styles.qrMessageIcon}>
+                  <Ionicons name="time-outline" size={25} color="#D97706" />
+                </View>
+                <Text style={styles.qrMessageTitle}>QR pendiente</Text>
                 <Text style={styles.qrMessageText}>
                   El código estará disponible cuando el administrador
                   apruebe tu reserva.
@@ -407,11 +429,9 @@ export default function ReservasScreen() {
               </View>
             ) : !idAlquiler ? (
               <View style={styles.qrMessage}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={35}
-                  color="#D62828"
-                />
+                <View style={styles.qrMessageIcon}>
+                  <Ionicons name="information-circle-outline" size={25} color="#D31A24" />
+                </View>
                 <Text style={styles.qrMessageTitle}>
                   Alquiler pendiente de registro
                 </Text>
@@ -422,41 +442,39 @@ export default function ReservasScreen() {
               </View>
             ) : qrLoading ? (
               <View style={styles.qrMessage}>
-                <ActivityIndicator size="large" color="#D62828" />
+                <ActivityIndicator size="large" color="#D31A24" />
                 <Text style={styles.qrMessageText}>
                   Generando tu código QR...
                 </Text>
               </View>
             ) : qrToken ? (
-              <>
+              <View style={styles.qrSuccess}>
                 <View style={styles.qrContainer}>
                   <QRCode
                     value={qrToken}
-                    size={160}
+                    size={175}
                     backgroundColor="#FFFFFF"
                     color="#111111"
                   />
                 </View>
 
-                <Text style={styles.qrText}>
-                  Reserva #{idReserva}
-                </Text>
+                <Text style={styles.qrText}>Reserva #{idReserva}</Text>
 
                 <Text style={styles.qrHint}>
                   Presenta este código al administrador para registrar
-                  la entrega del vehículo.
+                  la entrega de tu vehículo.
                 </Text>
-              </>
+              </View>
             ) : (
               <View style={styles.qrMessage}>
-                <Ionicons
-                  name="alert-circle-outline"
-                  size={35}
-                  color="#D62828"
-                />
+                <View style={styles.qrMessageIcon}>
+                  <Ionicons name="alert-circle-outline" size={25} color="#D31A24" />
+                </View>
+
                 <Text style={styles.qrMessageTitle}>
                   No se pudo generar el QR
                 </Text>
+
                 <Text style={styles.qrMessageText}>
                   {qrError || 'Intenta generar el código nuevamente.'}
                 </Text>
@@ -465,9 +483,7 @@ export default function ReservasScreen() {
                   style={styles.qrRetryButton}
                   onPress={actualizarQR}
                 >
-                  <Text style={styles.qrRetryText}>
-                    Generar nuevamente
-                  </Text>
+                  <Text style={styles.qrRetryText}>Generar nuevamente</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -478,24 +494,26 @@ export default function ReservasScreen() {
               style={styles.outlineButton}
               onPress={actualizarReserva}
             >
-              <Text style={styles.outlineButtonText}>
-                Actualizar reserva
-              </Text>
+              <Ionicons name="refresh-outline" size={17} color="#D31A24" />
+              <Text style={styles.outlineButtonText}>Actualizar</Text>
             </TouchableOpacity>
 
             {esAprobada && idAlquiler && (
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[styles.primaryButton, qrLoading && styles.disabledButton]}
                 onPress={actualizarQR}
                 disabled={qrLoading}
               >
-                <Text style={styles.primaryButtonText}>
-                  Renovar QR
-                </Text>
+                <Ionicons name="qr-code-outline" size={17} color="#FFFFFF" />
+                <Text style={styles.primaryButtonText}>Renovar QR</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
+
+        <Text style={styles.footerText}>
+          Gracias por elegir Tito's Rent a Car.
+        </Text>
       </ScrollView>
     </View>
   );
@@ -504,338 +522,458 @@ export default function ReservasScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F5F6F8',
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 30,
+    paddingHorizontal: 17,
+    paddingTop: 12,
+    paddingBottom: 28,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 25,
-    backgroundColor: '#F5F5F5',
+    padding: 28,
+    backgroundColor: '#F5F6F8',
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 15,
-    color: '#666',
-  },
-  errorTitle: {
-    marginTop: 12,
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#333',
-    textAlign: 'center',
-  },
-  errorText: {
-    marginTop: 8,
-    color: '#777',
-    textAlign: 'center',
-  },
-  emptyTitle: {
-    marginTop: 15,
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  emptyText: {
-    marginTop: 8,
     fontSize: 14,
-    color: '#777',
-    textAlign: 'center',
-  },
-  retryButton: {
-    marginTop: 20,
-    backgroundColor: '#D62828',
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: '#666666',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 18,
+  },
+  headerText: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  eyebrow: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: '#D31A24',
+    marginBottom: 5,
   },
   title: {
     fontSize: 25,
     fontWeight: '800',
-    color: '#111',
+    color: '#151515',
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 14,
-    color: '#777',
+    fontSize: 12,
+    color: '#777777',
+  },
+  headerIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 19,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F3D1D1',
-    shadowColor: '#000',
+    borderColor: '#EEEEEE',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 7,
+    shadowOpacity: 0.06,
+    shadowRadius: 9,
     elevation: 3,
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    marginBottom: 15,
   },
   statusLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: 8,
+    marginRight: 5,
   },
-  statusCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
+  statusIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 10,
   },
   statusInfo: {
     flex: 1,
   },
   statusTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#222',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#202020',
   },
   statusSubtitle: {
-    fontSize: 12,
-    marginTop: 3,
-    fontWeight: '600',
-  },
-  idBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  idBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    color: '#777777',
+    marginTop: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'capitalize',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#EEEEEE',
+    marginVertical: 16,
+  },
+  sectionHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 11,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#242424',
+    marginLeft: 7,
   },
   vehicleCard: {
     flexDirection: 'row',
-    backgroundColor: '#F7F7F7',
+    alignItems: 'center',
+    backgroundColor: '#F7F7F8',
     borderRadius: 14,
-    padding: 12,
-    marginBottom: 16,
+    padding: 11,
   },
   vehicleImage: {
-    width: 82,
-    height: 65,
-    borderRadius: 10,
-    backgroundColor: '#EAEAEA',
+    width: 105,
+    height: 78,
+    borderRadius: 11,
+    backgroundColor: '#EEEEEF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
     overflow: 'hidden',
   },
   vehicleImageReal: {
-    width: 82,
-    height: 65,
-    borderRadius: 10,
+    width: '100%',
+    height: '100%',
   },
   vehicleInfo: {
     flex: 1,
     justifyContent: 'center',
   },
   vehicleName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#222',
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#202020',
+  },
+  plateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
   },
   vehicleDetails: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#777',
+    fontSize: 11,
+    color: '#777777',
+    marginLeft: 5,
   },
   vehiclePrice: {
-    marginTop: 5,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#D62828',
+    marginTop: 7,
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#D31A24',
+  },
+  perDay: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#777777',
   },
   datesRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 18,
   },
   dateBox: {
     flex: 1,
     backgroundColor: '#FAFAFA',
-    borderRadius: 12,
+    borderRadius: 13,
     padding: 12,
     borderWidth: 1,
     borderColor: '#EEEEEE',
   },
+  dateIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#FDEDEE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
   dateLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#888',
-    marginBottom: 7,
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#888888',
+    marginBottom: 6,
   },
   dateValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#222',
-    textTransform: 'capitalize',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#222222',
   },
-  timeValue: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#777',
+  dateDescription: {
+    marginTop: 5,
+    fontSize: 10,
+    color: '#888888',
   },
   totalBlock: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFF7F7',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 14,
+    padding: 15,
     borderWidth: 1,
-    borderColor: '#F3D1D1',
+    borderColor: '#F7DEDF',
   },
-  totalText: {
-    marginTop: 3,
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#D62828',
-  },
-  locationBlock: {
-    marginBottom: 20,
-  },
-  sectionLabel: {
+  totalLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#888',
+    color: '#777777',
     letterSpacing: 0.5,
-    marginBottom: 9,
   },
-  locationRow: {
+  totalText: {
+    marginTop: 5,
+    fontSize: 25,
+    fontWeight: '900',
+    color: '#D31A24',
+  },
+  totalIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationBlock: {
+    marginTop: 19,
+  },
+  locationCard: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F7F8',
+    borderRadius: 13,
+    padding: 12,
+  },
+  locationIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#D31A24',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   locationTextContainer: {
     flex: 1,
-    marginLeft: 9,
+    marginLeft: 10,
   },
   locationTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#292929',
   },
   locationSubtitle: {
-    marginTop: 3,
-    fontSize: 12,
-    color: '#777',
+    marginTop: 4,
+    fontSize: 11,
+    color: '#777777',
   },
   qrBlock: {
+    marginTop: 2,
     alignItems: 'center',
-    marginBottom: 20,
+  },
+  qrHeading: {
+    width: '100%',
+  },
+  qrSmallLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#999999',
+    marginTop: -5,
+    marginBottom: 12,
+  },
+  qrSuccess: {
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 15,
+    padding: 17,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   qrContainer: {
-    width: 190,
-    height: 190,
+    width: 205,
+    height: 205,
     backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    borderRadius: 12,
+    borderColor: '#EAEAEA',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 5,
+  },
+  qrText: {
+    marginTop: 13,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#222222',
+  },
+  qrHint: {
+    marginTop: 6,
+    fontSize: 11,
+    color: '#777777',
+    textAlign: 'center',
+    lineHeight: 17,
   },
   qrMessage: {
     width: '100%',
-    minHeight: 140,
+    minHeight: 145,
     backgroundColor: '#FAFAFA',
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#EEEEEE',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 18,
   },
+  qrMessageIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   qrMessageTitle: {
-    marginTop: 9,
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#333333',
     textAlign: 'center',
   },
   qrMessageText: {
     marginTop: 7,
-    fontSize: 12,
-    color: '#777',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  qrText: {
-    marginTop: 12,
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#333',
-    textAlign: 'center',
-  },
-  qrHint: {
-    marginTop: 5,
     fontSize: 11,
-    color: '#777',
+    color: '#777777',
     textAlign: 'center',
     lineHeight: 17,
   },
   qrRetryButton: {
     marginTop: 12,
-    backgroundColor: '#D62828',
+    backgroundColor: '#D31A24',
     paddingHorizontal: 18,
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 20,
   },
   qrRetryText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
   },
   buttonsRow: {
     flexDirection: 'row',
     gap: 10,
+    marginTop: 20,
   },
   outlineButton: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#D62828',
-    borderRadius: 25,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: '#D31A24',
+    borderRadius: 12,
+    paddingVertical: 13,
   },
   outlineButtonText: {
-    color: '#D62828',
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
+    color: '#D31A24',
+    fontSize: 12,
+    fontWeight: '800',
   },
   primaryButton: {
     flex: 1,
-    backgroundColor: '#D62828',
-    borderRadius: 25,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 7,
+    backgroundColor: '#D31A24',
+    borderRadius: 12,
+    paddingVertical: 13,
   },
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  footerText: {
+    marginTop: 17,
     textAlign: 'center',
+    fontSize: 11,
+    color: '#999999',
+  },
+  emptyIconContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  emptyTitle: {
+    marginTop: 5,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#252525',
+    textAlign: 'center',
+  },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#777777',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 20,
+    backgroundColor: '#D31A24',
+    paddingHorizontal: 23,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 12,
   },
 });
