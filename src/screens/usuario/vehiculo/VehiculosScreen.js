@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useMemo } from 'react';
 
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,13 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import VehicleCard from '../../../components/VehicleCard.js';
 import DetalleVehiculoScreen from './DetalleVehiculoScreen.js';
-
 import { useVehiculos, useCategorias } from '../../../hooks/index.js';
-
-import { getReservas } from '../../../services/reservas.service.js';
-import { getAlquileres } from '../../../services/alquileres.service.js';
-
+import { getDisponibilidadVehiculos } from '../../../services/alquileres.service.js';
 import { styles } from './VehiculosScreen.styles.js';
 
 export default function VehiculosScreen({ navigation }) {
@@ -34,517 +29,114 @@ export default function VehiculosScreen({ navigation }) {
     refrescar,
   } = useVehiculos();
 
+  const { categorias, loadingCategorias } = useCategorias();
+
   const [busqueda, setBusqueda] = useState('');
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
+  const [disponibilidades, setDisponibilidades] = useState([]);
+  const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(true);
+
+  const cargarDisponibilidad = useCallback(async () => {
+    try {
+      setLoadingDisponibilidad(true);
+
+      const datos = await getDisponibilidadVehiculos();
+
+      setDisponibilidades(Array.isArray(datos) ? datos : []);
+    } catch (error) {
+      console.error('Error cargando disponibilidad:', error);
+      setDisponibilidades([]);
+    } finally {
+      setLoadingDisponibilidad(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarDisponibilidad();
+  }, [cargarDisponibilidad]);
+
+  const disponibilidadesPorVehiculo = useMemo(() => {
+    const mapa = {};
+
+    disponibilidades.forEach((item) => {
+      mapa[String(item.id_coche)] = item;
+    });
+
+    return mapa;
+  }, [disponibilidades]);
 
   const vehiculosFiltrados = useMemo(() => {
     if (!vehiculos) return [];
 
+    const query = busqueda.toLowerCase().trim();
+
+    if (!query) return vehiculos;
+
     return vehiculos.filter((item) => {
-      // Normalizamos el texto de búsqueda (sin espacios extra y en minúsculas)
-      const query = busqueda.toLowerCase().trim();
+      const campos = [
+        item.marca,
+        item.modelo,
+        item.nombre,
+        item.categoria,
+        item.categoria_nombre,
+        item.color,
+        item.transmision,
+        item.combustible,
+      ];
 
-      if (!query) return true; // Si no hay búsqueda, pasa el filtro base
-
-      // Campos por los cuales queremos permitir la búsqueda global
-      const marca = (item.marca || '').toLowerCase();
-      const modelo = (item.modelo || '').toLowerCase();
-      const nombre = (item.nombre || '').toLowerCase();
-      const categoria = (item.categoria || '').toLowerCase();
-      const color = (item.color || '').toLowerCase();
-      const transmision = (item.transmision || '').toLowerCase();
-      const combustible = (item.combustible || '').toLowerCase();
-
-      // Verificamos si la consulta coincide con alguno de los campos
-      return (
-        marca.includes(query) ||
-        modelo.includes(query) ||
-        nombre.includes(query) ||
-        categoria.includes(query) ||
-        color.includes(query) ||
-        transmision.includes(query) ||
-        combustible.includes(query)
+      return campos.some((campo) =>
+        String(campo || '').toLowerCase().includes(query)
       );
     });
   }, [vehiculos, busqueda]);
-
-  const { categorias, loadingCategorias } =
-    useCategorias();
-
-  const [vehiculoSeleccionado, setVehiculoSeleccionado] =
-    useState(null);
-
-  const [reservas, setReservas] = useState([]);
-
-  const [alquileres, setAlquileres] = useState([]);
-
-  const [cargandoReservas, setCargandoReservas] =
-    useState(true);
-
-  const [cargandoAlquileres, setCargandoAlquileres] =
-    useState(true);
 
   const handleSeleccionarVehiculo = (vehiculo) => {
     setVehiculoSeleccionado(vehiculo);
   };
 
-  // ==============================
-  // CARGAR RESERVAS
-  // ==============================
-  const cargarReservas = useCallback(async () => {
-    try {
-      setCargandoReservas(true);
-
-      const data = await getReservas();
-
-      setReservas(
-        Array.isArray(data)
-          ? data
-          : []
-      );
-    } catch (error) {
-      console.error(
-        'Error al cargar reservas para disponibilidad:',
-        error
-      );
-
-      setReservas([]);
-    } finally {
-      setCargandoReservas(false);
-    }
-  }, []);
-
-  // ==============================
-  // CARGAR ALQUILERES
-  // ==============================
-  const cargarAlquileres = useCallback(async () => {
-    try {
-      setCargandoAlquileres(true);
-
-      // null = consultar todos los alquileres
-      const data = await getAlquileres(null);
-
-      setAlquileres(
-        Array.isArray(data)
-          ? data
-          : []
-      );
-    } catch (error) {
-      console.error(
-        'Error al cargar alquileres para disponibilidad:',
-        error
-      );
-
-      setAlquileres([]);
-    } finally {
-      setCargandoAlquileres(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    cargarReservas();
-    cargarAlquileres();
-  }, [
-    cargarReservas,
-    cargarAlquileres,
-  ]);
-
-  // ==============================
-  // FORMATEAR FECHA
-  // ==============================
-  const formatearFecha = (fecha) => {
-    if (!fecha) return null;
-
-    const fechaObj = new Date(fecha);
-
-    if (isNaN(fechaObj.getTime())) {
-      return null;
-    }
-
-    return fechaObj.toLocaleDateString(
-      'es-NI',
-      {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      }
-    );
+  const handleActualizar = async () => {
+    await Promise.all([
+      Promise.resolve(refrescar()),
+      cargarDisponibilidad(),
+    ]);
   };
 
-  // ==============================
-  // OBTENER DISPONIBILIDAD
-  // ==============================
-  const obtenerDisponibilidad = (vehiculo) => {
-    const idVehiculo = String(
-      vehiculo.id ||
-      vehiculo.id_coche ||
-      ''
-    );
-
-    // --------------------------------
-    // BUSCAR ALQUILERES DEL VEHÍCULO
-    // --------------------------------
-    const alquileresVehiculo =
-      alquileres.filter(
-        (alquiler) => {
-          const idCocheAlquiler =
-            String(
-              alquiler.id_coche ||
-              alquiler.vehiculo
-                ?.id_coche ||
-              ''
-            );
-
-          return (
-            idCocheAlquiler ===
-            idVehiculo
-          );
-        }
-      );
-
-    // --------------------------------
-    // REVISAR SI EXISTE ALQUILER ACTIVO
-    // --------------------------------
-    const alquilerActivo =
-      alquileresVehiculo.find(
-        (alquiler) => {
-          const estado =
-            String(
-              alquiler.estado_alquiler ||
-              alquiler.estado ||
-              ''
-            )
-              .toLowerCase()
-              .trim();
-
-          return [
-            'alquilado',
-            'activo',
-            'en curso',
-            'en_curso',
-            'vigente',
-          ].includes(estado);
-        }
-      );
-
-    // Si está alquilado actualmente,
-    // el vehículo está bloqueado.
-    if (alquilerActivo) {
-      const fechaFin =
-        alquilerActivo.fecha_fin;
-
-      return {
-        estaReservado: true,
-        fechaDisponible:
-          formatearFecha(
-            fechaFin
-          ),
-      };
-    }
-
-    // --------------------------------
-    // RESERVAS DEL VEHÍCULO
-    // --------------------------------
-    const reservasVehiculo =
-      reservas.filter(
-        (reserva) => {
-          const idCocheReserva =
-            String(
-              reserva.id_coche ||
-              reserva.coche
-                ?.id_coche ||
-              ''
-            );
-
-          const estadoReserva =
-            String(
-              reserva.estado_aprobacion ||
-              ''
-            )
-              .toLowerCase()
-              .trim();
-
-          const estadosNoBloqueantes = [
-            'rechazada',
-            'rechazado',
-            'cancelada',
-            'cancelado',
-          ];
-
-          if (
-            estadosNoBloqueantes.includes(
-              estadoReserva
-            )
-          ) {
-            return false;
-          }
-
-          return (
-            idCocheReserva ===
-            idVehiculo
-          );
-        }
-      );
-
-    if (
-      reservasVehiculo.length === 0
-    ) {
-      return {
-        estaReservado: false,
-        fechaDisponible: null,
-      };
-    }
-
-    // --------------------------------
-    // REVISAR CADA RESERVA
-    // --------------------------------
-    const reservasActivas =
-      reservasVehiculo
-        .map((reserva) => {
-          const inicio =
-            new Date(
-              reserva.fecha_inicio
-            );
-
-          const fin =
-            new Date(
-              reserva.fecha_fin
-            );
-
-          if (
-            isNaN(
-              inicio.getTime()
-            ) ||
-            isNaN(
-              fin.getTime()
-            )
-          ) {
-            return null;
-          }
-
-          // Buscar alquiler relacionado
-          const idReserva =
-            String(
-              reserva.id_reserva ||
-              reserva.id ||
-              ''
-            );
-
-          const alquilerRelacionado =
-            alquileresVehiculo.find(
-              (alquiler) =>
-                String(
-                  alquiler.id_reserva ||
-                  ''
-                ) === idReserva
-            );
-
-          // --------------------------------
-          // SI EL ALQUILER YA FINALIZÓ
-          // LA RESERVA YA NO BLOQUEA
-          // --------------------------------
-          if (
-            alquilerRelacionado
-          ) {
-            const estadoAlquiler =
-              String(
-                alquilerRelacionado.estado_alquiler ||
-                alquilerRelacionado.estado ||
-                ''
-              )
-                .toLowerCase()
-                .trim();
-
-            const estadosFinalizados = [
-              'finalizado',
-              'finalizada',
-              'completado',
-              'completada',
-              'cancelado',
-              'cancelada',
-            ];
-
-            if (
-              estadosFinalizados.includes(
-                estadoAlquiler
-              )
-            ) {
-              return null;
-            }
-          }
-
-          inicio.setHours(
-            0,
-            0,
-            0,
-            0
-          );
-
-          fin.setHours(
-            23,
-            59,
-            59,
-            999
-          );
-
-          return {
-            inicio,
-            fin,
-          };
-        })
-        .filter(Boolean);
-
-    // --------------------------------
-    // FECHA ACTUAL
-    // --------------------------------
-    const hoy = new Date();
-
-    hoy.setHours(
-      0,
-      0,
-      0,
-      0
-    );
-
-    // Solo reservas que todavía
-    // no han terminado
-    const reservasPendientes =
-      reservasActivas
-        .filter(
-          (reserva) =>
-            reserva.fin >= hoy
-        )
-        .sort(
-          (a, b) =>
-            a.inicio.getTime() -
-            b.inicio.getTime()
-        );
-
-    if (
-      reservasPendientes.length === 0
-    ) {
-      return {
-        estaReservado: false,
-        fechaDisponible: null,
-      };
-    }
-
-    // --------------------------------
-    // RESERVA ACTUAL
-    // --------------------------------
-    const reservaActual =
-      reservasPendientes.find(
-        (reserva) =>
-          reserva.inicio <= hoy &&
-          reserva.fin >= hoy
-      );
-
-    if (reservaActual) {
-      const siguienteDia =
-        new Date(
-          reservaActual.fin
-        );
-
-      siguienteDia.setDate(
-        siguienteDia.getDate() + 1
-      );
-
-      return {
-        estaReservado: true,
-        fechaDisponible:
-          formatearFecha(
-            siguienteDia
-          ),
-      };
-    }
-
-    // Si existe una reserva futura,
-    // por ahora el vehículo sigue
-    // apareciendo como disponible
-    // hasta que llegue esa fecha.
-    return {
-      estaReservado: false,
-      fechaDisponible: null,
-    };
-  };
-
-  // ==============================
-  // ESTADO VACÍO
-  // ==============================
   const renderEmptyState = () => (
-    <View
-      style={
-        styles.emptyContainer
-      }
-    >
-      <Ionicons
-        name="car-outline"
-        size={64}
-        color="#D1D5DB"
-      />
+    <View style={styles.emptyContainer}>
+      <Ionicons name="car-outline" size={64} color="#D1D5DB" />
 
-      <Text
-        style={
-          styles.emptyTitle
-        }
-      >
-        {error
-          ? 'Error de conexión'
-          : 'No hay vehículos disponibles'}
+      <Text style={styles.emptyTitle}>
+        {error ? 'Error de conexión' : 'No hay vehículos disponibles'}
       </Text>
 
-      <Text
-        style={
-          styles.emptySubtitle
-        }
-      >
-        {error
-          ? error
-          : 'Intenta cambiando los filtros o vuelve más tarde.'}
+      <Text style={styles.emptySubtitle}>
+        {error || 'Intenta cambiando los filtros o vuelve más tarde.'}
       </Text>
     </View>
   );
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-    >
-      <View
-        style={styles.container}
-      >
-        {/* HEADER */}
-        <View
-          style={
-            styles.headerContainer
-          }
-        >
-          <Text
-            style={styles.title}
-          >
-            Vehículos
-          </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          <View style={styles.headerIntro}>
+            <Text style={styles.eyebrow}>TITO'S RENT A CAR</Text>
 
-          <View
-            style={
-              styles.searchRow
-            }
-          >
-            <View
-              style={
-                styles.searchBar
-              }
-            >
-              <Ionicons
-                name="search-outline"
-                size={20}
-                color="#9CA3AF"
-              />
+            <Text style={styles.title}>Encuentra tu vehículo</Text>
+
+            <Text style={styles.subtitle}>
+              Elegí el vehículo ideal para tu próximo viaje.
+            </Text>
+          </View>
+
+          <View style={styles.searchRow}>
+            <View style={styles.searchBar}>
+              <Ionicons name="search-outline" size={20} color="#9CA3AF" />
 
               <TextInput
                 placeholder="Buscar vehículo..."
                 placeholderTextColor="#9CA3AF"
-                style={
-                  styles.searchInput
-                }
+                style={styles.searchInput}
                 value={busqueda}
                 onChangeText={setBusqueda}
                 clearButtonMode="while-editing"
@@ -552,186 +144,109 @@ export default function VehiculosScreen({ navigation }) {
             </View>
 
             <TouchableOpacity
-              style={
-                styles.filterButton
-              }
+              style={styles.filterButton}
+              activeOpacity={0.8}
             >
-              <Ionicons
-                name="options-outline"
-                size={18}
-                color="#E53935"
-              />
-
-              <Text
-                style={
-                  styles.filterButtonText
-                }
-              >
-                Filtros
-              </Text>
+              <Ionicons name="options-outline" size={18} color="#D31A24" />
+              <Text style={styles.filterButtonText}>Filtros</Text>
             </TouchableOpacity>
           </View>
+
+          
 
           {loadingCategorias ? (
             <ActivityIndicator
               size="small"
-              color="#E53935"
-              style={{
-                paddingVertical: 12,
-              }}
+              color="#D31A24"
+              style={{ paddingVertical: 12 }}
             />
           ) : (
             <ScrollView
               horizontal
-              showsHorizontalScrollIndicator={
-                false
-              }
-              contentContainerStyle={
-                styles.categoriesScroll
-              }
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScroll}
             >
-              {categorias.map(
-                (cat) => {
-                  const isSelected =
-                    categoriaActiva ===
-                    cat;
+              {(categorias || []).map((cat) => {
+                const isSelected = categoriaActiva === cat;
 
-                  return (
-                    <TouchableOpacity
-                      key={
-                        cat
-                      }
-                      onPress={() =>
-                        setCategoriaActiva(
-                          cat
-                        )
-                      }
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => setCategoriaActiva(cat)}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.chip,
+                      isSelected && styles.chipActive,
+                    ]}
+                  >
+                    <Text
                       style={[
-                        styles.chip,
-                        isSelected &&
-                        styles.chipActive,
+                        styles.chipText,
+                        isSelected && styles.chipTextActive,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          isSelected &&
-                          styles.chipTextActive,
-                        ]}
-                      >
-                        {
-                          cat
-                        }
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-              )}
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           )}
+
+          
         </View>
 
-        {/* LISTA */}
-        {loading ||
-          cargandoReservas ||
-          cargandoAlquileres ? (
-          <View
-            style={
-              styles.loadingContainer
-            }
-          >
-            <ActivityIndicator
-              size="large"
-              color="#E53935"
-            />
+        {loading || loadingDisponibilidad ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#D31A24" />
 
-            <Text
-              style={{
-                marginTop: 10,
-                color: '#6B7280',
-              }}
-            >
-              Consultando disponibilidad...
+            <Text style={styles.loadingText}>
+              Cargando vehículos y disponibilidad...
             </Text>
           </View>
         ) : (
           <FlatList
             data={vehiculosFiltrados}
-            keyExtractor={(
-              item
-            ) =>
-              item.id.toString()
+            keyExtractor={(item, index) =>
+              String(item.id_coche || item.id || index)
             }
-            renderItem={({
-              item,
-            }) => {
-              const disponibilidad =
-                obtenerDisponibilidad(
-                  item
-                );
+            renderItem={({ item }) => {
+              const idCoche = String(
+                item.id_coche || item.id || ''
+              );
 
               return (
                 <VehicleCard
-                  vehiculo={
-                    item
-                  }
+                  vehiculo={item}
                   disponibilidad={
-                    disponibilidad
+                    disponibilidadesPorVehiculo[idCoche] || null
                   }
-                  onSelect={
-                    handleSeleccionarVehiculo
-                  }
+                  onSelect={handleSeleccionarVehiculo}
                 />
               );
             }}
-            contentContainerStyle={
-              styles.listContent
-            }
-            showsVerticalScrollIndicator={
-              false
-            }
-            ListEmptyComponent={
-              renderEmptyState
-            }
-            onRefresh={async () => {
-              await refrescar();
-              await cargarReservas();
-              await cargarAlquileres();
-            }}
-            refreshing={
-              loading ||
-              cargandoReservas ||
-              cargandoAlquileres
-            }
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={renderEmptyState}
+            onRefresh={handleActualizar}
+            refreshing={loading || loadingDisponibilidad}
           />
         )}
 
-        {/* MODAL DETALLE */}
         <Modal
-          visible={
-            vehiculoSeleccionado !==
-            null
-          }
+          visible={vehiculoSeleccionado !== null}
           animationType="slide"
           transparent={false}
-          onRequestClose={() =>
-            setVehiculoSeleccionado(
-              null
-            )
-          }
+          onRequestClose={() => setVehiculoSeleccionado(null)}
         >
           <DetalleVehiculoScreen
             route={{
               params: {
-                vehiculo:
-                  vehiculoSeleccionado,
+                vehiculo: vehiculoSeleccionado,
               },
             }}
             navigation={{
-              goBack: () =>
-                setVehiculoSeleccionado(
-                  null
-                ),
+              goBack: () => setVehiculoSeleccionado(null),
             }}
           />
         </Modal>

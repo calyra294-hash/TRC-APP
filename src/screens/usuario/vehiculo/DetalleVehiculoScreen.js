@@ -16,14 +16,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DetalleVehiculoScreen.styles.js';
 
-import {
-  crearReserva,
-  getReservas,
-} from '../../../services/reservas.service.js';
+import { crearReserva } from '../../../services/reservas.service.js';
 
 const e = React.createElement;
 
-// USUARIO TEMPORAL PARA PRUEBAS
 const ID_USUARIO_TEMPORAL = 1;
 
 export default function DetalleVehiculoScreen({ route, navigation }) {
@@ -72,8 +68,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
   }
 
   const abrirReserva = () => {
-    console.log('BOTÓN RESERVAR AHORA PRESIONADO');
-
     setFechaInicio(null);
     setFechaFin(null);
     setMostrarCalendarioInicio(false);
@@ -111,6 +105,9 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
 
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+
     if (fin <= inicio) {
       Alert.alert(
         'Fechas incorrectas',
@@ -119,7 +116,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
       return;
     }
 
-    const cantidadDias = Math.ceil(
+    const cantidadDias = Math.round(
       (fin.getTime() - inicio.getTime()) /
       (1000 * 60 * 60 * 24)
     );
@@ -133,54 +130,16 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
     try {
       setGuardando(true);
 
-      // VERIFICAR DISPONIBILIDAD DEL VEHÍCULO
-      const reservas = await getReservas();
-
       const idCoche = Number(
         vehiculo.id_coche || vehiculo.id
       );
 
-      const fechaInicioSeleccionada =
-        formatearFecha(fechaInicio);
-
-      const fechaFinSeleccionada =
-        formatearFecha(fechaFin);
-
-      const reservaCruza = reservas.some((reserva) => {
-        const mismaCoche =
-          Number(reserva.id_coche) === idCoche;
-
-        const estado = String(
-          reserva.estado_aprobacion || ''
-        ).toLowerCase();
-
-        const noBloquea =
-          estado === 'rechazada' ||
-          estado === 'cancelada' ||
-          estado === 'cancelado';
-
-        if (!mismaCoche || noBloquea) {
-          return false;
-        }
-
-        const inicioExistente = reserva.fecha_inicio;
-        const finExistente = reserva.fecha_fin;
-
-        return (
-          fechaInicioSeleccionada <= finExistente &&
-          fechaFinSeleccionada >= inicioExistente
-        );
-      });
-
-      if (reservaCruza) {
-        Alert.alert(
-          'Vehículo no disponible',
-          'Este vehículo ya está reservado para las fechas seleccionadas. Por favor, elegí otras fechas o seleccioná otro vehículo.'
-        );
-
-        setGuardando(false);
-        return;
+      if (!Number.isFinite(idCoche) || idCoche <= 0) {
+        throw new Error('No se pudo identificar el vehículo seleccionado.');
       }
+
+      const fechaInicioSeleccionada = formatearFecha(inicio);
+      const fechaFinSeleccionada = formatearFecha(fin);
 
       const datosReserva = {
         id_usuario: ID_USUARIO_TEMPORAL,
@@ -193,17 +152,15 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
 
       console.log('Datos de la reserva:', datosReserva);
 
+      // El backend comprueba las reservas y alquileres de todos los usuarios.
       await crearReserva(datosReserva);
 
       setModalReserva(false);
 
       Alert.alert(
         'Reserva realizada',
-        `Tu reserva fue registrada correctamente.\n\nVehículo: ${vehiculo.nombre ||
-        `${vehiculo.marca} ${vehiculo.modelo}`
-        }\nFechas: ${fechaInicioSeleccionada} al ${fechaFinSeleccionada}\nTotal: $${montoTotal.toFixed(
-          2
-        )}`,
+        `Tu reserva fue registrada correctamente.\n\nVehículo: ${vehiculo.nombre || `${vehiculo.marca} ${vehiculo.modelo}`
+        }\nFechas: ${fechaInicioSeleccionada} al ${fechaFinSeleccionada}\nTotal: $${montoTotal.toFixed(2)}`,
         [
           {
             text: 'OK',
@@ -218,10 +175,18 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
     } catch (error) {
       console.error('Error al crear reserva:', error);
 
+      const mensaje =
+        error.message || 'No se pudo registrar la reserva.';
+
+      const esConflicto =
+        error.status === 409 ||
+        /reserva para las fechas|ocupado por un alquiler|no está disponible|fechas seleccionadas/i.test(
+          mensaje
+        );
+
       Alert.alert(
-        'Error',
-        error.message ||
-        'No se pudo registrar la reserva.'
+        esConflicto ? 'Vehículo no disponible' : 'Error',
+        mensaje
       );
     } finally {
       setGuardando(false);
@@ -230,11 +195,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
 
   const fechaHoy = formatearFecha(new Date());
 
-  const calendarioWeb = (
-    fecha,
-    setFecha,
-    fechaMinima
-  ) =>
+  const calendarioWeb = (fecha, setFecha, fechaMinima) =>
     e('input', {
       type: 'date',
       value: fecha ? formatearFecha(fecha) : '',
@@ -307,11 +268,9 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
         e(
           View,
           { style: styles.badge4x4 },
-
           e(
             Text,
             { style: styles.badge4x4Text },
-
             vehiculo.categoria_nombre ||
             vehiculo.categoria ||
             '4x4'
@@ -334,7 +293,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             e(
               Text,
               { style: styles.title },
-
               vehiculo.nombre ||
               `${vehiculo.marca} ${vehiculo.modelo}`
             ),
@@ -348,25 +306,21 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 size: 16,
                 color: '#FFC107',
               }),
-
               e(Ionicons, {
                 name: 'star',
                 size: 16,
                 color: '#FFC107',
               }),
-
               e(Ionicons, {
                 name: 'star',
                 size: 16,
                 color: '#FFC107',
               }),
-
               e(Ionicons, {
                 name: 'star',
                 size: 16,
                 color: '#FFC107',
               }),
-
               e(Ionicons, {
                 name: 'star',
                 size: 16,
@@ -376,9 +330,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
               e(
                 Text,
                 { style: styles.ratingText },
-
                 '4.8 ',
-
                 e(
                   Text,
                   { style: styles.reviewsText },
@@ -391,14 +343,11 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(
             View,
             { style: styles.priceContainer },
-
             e(
               Text,
               { style: styles.priceText },
-
               `$${vehiculo.valor_dia || vehiculo.precio}`
             ),
-
             e(
               Text,
               { style: styles.perDayText },
@@ -420,27 +369,22 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(
             View,
             { style: styles.gridItem },
-
             e(Ionicons, {
               name: 'people',
               size: 24,
               color: '#4C1D95',
             }),
-
             e(
               View,
               { style: styles.gridTextContainer },
-
               e(
                 Text,
                 { style: styles.gridLabel },
                 'PASAJEROS'
               ),
-
               e(
                 Text,
                 { style: styles.gridValue },
-
                 `${detalles.pasajeros ?? vehiculo.pasajeros ?? 5} personas`
               )
             )
@@ -449,27 +393,22 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(
             View,
             { style: styles.gridItem },
-
             e(Ionicons, {
               name: 'cog',
               size: 24,
               color: '#4C1D95',
             }),
-
             e(
               View,
               { style: styles.gridTextContainer },
-
               e(
                 Text,
                 { style: styles.gridLabel },
                 'TRANSMISIÓN'
               ),
-
               e(
                 Text,
                 { style: styles.gridValue },
-
                 detalles.transmision ||
                 vehiculo.transmision ||
                 'Manual'
@@ -480,27 +419,22 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(
             View,
             { style: styles.gridItem },
-
             e(Ionicons, {
               name: 'color-fill',
               size: 24,
               color: '#E53935',
             }),
-
             e(
               View,
               { style: styles.gridTextContainer },
-
               e(
                 Text,
                 { style: styles.gridLabel },
                 'COMBUSTIBLE'
               ),
-
               e(
                 Text,
                 { style: styles.gridValue },
-
                 detalles.combustible ||
                 vehiculo.combustible ||
                 'Gasolina'
@@ -511,27 +445,22 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(
             View,
             { style: styles.gridItem },
-
             e(Ionicons, {
               name: 'briefcase',
               size: 24,
               color: '#0284C7',
             }),
-
             e(
               View,
               { style: styles.gridTextContainer },
-
               e(
                 Text,
                 { style: styles.gridLabel },
                 'MALETERO'
               ),
-
               e(
                 Text,
                 { style: styles.gridValue },
-
                 detalles.maletero ||
                 vehiculo.maletero ||
                 '850L'
@@ -561,19 +490,15 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
       e(
         View,
         null,
-
         e(
           Text,
           { style: styles.footerSubText },
           'Precio por día'
         ),
-
         e(
           Text,
           { style: styles.footerPrice },
-
           `$${vehiculo.valor_dia || vehiculo.precio} `,
-
           e(
             Text,
             { style: styles.currencyText },
@@ -589,7 +514,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           activeOpacity: 0.8,
           onPress: abrirReserva,
         },
-
         e(
           Text,
           { style: styles.reserveButtonText },
@@ -654,10 +578,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
 
             e(
               TouchableOpacity,
-              {
-                onPress: cerrarReserva,
-              },
-
+              { onPress: cerrarReserva },
               e(Ionicons, {
                 name: 'close-circle',
                 size: 30,
@@ -675,7 +596,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 marginBottom: 20,
               },
             },
-
             vehiculo.nombre ||
             `${vehiculo.marca} ${vehiculo.modelo}`
           ),
@@ -702,9 +622,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
               {
                 onPress: () =>
                   setMostrarCalendarioInicio(true),
-
                 disabled: guardando,
-
                 style: {
                   borderWidth: 1,
                   borderColor: '#ccc',
@@ -716,23 +634,18 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                   justifyContent: 'space-between',
                 },
               },
-
               e(
                 Text,
                 {
                   style: {
                     fontSize: 16,
-                    color: fechaInicio
-                      ? '#222'
-                      : '#888',
+                    color: fechaInicio ? '#222' : '#888',
                   },
                 },
-
                 fechaInicio
                   ? formatearFecha(fechaInicio)
                   : 'Seleccionar fecha'
               ),
-
               e(Ionicons, {
                 name: 'calendar-outline',
                 size: 23,
@@ -745,23 +658,15 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
           e(DateTimePicker, {
             value: fechaInicio || new Date(),
             mode: 'date',
-            display:
-              Platform.OS === 'ios'
-                ? 'spinner'
-                : 'default',
-
+            display: Platform.OS === 'ios' ? 'spinner' : 'default',
             minimumDate: new Date(),
-
             onChange: (event, selectedDate) => {
               setMostrarCalendarioInicio(false);
 
               if (selectedDate) {
                 setFechaInicio(selectedDate);
 
-                if (
-                  fechaFin &&
-                  selectedDate >= fechaFin
-                ) {
+                if (fechaFin && selectedDate >= fechaFin) {
                   setFechaFin(null);
                 }
               }
@@ -793,7 +698,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                   backgroundColor: '#f5f5f5',
                 },
               },
-
               e(
                 Text,
                 {
@@ -802,7 +706,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                     color: '#999',
                   },
                 },
-
                 'Primero seleccioná la fecha de inicio'
               )
             )
@@ -822,9 +725,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 {
                   onPress: () =>
                     setMostrarCalendarioFin(true),
-
                   disabled: guardando,
-
                   style: {
                     borderWidth: 1,
                     borderColor: '#ccc',
@@ -836,23 +737,18 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                     justifyContent: 'space-between',
                   },
                 },
-
                 e(
                   Text,
                   {
                     style: {
                       fontSize: 16,
-                      color: fechaFin
-                        ? '#222'
-                        : '#888',
+                      color: fechaFin ? '#222' : '#888',
                     },
                   },
-
                   fechaFin
                     ? formatearFecha(fechaFin)
                     : 'Seleccionar fecha'
                 ),
-
                 e(Ionicons, {
                   name: 'calendar-outline',
                   size: 23,
@@ -870,19 +766,12 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 fechaInicio.getTime() +
                 24 * 60 * 60 * 1000
               ),
-
             mode: 'date',
-
-            display:
-              Platform.OS === 'ios'
-                ? 'spinner'
-                : 'default',
-
+            display: Platform.OS === 'ios' ? 'spinner' : 'default',
             minimumDate: new Date(
               fechaInicio.getTime() +
               24 * 60 * 60 * 1000
             ),
-
             onChange: (event, selectedDate) => {
               setMostrarCalendarioFin(false);
 
@@ -901,7 +790,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 marginBottom: 20,
               },
             },
-
             'Seleccioná las fechas usando el calendario.'
           ),
 
@@ -910,18 +798,13 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             {
               onPress: procesarReserva,
               disabled: guardando,
-
               style: {
-                backgroundColor: guardando
-                  ? '#999'
-                  : '#4C1D95',
-
+                backgroundColor: guardando ? '#999' : '#4C1D95',
                 padding: 16,
                 borderRadius: 12,
                 alignItems: 'center',
               },
             },
-
             e(
               Text,
               {
@@ -931,7 +814,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                   fontWeight: 'bold',
                 },
               },
-
               guardando
                 ? 'VERIFICANDO...'
                 : 'CONFIRMAR RESERVA'

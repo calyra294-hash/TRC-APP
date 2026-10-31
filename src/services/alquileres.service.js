@@ -103,6 +103,31 @@ export const getAlquileres = async () => {
   }
 };
 
+// OBTENER DISPONIBILIDAD DE TODOS LOS VEHÍCULOS
+export const getDisponibilidadVehiculos = async () => {
+  try {
+    const token = await obtenerToken();
+
+    const response = await fetch(
+      `${API_URL}/reserva/disponibilidad`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const json = await procesarRespuesta(response);
+
+    return Array.isArray(json.data) ? json.data : [];
+  } catch (error) {
+    console.error("Error al obtener disponibilidad:", error);
+    throw error;
+  }
+};
+
 // REGISTRAR ENTREGA DEL VEHÍCULO
 export const registrarEntregaAlquiler = async (id) => {
   try {
