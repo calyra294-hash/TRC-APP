@@ -205,8 +205,11 @@ export const validarQRAlquiler = async (qrToken) => {
   }
 };
 
-// CONFIRMAR ENTREGA MEDIANTE QR
-export const confirmarEntregaQR = async (qrToken) => {
+// CONFIRMAR ENTREGA O DEVOLUCIÓN MEDIANTE EL MISMO QR
+export const confirmarEntregaQR = async (
+  qrToken,
+  especificaciones = {}
+) => {
   try {
     if (!qrToken) {
       throw new Error("No se encontró el código QR.");
@@ -222,13 +225,19 @@ export const confirmarEntregaQR = async (qrToken) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token: qrToken }),
+        body: JSON.stringify({
+          token: qrToken,
+          especificaciones,
+        }),
       }
     );
 
     return await procesarRespuesta(response);
   } catch (error) {
-    console.error("Error al confirmar entrega mediante QR:", error);
+    console.error(
+      "Error al confirmar entrega o devolución mediante QR:",
+      error
+    );
     throw error;
   }
 };

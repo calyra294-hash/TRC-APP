@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import {
     View,
     Text,
+    TextInput,
     StyleSheet,
     TouchableOpacity,
     ActivityIndicator,
@@ -45,11 +47,23 @@ export default function EscanearQRScreen() {
     const [alquiler, setAlquiler] = useState(null);
     const [procesando, setProcesando] = useState(false);
     const [confirmando, setConfirmando] = useState(false);
-    const [entregaConfirmada, setEntregaConfirmada] = useState(false);
+    const [operacionConfirmada, setOperacionConfirmada] = useState(false);
     const [error, setError] = useState("");
 
+    const [estadoGeneral, setEstadoGeneral] = useState("");
+    const [kilometraje, setKilometraje] = useState("");
+    const [combustible, setCombustible] = useState("");
+
+    const estadoAlquiler = String(
+        alquiler?.estado ||
+        alquiler?.estado_alquiler ||
+        ""
+    ).trim().toLowerCase();
+
+    const esDevolucion = estadoAlquiler === "activo";
+
     const procesarQR = async ({ data }) => {
-        if (!data || procesando || qrToken || entregaConfirmada) {
+        if (!data || procesando || qrToken || operacionConfirmada) {
             return;
         }
 
@@ -67,23 +81,49 @@ export default function EscanearQRScreen() {
         }
     };
 
-    const confirmarEntrega = () => {
-        if (!qrToken) return;
+    const confirmarOperacion = () => {
+        if (!qrToken || !alquiler) return;
 
-        Alert.alert(
-            "Confirmar entrega",
-            "¿Confirmas que el vehículo ha sido entregado al cliente?",
-            [
-                {
-                    text: "Cancelar",
-                    style: "cancel",
-                },
-                {
-                    text: "Confirmar entrega",
-                    onPress: ejecutarConfirmacion,
-                },
-            ]
-        );
+        if (esDevolucion) {
+            if (!estadoGeneral.trim()) {
+                setError("Indica el estado general del vehículo.");
+                return;
+            }
+
+            if (!kilometraje.trim()) {
+                setError("Ingresa el kilometraje de devolución.");
+                return;
+            }
+
+            if (!/^\d+(\.\d+)?$/.test(kilometraje.trim())) {
+                setError("El kilometraje debe ser un número válido.");
+                return;
+            }
+
+            if (!combustible.trim()) {
+                setError("Indica el nivel de combustible.");
+                return;
+            }
+        }
+
+        const titulo = esDevolucion
+            ? "Confirmar devolución"
+            : "Confirmar entrega";
+
+        const mensaje = esDevolucion
+            ? "¿Confirmas que el vehículo ha sido devuelto y revisado?"
+            : "¿Confirmas que el vehículo ha sido entregado al cliente?";
+
+        Alert.alert(titulo, mensaje, [
+            {
+                text: "Cancelar",
+                style: "cancel",
+            },
+            {
+                text: "Confirmar",
+                onPress: ejecutarConfirmacion,
+            },
+        ]);
     };
 
     const ejecutarConfirmacion = async () => {
@@ -91,16 +131,34 @@ export default function EscanearQRScreen() {
             setConfirmando(true);
             setError("");
 
-            await confirmarEntregaQR(qrToken);
+            const especificaciones = esDevolucion
+                ? {
+                    estado_general: estadoGeneral.trim(),
+                    kilometraje_devolucion: kilometraje.trim(),
+                    nivel_combustible: combustible.trim(),
+                }
+                : {};
 
-            setEntregaConfirmada(true);
+            const resultado = await confirmarEntregaQR(
+                qrToken,
+                especificaciones
+            );
+
+            setOperacionConfirmada(true);
+
+            const fueDevolucion = esDevolucion ||
+                resultado.operacion === "devolucion";
 
             Alert.alert(
-                "Entrega confirmada",
-                "Vehículo entregado correctamente. El código QR ya no está disponible."
+                fueDevolucion
+                    ? "Devolución confirmada"
+                    : "Entrega confirmada",
+                fueDevolucion
+                    ? "La devolución del vehículo fue registrada correctamente. El alquiler ha finalizado."
+                    : "Vehículo entregado correctamente. El alquiler ahora está activo."
             );
         } catch (err) {
-            setError(err.message || "No se pudo confirmar la entrega.");
+            setError(err.message || "No se pudo completar la operación.");
         } finally {
             setConfirmando(false);
         }
@@ -110,8 +168,12 @@ export default function EscanearQRScreen() {
         setQrToken(null);
         setAlquiler(null);
         setError("");
-        setEntregaConfirmada(false);
+        setOperacionConfirmada(false);
         setProcesando(false);
+
+        setEstadoGeneral("");
+        setKilometraje("");
+        setCombustible("");
     };
 
     const vehiculo = alquiler?.vehiculo || {};
@@ -158,13 +220,14 @@ export default function EscanearQRScreen() {
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.contenido}
+            keyboardShouldPersistTaps="handled"
         >
             <Text style={styles.titulo}>
                 Escanear código QR
             </Text>
 
             <Text style={styles.subtitulo}>
-                Escanea el código QR del cliente para consultar su reserva y registrar la entrega del vehículo.
+                Escanea el código QR del cliente para registrar la entrega o devolución del vehículo.
             </Text>
 
             {!qrToken && (
@@ -250,6 +313,24 @@ export default function EscanearQRScreen() {
                         </Text>
                     </View>
 
+                    <View style={[
+                        styles.estadoOperacion,
+                        esDevolucion
+                            ? styles.estadoActivo
+                            : styles.estadoPendiente,
+                    ]}>
+                        <Text style={[
+                            styles.estadoOperacionTexto,
+                            esDevolucion
+                                ? styles.textoActivo
+                                : styles.textoPendiente,
+                        ]}>
+                            {esDevolucion
+                                ? "ALQUILER ACTIVO - REGISTRAR DEVOLUCIÓN"
+                                : "PENDIENTE DE ENTREGA"}
+                        </Text>
+                    </View>
+
                     <Text style={styles.seccionTitulo}>
                         Información del cliente
                     </Text>
@@ -301,19 +382,65 @@ export default function EscanearQRScreen() {
                         </Text>
                     </View>
 
-                    <View style={styles.estadoPendiente}>
-                        <Text style={styles.estadoPendienteTexto}>
-                            Estado: {entregaConfirmada ? "ACTIVO" : "PENDIENTE DE ENTREGA"}
-                        </Text>
-                    </View>
+                    {esDevolucion && !operacionConfirmada && (
+                        <>
+                            <View style={styles.separador} />
 
-                    {!entregaConfirmada ? (
+                            <Text style={styles.tituloFormulario}>
+                                Registrar devolución
+                            </Text>
+
+                            <Text style={styles.descripcionFormulario}>
+                                Revisa el vehículo y completa los siguientes datos.
+                            </Text>
+
+                            <Text style={styles.label}>
+                                Estado general del vehículo *
+                            </Text>
+
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Ej. Buen estado, sin daños"
+                                placeholderTextColor="#999999"
+                                value={estadoGeneral}
+                                onChangeText={setEstadoGeneral}
+                                multiline
+                            />
+
+                            <Text style={styles.label}>
+                                Kilometraje de devolución *
+                            </Text>
+
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Ej. 45000"
+                                placeholderTextColor="#999999"
+                                value={kilometraje}
+                                onChangeText={setKilometraje}
+                                keyboardType="decimal-pad"
+                            />
+
+                            <Text style={styles.label}>
+                                Nivel de combustible *
+                            </Text>
+
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Ej. Lleno, medio tanque o 1/4"
+                                placeholderTextColor="#999999"
+                                value={combustible}
+                                onChangeText={setCombustible}
+                            />
+                        </>
+                    )}
+
+                    {!operacionConfirmada ? (
                         <TouchableOpacity
                             style={[
                                 styles.botonPrincipal,
                                 confirmando && styles.botonDeshabilitado,
                             ]}
-                            onPress={confirmarEntrega}
+                            onPress={confirmarOperacion}
                             disabled={confirmando}
                         >
                             {confirmando ? (
@@ -321,12 +448,19 @@ export default function EscanearQRScreen() {
                             ) : (
                                 <>
                                     <Ionicons
-                                        name="checkmark-circle-outline"
+                                        name={
+                                            esDevolucion
+                                                ? "car-outline"
+                                                : "checkmark-circle-outline"
+                                        }
                                         size={21}
                                         color="#FFFFFF"
                                     />
+
                                     <Text style={styles.textoBoton}>
-                                        Confirmar entrega del vehículo
+                                        {esDevolucion
+                                            ? "Confirmar devolución"
+                                            : "Confirmar entrega del vehículo"}
                                     </Text>
                                 </>
                             )}
@@ -338,15 +472,18 @@ export default function EscanearQRScreen() {
                                 size={25}
                                 color="#16834A"
                             />
+
                             <Text style={styles.confirmacionTexto}>
-                                Entrega registrada correctamente.
+                                {esDevolucion
+                                    ? "Devolución registrada correctamente."
+                                    : "Entrega registrada correctamente."}
                             </Text>
                         </View>
                     )}
                 </View>
             )}
 
-            {(qrToken || error || entregaConfirmada) && (
+            {(qrToken || error || operacionConfirmada) && (
                 <TouchableOpacity
                     style={styles.botonSecundario}
                     onPress={escanearOtro}
@@ -505,7 +642,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 9,
-        marginBottom: 18,
+        marginBottom: 10,
     },
     cardTitulo: {
         fontSize: 18,
@@ -535,17 +672,64 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#121212",
     },
-    estadoPendiente: {
-        backgroundColor: "#FFF2D8",
+    estadoOperacion: {
         borderRadius: 8,
         padding: 12,
-        marginTop: 18,
+        marginTop: 8,
         alignItems: "center",
     },
-    estadoPendienteTexto: {
+    estadoPendiente: {
+        backgroundColor: "#FFF2D8",
+    },
+    estadoActivo: {
+        backgroundColor: "#E8F5EC",
+    },
+    estadoOperacionTexto: {
         fontWeight: "bold",
-        color: "#8A5A00",
         fontSize: 12,
+        textAlign: "center",
+    },
+    textoPendiente: {
+        color: "#8A5A00",
+    },
+    textoActivo: {
+        color: "#16834A",
+    },
+    separador: {
+        height: 1,
+        backgroundColor: "#EEEEEE",
+        marginTop: 22,
+        marginBottom: 8,
+    },
+    tituloFormulario: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#121212",
+        marginTop: 10,
+    },
+    descripcionFormulario: {
+        color: "#777777",
+        fontSize: 13,
+        marginTop: 5,
+        marginBottom: 12,
+    },
+    label: {
+        fontSize: 13,
+        fontWeight: "bold",
+        color: "#333333",
+        marginTop: 13,
+        marginBottom: 7,
+    },
+    input: {
+        backgroundColor: "#FFFFFF",
+        borderWidth: 1,
+        borderColor: "#DDDDDD",
+        borderRadius: 9,
+        padding: 12,
+        color: "#222222",
+        fontSize: 14,
+        minHeight: 46,
+        textAlignVertical: "top",
     },
     botonPrincipal: {
         backgroundColor: "#D31A24",
@@ -579,6 +763,7 @@ const styles = StyleSheet.create({
         color: "#16834A",
         fontWeight: "bold",
         fontSize: 13,
+        flex: 1,
     },
     botonSecundario: {
         borderWidth: 1,

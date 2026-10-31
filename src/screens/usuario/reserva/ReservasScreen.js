@@ -27,7 +27,9 @@ export default function ReservasScreen() {
   const reserva = reservas?.[0];
 
   const estado = String(
-    reserva?.estado_aprobacion || 'pendiente'
+    reserva?.estado_aprobacion ||
+    reserva?.estado ||
+    'pendiente'
   ).toLowerCase().trim();
 
   const esAprobada = [
@@ -40,6 +42,17 @@ export default function ReservasScreen() {
   ].includes(estado);
 
   const idAlquiler = reserva?.id_alquiler;
+
+  const estadoAlquiler = String(
+    reserva?.estado_alquiler || reserva?.estado || ''
+  ).toLowerCase().trim();
+
+  const esAlquilerActivo = [
+    'activo',
+    'activa',
+  ].includes(estadoAlquiler);
+
+  const puedeObtenerQR = esAprobada || esAlquilerActivo;
 
   useFocusEffect(
     useCallback(() => {
@@ -54,8 +67,9 @@ export default function ReservasScreen() {
     setQrToken(null);
     setQrError('');
 
-    if (!esAprobada || !idAlquiler) {
+    if (!puedeObtenerQR || !idAlquiler) {
       setQrLoading(false);
+
       return () => {
         activo = false;
       };
@@ -76,7 +90,9 @@ export default function ReservasScreen() {
         }
       } catch (err) {
         if (activo) {
-          setQrError(err.message || 'No se pudo generar el código QR.');
+          setQrError(
+            err.message || 'No se pudo generar el código QR.'
+          );
         }
       } finally {
         if (activo) {
@@ -90,7 +106,7 @@ export default function ReservasScreen() {
     return () => {
       activo = false;
     };
-  }, [idAlquiler, esAprobada, qrVersion]);
+  }, [idAlquiler, puedeObtenerQR, qrVersion]);
 
   const actualizarQR = () => {
     setQrToken(null);
@@ -114,6 +130,7 @@ export default function ReservasScreen() {
       fechaReal = new Date(fecha.seconds * 1000);
     } else {
       const texto = String(fecha);
+
       fechaReal = new Date(
         /^\d{4}-\d{2}-\d{2}$/.test(texto)
           ? `${texto}T00:00:00`
@@ -195,7 +212,9 @@ export default function ReservasScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#D31A24" />
-        <Text style={styles.loadingText}>Cargando tu reserva...</Text>
+        <Text style={styles.loadingText}>
+          Cargando tu reserva...
+        </Text>
       </View>
     );
   }
@@ -204,7 +223,11 @@ export default function ReservasScreen() {
     return (
       <View style={styles.center}>
         <View style={styles.emptyIconContainer}>
-          <Ionicons name="cloud-offline-outline" size={42} color="#D31A24" />
+          <Ionicons
+            name="cloud-offline-outline"
+            size={42}
+            color="#D31A24"
+          />
         </View>
 
         <Text style={styles.emptyTitle}>
@@ -213,9 +236,18 @@ export default function ReservasScreen() {
 
         <Text style={styles.emptyText}>{error}</Text>
 
-        <TouchableOpacity style={styles.retryButton} onPress={refrescar}>
-          <Ionicons name="refresh-outline" size={17} color="#FFFFFF" />
-          <Text style={styles.retryText}>Intentar nuevamente</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={refrescar}
+        >
+          <Ionicons
+            name="refresh-outline"
+            size={17}
+            color="#FFFFFF"
+          />
+          <Text style={styles.retryText}>
+            Intentar nuevamente
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -225,10 +257,16 @@ export default function ReservasScreen() {
     return (
       <View style={styles.center}>
         <View style={styles.emptyIconContainer}>
-          <Ionicons name="calendar-outline" size={48} color="#D31A24" />
+          <Ionicons
+            name="calendar-outline"
+            size={48}
+            color="#D31A24"
+          />
         </View>
 
-        <Text style={styles.emptyTitle}>Todavía no tienes reservas</Text>
+        <Text style={styles.emptyTitle}>
+          Todavía no tienes reservas
+        </Text>
 
         <Text style={styles.emptyText}>
           Cuando reserves uno de nuestros vehículos, podrás consultar aquí
@@ -260,22 +298,35 @@ export default function ReservasScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.eyebrow}>TITO'S RENT A CAR</Text>
+            <Text style={styles.eyebrow}>
+              TITO'S RENT A CAR
+            </Text>
+
             <Text style={styles.title}>Mi reserva</Text>
+
             <Text style={styles.subtitle}>
               Consulta el estado y los detalles de tu reservación.
             </Text>
           </View>
 
           <View style={styles.headerIcon}>
-            <Ionicons name="calendar-outline" size={25} color="#D31A24" />
+            <Ionicons
+              name="calendar-outline"
+              size={25}
+              color="#D31A24"
+            />
           </View>
         </View>
 
         <View style={styles.card}>
           <View style={styles.statusRow}>
             <View style={styles.statusLeft}>
-              <View style={[styles.statusIcon, { backgroundColor: estadoVisual.fondo }]}>
+              <View
+                style={[
+                  styles.statusIcon,
+                  { backgroundColor: estadoVisual.fondo },
+                ]}
+              >
                 <Ionicons
                   name={estadoVisual.icono}
                   size={23}
@@ -287,14 +338,25 @@ export default function ReservasScreen() {
                 <Text style={styles.statusTitle}>
                   {estadoVisual.titulo}
                 </Text>
+
                 <Text style={styles.statusSubtitle}>
                   {estadoVisual.subtitulo}
                 </Text>
               </View>
             </View>
 
-            <View style={[styles.statusBadge, { backgroundColor: estadoVisual.fondo }]}>
-              <Text style={[styles.statusBadgeText, { color: estadoVisual.color }]}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: estadoVisual.fondo },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusBadgeText,
+                  { color: estadoVisual.color },
+                ]}
+              >
                 {estadoVisual.titulo.replace('Reserva ', '')}
               </Text>
             </View>
@@ -303,8 +365,14 @@ export default function ReservasScreen() {
           <View style={styles.separator} />
 
           <View style={styles.sectionHeading}>
-            <Ionicons name="car-sport-outline" size={19} color="#D31A24" />
-            <Text style={styles.sectionTitle}>Vehículo reservado</Text>
+            <Ionicons
+              name="car-sport-outline"
+              size={19}
+              color="#D31A24"
+            />
+            <Text style={styles.sectionTitle}>
+              Vehículo reservado
+            </Text>
           </View>
 
           <View style={styles.vehicleCard}>
@@ -316,17 +384,29 @@ export default function ReservasScreen() {
                   resizeMode="contain"
                 />
               ) : (
-                <Ionicons name="car-sport-outline" size={42} color="#B8B8B8" />
+                <Ionicons
+                  name="car-sport-outline"
+                  size={42}
+                  color="#B8B8B8"
+                />
               )}
             </View>
 
             <View style={styles.vehicleInfo}>
-              <Text style={styles.vehicleName} numberOfLines={2}>
+              <Text
+                style={styles.vehicleName}
+                numberOfLines={2}
+              >
                 {nombreVehiculo}
               </Text>
 
               <View style={styles.plateRow}>
-                <Ionicons name="card-outline" size={14} color="#888888" />
+                <Ionicons
+                  name="card-outline"
+                  size={14}
+                  color="#888888"
+                />
+
                 <Text style={styles.vehicleDetails}>
                   {vehiculo.placa || 'Vehículo reservado'}
                 </Text>
@@ -342,62 +422,105 @@ export default function ReservasScreen() {
           <View style={styles.separator} />
 
           <View style={styles.sectionHeading}>
-            <Ionicons name="calendar-outline" size={19} color="#D31A24" />
-            <Text style={styles.sectionTitle}>Periodo de alquiler</Text>
+            <Ionicons
+              name="calendar-outline"
+              size={19}
+              color="#D31A24"
+            />
+            <Text style={styles.sectionTitle}>
+              Periodo de alquiler
+            </Text>
           </View>
 
           <View style={styles.datesRow}>
             <View style={styles.dateBox}>
               <View style={styles.dateIcon}>
-                <Ionicons name="log-in-outline" size={18} color="#D31A24" />
+                <Ionicons
+                  name="log-in-outline"
+                  size={18}
+                  color="#D31A24"
+                />
               </View>
+
               <Text style={styles.dateLabel}>RECOGIDA</Text>
+
               <Text style={styles.dateValue}>
                 {formatearFecha(reserva.fecha_inicio)}
               </Text>
-              <Text style={styles.dateDescription}>Inicio del alquiler</Text>
+
+              <Text style={styles.dateDescription}>
+                Inicio del alquiler
+              </Text>
             </View>
 
             <View style={styles.dateBox}>
               <View style={styles.dateIcon}>
-                <Ionicons name="log-out-outline" size={18} color="#D31A24" />
+                <Ionicons
+                  name="log-out-outline"
+                  size={18}
+                  color="#D31A24"
+                />
               </View>
+
               <Text style={styles.dateLabel}>DEVOLUCIÓN</Text>
+
               <Text style={styles.dateValue}>
                 {formatearFecha(reserva.fecha_fin)}
               </Text>
-              <Text style={styles.dateDescription}>Fin del alquiler</Text>
+
+              <Text style={styles.dateDescription}>
+                Fin del alquiler
+              </Text>
             </View>
           </View>
 
           <View style={styles.totalBlock}>
             <View>
-              <Text style={styles.totalLabel}>TOTAL DE LA RESERVA</Text>
+              <Text style={styles.totalLabel}>
+                TOTAL DE LA RESERVA
+              </Text>
+
               <Text style={styles.totalText}>
                 ${Number(reserva.monto_total || 0).toFixed(2)}
               </Text>
             </View>
 
             <View style={styles.totalIcon}>
-              <Ionicons name="receipt-outline" size={24} color="#D31A24" />
+              <Ionicons
+                name="receipt-outline"
+                size={24}
+                color="#D31A24"
+              />
             </View>
           </View>
 
           <View style={styles.locationBlock}>
             <View style={styles.sectionHeading}>
-              <Ionicons name="location-outline" size={19} color="#D31A24" />
-              <Text style={styles.sectionTitle}>Lugar de recogida</Text>
+              <Ionicons
+                name="location-outline"
+                size={19}
+                color="#D31A24"
+              />
+
+              <Text style={styles.sectionTitle}>
+                Lugar de recogida
+              </Text>
             </View>
 
             <View style={styles.locationCard}>
               <View style={styles.locationIcon}>
-                <Ionicons name="location" size={21} color="#FFFFFF" />
+                <Ionicons
+                  name="location"
+                  size={21}
+                  color="#FFFFFF"
+                />
               </View>
 
               <View style={styles.locationTextContainer}>
                 <Text style={styles.locationTitle}>
                   Juigalpa, Chontales, Nicaragua
                 </Text>
+
                 <Text style={styles.locationSubtitle}>
                   Oficina principal Tito's Rent a Car
                 </Text>
@@ -410,18 +533,36 @@ export default function ReservasScreen() {
           <View style={styles.qrBlock}>
             <View style={styles.qrHeading}>
               <View style={styles.sectionHeading}>
-                <Ionicons name="qr-code-outline" size={20} color="#D31A24" />
-                <Text style={styles.sectionTitle}>Código QR de entrega</Text>
+                <Ionicons
+                  name="qr-code-outline"
+                  size={20}
+                  color="#D31A24"
+                />
+
+                <Text style={styles.sectionTitle}>
+                  Código QR de entrega y devolución
+                </Text>
               </View>
-              <Text style={styles.qrSmallLabel}>ACCESO DE ENTREGA</Text>
+
+              <Text style={styles.qrSmallLabel}>
+                ACCESO DEL ALQUILER
+              </Text>
             </View>
 
-            {!esAprobada ? (
+            {!puedeObtenerQR ? (
               <View style={styles.qrMessage}>
                 <View style={styles.qrMessageIcon}>
-                  <Ionicons name="time-outline" size={25} color="#D97706" />
+                  <Ionicons
+                    name="time-outline"
+                    size={25}
+                    color="#D97706"
+                  />
                 </View>
-                <Text style={styles.qrMessageTitle}>QR pendiente</Text>
+
+                <Text style={styles.qrMessageTitle}>
+                  QR pendiente
+                </Text>
+
                 <Text style={styles.qrMessageText}>
                   El código estará disponible cuando el administrador
                   apruebe tu reserva.
@@ -430,11 +571,17 @@ export default function ReservasScreen() {
             ) : !idAlquiler ? (
               <View style={styles.qrMessage}>
                 <View style={styles.qrMessageIcon}>
-                  <Ionicons name="information-circle-outline" size={25} color="#D31A24" />
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={25}
+                    color="#D31A24"
+                  />
                 </View>
+
                 <Text style={styles.qrMessageTitle}>
                   Alquiler pendiente de registro
                 </Text>
+
                 <Text style={styles.qrMessageText}>
                   Tu reserva está aprobada, pero todavía no tiene un
                   alquiler asociado.
@@ -442,7 +589,11 @@ export default function ReservasScreen() {
               </View>
             ) : qrLoading ? (
               <View style={styles.qrMessage}>
-                <ActivityIndicator size="large" color="#D31A24" />
+                <ActivityIndicator
+                  size="large"
+                  color="#D31A24"
+                />
+
                 <Text style={styles.qrMessageText}>
                   Generando tu código QR...
                 </Text>
@@ -458,17 +609,23 @@ export default function ReservasScreen() {
                   />
                 </View>
 
-                <Text style={styles.qrText}>Reserva #{idReserva}</Text>
+                <Text style={styles.qrText}>
+                  Reserva #{idReserva}
+                </Text>
 
                 <Text style={styles.qrHint}>
                   Presenta este código al administrador para registrar
-                  la entrega de tu vehículo.
+                  la entrega o devolución de tu vehículo.
                 </Text>
               </View>
             ) : (
               <View style={styles.qrMessage}>
                 <View style={styles.qrMessageIcon}>
-                  <Ionicons name="alert-circle-outline" size={25} color="#D31A24" />
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={25}
+                    color="#D31A24"
+                  />
                 </View>
 
                 <Text style={styles.qrMessageTitle}>
@@ -483,7 +640,9 @@ export default function ReservasScreen() {
                   style={styles.qrRetryButton}
                   onPress={actualizarQR}
                 >
-                  <Text style={styles.qrRetryText}>Generar nuevamente</Text>
+                  <Text style={styles.qrRetryText}>
+                    Generar nuevamente
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -494,18 +653,35 @@ export default function ReservasScreen() {
               style={styles.outlineButton}
               onPress={actualizarReserva}
             >
-              <Ionicons name="refresh-outline" size={17} color="#D31A24" />
-              <Text style={styles.outlineButtonText}>Actualizar</Text>
+              <Ionicons
+                name="refresh-outline"
+                size={17}
+                color="#D31A24"
+              />
+
+              <Text style={styles.outlineButtonText}>
+                Actualizar
+              </Text>
             </TouchableOpacity>
 
-            {esAprobada && idAlquiler && (
+            {puedeObtenerQR && idAlquiler && (
               <TouchableOpacity
-                style={[styles.primaryButton, qrLoading && styles.disabledButton]}
+                style={[
+                  styles.primaryButton,
+                  qrLoading && styles.disabledButton,
+                ]}
                 onPress={actualizarQR}
                 disabled={qrLoading}
               >
-                <Ionicons name="qr-code-outline" size={17} color="#FFFFFF" />
-                <Text style={styles.primaryButtonText}>Renovar QR</Text>
+                <Ionicons
+                  name="qr-code-outline"
+                  size={17}
+                  color="#FFFFFF"
+                />
+
+                <Text style={styles.primaryButtonText}>
+                  Renovar QR
+                </Text>
               </TouchableOpacity>
             )}
           </View>
