@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
     encabezado: {
         backgroundColor: '#151515',
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: 40,
         paddingBottom: 18,
         borderBottomLeftRadius: 23,
         borderBottomRightRadius: 23,

@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     encabezado: {
         backgroundColor: '#121111',
         paddingHorizontal: 21,
-        paddingTop: 20,
+        paddingTop: 40,
         paddingBottom: 19,
         borderBottomLeftRadius: 23,
         borderBottomRightRadius: 23,

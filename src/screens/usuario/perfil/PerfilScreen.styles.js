@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
 
     header: {
         backgroundColor: '#D71920',
-        paddingTop: 18,
+        paddingTop: 37,
         paddingBottom: 27,
         alignItems: 'center',
 
