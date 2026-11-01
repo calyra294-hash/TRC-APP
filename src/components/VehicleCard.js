@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -105,93 +106,76 @@ export default function VehicleCard({
         </View>
 
         {estaReservado ? (
-          <View style={styles.availabilityReserved}>
-            <View style={styles.availabilityHeader}>
-              <View style={styles.availabilityIconReserved}>
-                <Ionicons name="time-outline" size={19} color="#B45309" />
-              </View>
-
-              <View style={styles.availabilityTitleContainer}>
-                <Text style={styles.availabilityTitleReserved}>
-                  Reservado actualmente
-                </Text>
-                <Text style={styles.availabilitySubtitleReserved}>
-                  Este vehículo tiene una reserva en curso.
-                </Text>
-              </View>
-            </View>
+          <View
+            style={{
+              marginTop: 10,
+              marginBottom: 8,
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: '#FFF4E5',
+            }}
+          >
+            <Text style={{ color: '#B45309', fontWeight: '700', fontSize: 13 }}>
+              <Ionicons name="time-outline" size={14} />
+              {' '}Reservado actualmente
+            </Text>
 
             {reservadoHasta ? (
-              <View style={styles.dateRow}>
-                <Text style={styles.dateLabelReserved}>
-                  Reservado hasta
-                </Text>
-                <Text style={styles.dateValueReserved}>
-                  {formatearFecha(reservadoHasta)}
-                </Text>
-              </View>
+              <Text style={{ color: '#92400E', fontSize: 12, marginTop: 4 }}>
+                Reservado hasta: {formatearFecha(reservadoHasta)}
+              </Text>
             ) : null}
 
             {disponibleDesde ? (
-              <View style={styles.availableDateBox}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={16}
-                  color="#15803D"
-                />
-                <View style={styles.availableDateTextContainer}>
-                  <Text style={styles.availableDateLabel}>
-                    Disponible desde
-                  </Text>
-                  <Text style={styles.availableDateValue}>
-                    {formatearFecha(disponibleDesde)}
-                  </Text>
-                </View>
-              </View>
+              <Text
+                style={{
+                  color: '#92400E',
+                  fontSize: 12,
+                  marginTop: 3,
+                  fontWeight: '600',
+                }}
+              >
+                Disponible desde: {formatearFecha(disponibleDesde)}
+              </Text>
             ) : null}
           </View>
-        ) : (
-          <View style={styles.availabilityAvailable}>
-            <View style={styles.availabilityHeader}>
-              <View style={styles.availabilityIconAvailable}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color="#15803D"
-                />
-              </View>
+        ) : disponibilidad && proximaReserva ? (
+          <View
+            style={{
+              marginTop: 10,
+              marginBottom: 8,
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: '#E6F4EA',
+            }}
+          >
+            <Text style={{ color: '#15803D', fontWeight: '700', fontSize: 13 }}>
+              ✓ Disponible para reservar
+            </Text>
 
-              <View style={styles.availabilityTitleContainer}>
-                <Text style={styles.availabilityTitleAvailable}>
-                  Disponible para reservar
-                </Text>
-                <Text style={styles.availabilitySubtitleAvailable}>
-                  Podés consultar las fechas de alquiler.
-                </Text>
-              </View>
-            </View>
-
-            {proximaReserva && disponibleHasta ? (
-              <View style={styles.nextReservationBox}>
-                <View style={styles.dateRow}>
-                  <Text style={styles.dateLabelAvailable}>
-                    Disponible hasta
-                  </Text>
-                  <Text style={styles.dateValueAvailable}>
-                    {formatearFecha(disponibleHasta)}
-                  </Text>
-                </View>
-
-                <View style={styles.dateRow}>
-                  <Text style={styles.dateLabelAvailable}>
-                    Próxima reserva
-                  </Text>
-                  <Text style={styles.dateValueAvailable}>
-                    {formatearFecha(proximaReserva)}
-                  </Text>
-                </View>
-              </View>
+            {disponibleHasta ? (
+              <Text style={{ color: '#166534', fontSize: 12, marginTop: 4 }}>
+                Disponible hasta: {formatearFecha(disponibleHasta)}
+              </Text>
             ) : null}
+
+            <Text style={{ color: '#166534', fontSize: 12, marginTop: 3 }}>
+              Próxima reserva: {formatearFecha(proximaReserva)}
+            </Text>
+          </View>
+        ) : (
+          <View
+            style={{
+              marginTop: 10,
+              marginBottom: 8,
+              padding: 10,
+              borderRadius: 10,
+              backgroundColor: '#E6F4EA',
+            }}
+          >
+            <Text style={{ color: '#15803D', fontWeight: '700', fontSize: 13 }}>
+              ✓ Disponible para reservar
+            </Text>
           </View>
         )}
 
@@ -203,7 +187,6 @@ export default function VehicleCard({
           <Text style={styles.selectButtonText}>
             SELECCIONAR
           </Text>
-          <Ionicons name="arrow-forward" size={17} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>

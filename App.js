@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ import ReservasAdminScreen from './src/screens/administrador/ReservasAdminScreen
 import InicioAdminScreen from './src/screens/administrador/InicioAdminScreen';
 import AlquileresAdminScreen from './src/screens/administrador/AlquileresAdminScreen';
 import EscanearQRScreen from './src/screens/administrador/EscanearQRScreen';
+import VehiculosAdminScreen from './src/screens/administrador/VehiculosAdminScreen';
 
 import { saludService } from './src/services/salud.service';
 
@@ -150,7 +152,7 @@ function AdminTabs() {
       })}
     >
       <Tab.Screen name="Inicio" component={InicioAdminScreen} />
-      <Tab.Screen name="Vehículos" component={VehiculosScreen} />
+      <Tab.Screen name="Vehículos" component={VehiculosAdminScreen} />
       <Tab.Screen name="Reservas" component={ReservasAdminScreen} />
       <Tab.Screen name="Alquileres" component={AlquileresAdminScreen} />
       <Tab.Screen
