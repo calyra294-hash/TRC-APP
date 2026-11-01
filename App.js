@@ -18,6 +18,8 @@ import EscanearQRScreen from './src/screens/administrador/EscanearQRScreen';
 import VehiculosAdminScreen from './src/screens/administrador/VehiculosAdminScreen';
 import ResenasAdminScreen from './src/screens/administrador/ResenasAdminScreen';
 
+import NotificacionesScreen from './src/screens/usuario/notificaciones/NotificacionesScreen';
+
 import { saludService } from './src/services/salud.service';
 
 import {
@@ -47,7 +49,23 @@ function AlquileresNavigator() {
   );
 }
 
-// Navegación interna de Inicio del administrador
+// Navegación interna del inicio del cliente
+function InicioNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="InicioMain"
+        component={InicioScreen}
+      />
+      <Stack.Screen
+        name="Notificaciones"
+        component={NotificacionesScreen}
+      />
+    </Stack.Navigator>
+  );
+}
+
+// Navegación interna del inicio del administrador
 function InicioAdminNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -58,6 +76,10 @@ function InicioAdminNavigator() {
       <Stack.Screen
         name="ResenasAdmin"
         component={ResenasAdminScreen}
+      />
+      <Stack.Screen
+        name="Notificaciones"
+        component={NotificacionesScreen}
       />
     </Stack.Navigator>
   );
@@ -109,7 +131,7 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="Inicio" component={InicioScreen} />
+      <Tab.Screen name="Inicio" component={InicioNavigator} />
       <Tab.Screen name="Vehículos" component={VehiculosScreen} />
       <Tab.Screen
         name="Alquileres"

@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 15,
+    paddingTop: 35,
     paddingBottom: 10,
   },
   logoContainer: {
@@ -153,4 +153,38 @@ export const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 14,
   },
+
+
+  botonNotificaciones: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    elevation: 2,
+  },
+
+  contadorNotificaciones: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 19,
+    height: 19,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    backgroundColor: '#D31A24',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+
+  textoContador: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+
 });

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     View,
     Text,
@@ -10,12 +10,16 @@ import {
     RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useReservas } from '../../hooks/useReservas';
 import { useAlquileres } from '../../hooks/useAlquileres';
 import { useAuth } from '../../context/AuthContext';
+import { obtenerNotificaciones } from '../../services/notificaciones.service.js';
 
 export default function InicioAdminScreen({ navigation }) {
     const { user } = useAuth();
+
+    const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0);
 
     const {
         reservas,
@@ -28,6 +32,35 @@ export default function InicioAdminScreen({ navigation }) {
         loading: cargandoAlquileres,
         refrescar: refrescarAlquileres,
     } = useAlquileres();
+
+    const cargarContadorNotificaciones = useCallback(async () => {
+        try {
+            const respuesta = await obtenerNotificaciones();
+
+            const lista =
+                respuesta?.data?.notificaciones ||
+                respuesta?.notificaciones ||
+                [];
+
+            const cantidad =
+                respuesta?.data?.no_leidas ??
+                respuesta?.no_leidas ??
+                lista.filter(item => item.leido === false).length;
+
+            setNotificacionesNoLeidas(cantidad);
+        } catch (error) {
+            console.log(
+                'Error al cargar contador de notificaciones:',
+                error.message
+            );
+        }
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            cargarContadorNotificaciones();
+        }, [cargarContadorNotificaciones])
+    );
 
     const pendientes = reservas.filter(
         item => String(item.estado_aprobacion || 'pendiente').toLowerCase() === 'pendiente'
@@ -50,6 +83,7 @@ export default function InicioAdminScreen({ navigation }) {
     const actualizarDatos = () => {
         refrescarReservas();
         refrescarAlquileres();
+        cargarContadorNotificaciones();
     };
 
     const cargando = cargandoReservas || cargandoAlquileres;
@@ -119,9 +153,33 @@ export default function InicioAdminScreen({ navigation }) {
                         </View>
                     </View>
 
-                    <View style={styles.estadoAdmin}>
-                        <View style={styles.puntoEstado} />
-                        <Text style={styles.estadoTexto}>En línea</Text>
+                    <View style={styles.encabezadoAcciones}>
+                        <TouchableOpacity
+                            style={styles.botonNotificaciones}
+                            onPress={() => navigation.navigate('Notificaciones')}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons
+                                name="notifications-outline"
+                                size={23}
+                                color="#FFFFFF"
+                            />
+
+                            {notificacionesNoLeidas > 0 && (
+                                <View style={styles.contadorNotificaciones}>
+                                    <Text style={styles.textoContador}>
+                                        {notificacionesNoLeidas > 99
+                                            ? '99+'
+                                            : notificacionesNoLeidas}
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.estadoAdmin}>
+                            <View style={styles.puntoEstado} />
+                            <Text style={styles.estadoTexto}>En línea</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -410,6 +468,43 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         letterSpacing: 1.3,
         marginTop: 3,
+    },
+
+    encabezadoAcciones: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 9,
+    },
+
+    botonNotificaciones: {
+        width: 37,
+        height: 37,
+        borderRadius: 12,
+        backgroundColor: '#292929',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+
+    contadorNotificaciones: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        minWidth: 17,
+        height: 17,
+        borderRadius: 9,
+        backgroundColor: '#D31A24',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 4,
+        borderWidth: 1.5,
+        borderColor: '#121212',
+    },
+
+    textoContador: {
+        color: '#FFFFFF',
+        fontSize: 9,
+        fontWeight: 'bold',
     },
 
     estadoAdmin: {

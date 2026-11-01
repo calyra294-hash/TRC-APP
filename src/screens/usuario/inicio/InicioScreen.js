@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -13,7 +14,12 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import { getVehiculos } from '../../../services/vehiculos.service.js';
+import {
+  obtenerNotificaciones,
+} from '../../../services/notificaciones.service.js';
+
 import VehicleCard from '../../../components/VehicleCard.js';
 import DetalleVehiculoScreen from '../vehiculo/DetalleVehiculoScreen.js';
 import { styles } from './InicioScreen.styles.js';
@@ -22,9 +28,8 @@ export default function InicioScreen({ navigation }) {
   const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Estado para controlar el modal del vehículo seleccionado (mismo patrón que VehiculosScreen)
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
+  const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0);
 
   const fetchVehiculosData = useCallback(async () => {
     try {
@@ -38,23 +43,53 @@ export default function InicioScreen({ navigation }) {
     }
   }, []);
 
+  const cargarContadorNotificaciones = useCallback(async () => {
+    try {
+      const resultado = await obtenerNotificaciones();
+
+      const cantidad = Array.isArray(resultado?.notificaciones)
+        ? resultado.notificaciones.filter(
+          (item) => item.leido === false
+        ).length
+        : 0;
+
+      setNotificacionesNoLeidas(cantidad);
+    } catch (error) {
+      console.error(
+        'Error cargando contador de notificaciones:',
+        error.message
+      );
+    }
+  }, []);
+
   useEffect(() => {
     fetchVehiculosData();
   }, [fetchVehiculosData]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      cargarContadorNotificaciones();
+    });
+
+    return unsubscribe;
+  }, [navigation, cargarContadorNotificaciones]);
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchVehiculosData();
+    cargarContadorNotificaciones();
   };
 
-  // Redirige al Tab de Vehículos al presionar "Buscar Autos" o "Ver todos"
   const handleBuscarAutos = () => {
     navigation.navigate('Vehículos');
   };
 
-  // Abre el modal flotante con el vehículo seleccionado desde el carrusel
   const handleSelectVehiculo = (vehiculo) => {
     setVehiculoSeleccionado(vehiculo);
+  };
+
+  const handleNotificaciones = () => {
+    navigation.navigate('Notificaciones');
   };
 
   if (loading) {
@@ -73,53 +108,102 @@ export default function InicioScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E53935']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#E53935']}
+          />
         }
       >
-        {/* Top Header / App Bar */}
+        {/* Encabezado */}
         <View style={styles.headerBar}>
           <View style={styles.logoContainer}>
-            <Image 
-              source={require('../../../../assets/logo_titos.png')} 
-              style={styles.logoImage} 
-              resizeMode="contain" 
+            <Image
+              source={require('../../../../assets/logo_titos.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
             />
           </View>
+
+          <TouchableOpacity
+            style={styles.botonNotificaciones}
+            onPress={handleNotificaciones}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={27}
+              color="#121212"
+            />
+
+            {notificacionesNoLeidas > 0 && (
+              <View style={styles.contadorNotificaciones}>
+                <Text style={styles.textoContador}>
+                  {notificacionesNoLeidas > 99
+                    ? '99+'
+                    : notificacionesNoLeidas}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Hero Card / Formulario de Búsqueda y Reserva */}
+        {/* Tarjeta principal */}
         <View style={styles.heroCard}>
-          <Text style={styles.heroSubtitle}>TITO'S RENT A CAR</Text>
-          <Text style={styles.heroTitle}>Reserva Tu{'\n'}Auto Ideal</Text>
+          <Text style={styles.heroSubtitle}>
+            TITO'S RENT A CAR
+          </Text>
+
+          <Text style={styles.heroTitle}>
+            Reserva Tu{'\n'}Auto Ideal
+          </Text>
+
           <Text style={styles.heroDescription}>
             Encuentra el vehículo perfecto para tu viaje
           </Text>
 
-          {/* Selector de Ubicación */}
-          <TouchableOpacity style={styles.locationInputContainer} activeOpacity={0.8}>
-            <Ionicons name="location-outline" size={20} color="#E53935" />
-            <Text style={styles.locationInputValue}>Juigalpa, Chontales</Text>
+          <TouchableOpacity
+            style={styles.locationInputContainer}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="location-outline"
+              size={20}
+              color="#E53935"
+            />
+            <Text style={styles.locationInputValue}>
+              Juigalpa, Chontales
+            </Text>
           </TouchableOpacity>
 
-          {/* Botón Principal -> Redirige a Vehículos */}
           <TouchableOpacity
             style={styles.searchButton}
             activeOpacity={0.9}
             onPress={handleBuscarAutos}
           >
-            <Text style={styles.searchButtonText}>BUSCAR AUTOS</Text>
+            <Text style={styles.searchButtonText}>
+              BUSCAR AUTOS
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Sección: Vehículos Destacados */}
+        {/* Vehículos destacados */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Vehículos destacados</Text>
-          <TouchableOpacity onPress={handleBuscarAutos} activeOpacity={0.6}>
-            <Text style={styles.seeAllText}>Ver todos</Text>
+          <Text style={styles.sectionTitle}>
+            Vehículos destacados
+          </Text>
+
+          <TouchableOpacity
+            onPress={handleBuscarAutos}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.seeAllText}>
+              Ver todos
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Carrusel Horizontal de Tarjetas de Vehículos */}
+        {/* Carrusel de vehículos */}
         {vehiculos.length > 0 ? (
           <FlatList
             horizontal
@@ -127,7 +211,7 @@ export default function InicioScreen({ navigation }) {
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.carouselContainer}
-            snapToInterval={280 + 16} // Ancho de tarjeta (estimado) + margen
+            snapToInterval={280 + 16}
             decelerationRate="fast"
             renderItem={({ item }) => (
               <View style={styles.cardWrapper}>
@@ -140,12 +224,14 @@ export default function InicioScreen({ navigation }) {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No hay vehículos disponibles en este momento.</Text>
+            <Text style={styles.emptyText}>
+              No hay vehículos disponibles en este momento.
+            </Text>
           </View>
         )}
       </ScrollView>
 
-      {/* Modal Superpuesto para el Detalle del Vehículo */}
+      {/* Modal del detalle del vehículo */}
       <Modal
         visible={vehiculoSeleccionado !== null}
         animationType="slide"
@@ -153,7 +239,11 @@ export default function InicioScreen({ navigation }) {
         onRequestClose={() => setVehiculoSeleccionado(null)}
       >
         <DetalleVehiculoScreen
-          route={{ params: { vehiculo: vehiculoSeleccionado } }}
+          route={{
+            params: {
+              vehiculo: vehiculoSeleccionado,
+            },
+          }}
           navigation={{
             goBack: () => setVehiculoSeleccionado(null),
           }}
