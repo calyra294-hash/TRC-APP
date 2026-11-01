@@ -1,3 +1,4 @@
+
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
@@ -5,25 +6,20 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F7F7F8',
     },
-
     container: {
         flex: 1,
         backgroundColor: '#F7F7F8',
     },
-
-    // ENCABEZADO
     header: {
         paddingHorizontal: 20,
         paddingTop: 12,
         paddingBottom: 18,
     },
-
     headerTop: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-
     headerEyebrow: {
         fontSize: 9,
         fontWeight: '800',
@@ -31,21 +27,18 @@ export const styles = StyleSheet.create({
         letterSpacing: 1.8,
         marginBottom: 5,
     },
-
     title: {
         fontSize: 25,
         fontWeight: '800',
         color: '#171717',
         letterSpacing: -0.6,
     },
-
     subtitle: {
         fontSize: 12,
         color: '#777777',
         marginTop: 7,
         lineHeight: 18,
     },
-
     headerIcon: {
         width: 45,
         height: 45,
@@ -54,18 +47,13 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-
-    // LISTA
     listContent: {
         paddingHorizontal: 16,
         paddingBottom: 30,
     },
-
     emptyListContent: {
         flexGrow: 1,
     },
-
-    // TARJETA
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 19,
@@ -73,38 +61,28 @@ export const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#EEEEEE',
-
         shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.07,
         shadowRadius: 10,
-
         elevation: 3,
     },
-
-    // IMAGEN
     imageContainer: {
         width: '100%',
         height: 185,
         position: 'relative',
         backgroundColor: '#E9E9E9',
     },
-
     vehicleImage: {
         width: '100%',
         height: '100%',
     },
-
     imagePlaceholder: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#EEEEEE',
     },
-
     imageDarkOverlay: {
         position: 'absolute',
         left: 0,
@@ -113,7 +91,6 @@ export const styles = StyleSheet.create({
         height: 95,
         backgroundColor: 'rgba(0, 0, 0, 0.34)',
     },
-
     statusBadge: {
         position: 'absolute',
         top: 13,
@@ -125,19 +102,16 @@ export const styles = StyleSheet.create({
         paddingVertical: 7,
         borderRadius: 20,
     },
-
     statusText: {
         fontSize: 11,
         fontWeight: '800',
     },
-
     imageOverlay: {
         position: 'absolute',
         left: 16,
         right: 16,
         bottom: 14,
     },
-
     vehicleBrand: {
         color: '#FFFFFF',
         fontSize: 9,
@@ -146,22 +120,17 @@ export const styles = StyleSheet.create({
         marginBottom: 4,
         opacity: 0.9,
     },
-
     vehicleName: {
         color: '#FFFFFF',
         fontSize: 21,
         fontWeight: '800',
         letterSpacing: -0.3,
     },
-
-    // CUERPO
     cardBody: {
         paddingHorizontal: 16,
         paddingTop: 16,
         paddingBottom: 13,
     },
-
-    // MONTO E ID
     mainInfoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -170,16 +139,13 @@ export const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
-
     rentalIdContainer: {
         flex: 1,
         paddingRight: 10,
     },
-
     priceContainer: {
         alignItems: 'flex-end',
     },
-
     label: {
         fontSize: 9,
         fontWeight: '800',
@@ -187,34 +153,28 @@ export const styles = StyleSheet.create({
         letterSpacing: 1,
         marginBottom: 5,
     },
-
     rentalId: {
         fontSize: 13,
         fontWeight: '700',
         color: '#282828',
     },
-
     price: {
         fontSize: 22,
         fontWeight: '900',
         color: '#D31A24',
         letterSpacing: -0.5,
     },
-
-    // PLACA Y DURACIÓN
     featuresRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 25,
         paddingVertical: 15,
     },
-
     featureItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 9,
     },
-
     featureIcon: {
         width: 35,
         height: 35,
@@ -223,7 +183,6 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     featureLabel: {
         fontSize: 9,
         fontWeight: '800',
@@ -231,14 +190,11 @@ export const styles = StyleSheet.create({
         letterSpacing: 0.7,
         marginBottom: 3,
     },
-
     featureValue: {
         fontSize: 12,
         fontWeight: '800',
         color: '#262626',
     },
-
-    // FECHAS
     datesContainer: {
         backgroundColor: '#F8F8F9',
         borderRadius: 13,
@@ -248,14 +204,12 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 15,
     },
-
     dateItem: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
     },
-
     dateIconContainer: {
         width: 31,
         height: 31,
@@ -264,11 +218,9 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     dateTextContainer: {
         flex: 1,
     },
-
     dateLabel: {
         fontSize: 9,
         fontWeight: '800',
@@ -276,32 +228,59 @@ export const styles = StyleSheet.create({
         letterSpacing: 0.6,
         marginBottom: 4,
     },
-
     dateValue: {
         fontSize: 11,
         fontWeight: '800',
         color: '#292929',
     },
-
     dateDivider: {
         width: 1,
         height: 34,
         backgroundColor: '#E5E5E5',
         marginHorizontal: 9,
     },
-
-    // BOTÓN DETALLES
     detailButton: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingTop: 3,
     },
-
     detailText: {
         fontSize: 12,
         fontWeight: '800',
         color: '#D31A24',
+    },
+
+    // CALIFICACIONES
+    reviewButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#D31A24',
+        borderRadius: 12,
+        paddingVertical: 13,
+        paddingHorizontal: 12,
+        marginTop: 14,
+        gap: 8,
+    },
+    reviewButtonText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '800',
+    },
+    reviewedContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FCEBEC',
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 14,
+        gap: 8,
+    },
+    reviewedText: {
+        color: '#A71922',
+        fontSize: 12,
+        fontWeight: '800',
     },
 
     // CARGANDO
@@ -310,7 +289,6 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     loadingText: {
         marginTop: 12,
         fontSize: 13,
@@ -325,7 +303,6 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 30,
     },
-
     emptyIconContainer: {
         width: 105,
         height: 105,
@@ -335,7 +312,6 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 19,
     },
-
     emptyTitle: {
         fontSize: 19,
         fontWeight: '800',
@@ -343,21 +319,18 @@ export const styles = StyleSheet.create({
         marginBottom: 8,
         textAlign: 'center',
     },
-
     emptySubtitle: {
         fontSize: 13,
         color: '#777777',
         textAlign: 'center',
         lineHeight: 21,
     },
-
     emptyDecoration: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
         marginTop: 18,
     },
-
     emptyDecorationText: {
         fontSize: 11,
         color: '#98A2B3',

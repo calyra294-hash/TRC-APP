@@ -9,12 +9,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/login/LoginScreen';
+
 import OtraScreenAdmin from './src/screens/administrador/OtraScreenAdmin';
 import ReservasAdminScreen from './src/screens/administrador/ReservasAdminScreen';
 import InicioAdminScreen from './src/screens/administrador/InicioAdminScreen';
 import AlquileresAdminScreen from './src/screens/administrador/AlquileresAdminScreen';
 import EscanearQRScreen from './src/screens/administrador/EscanearQRScreen';
 import VehiculosAdminScreen from './src/screens/administrador/VehiculosAdminScreen';
+import ResenasAdminScreen from './src/screens/administrador/ResenasAdminScreen';
 
 import { saludService } from './src/services/salud.service';
 
@@ -40,6 +42,22 @@ function AlquileresNavigator() {
       <Stack.Screen
         name="DetalleAlquiler"
         component={DetalleAlquilerScreen}
+      />
+    </Stack.Navigator>
+  );
+}
+
+// Navegación interna de Inicio del administrador
+function InicioAdminNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="InicioAdminMain"
+        component={InicioAdminScreen}
+      />
+      <Stack.Screen
+        name="ResenasAdmin"
+        component={ResenasAdminScreen}
       />
     </Stack.Navigator>
   );
@@ -151,15 +169,30 @@ function AdminTabs() {
         },
       })}
     >
-      <Tab.Screen name="Inicio" component={InicioAdminScreen} />
-      <Tab.Screen name="Vehículos" component={VehiculosAdminScreen} />
-      <Tab.Screen name="Reservas" component={ReservasAdminScreen} />
-      <Tab.Screen name="Alquileres" component={AlquileresAdminScreen} />
+      <Tab.Screen
+        name="Inicio"
+        component={InicioAdminNavigator}
+      />
+      <Tab.Screen
+        name="Vehículos"
+        component={VehiculosAdminScreen}
+      />
+      <Tab.Screen
+        name="Reservas"
+        component={ReservasAdminScreen}
+      />
+      <Tab.Screen
+        name="Alquileres"
+        component={AlquileresAdminScreen}
+      />
       <Tab.Screen
         name="Escanear QR"
         component={EscanearQRScreen}
       />
-      <Tab.Screen name="Mi perfil" component={OtraScreenAdmin} />
+      <Tab.Screen
+        name="Mi perfil"
+        component={OtraScreenAdmin}
+      />
     </Tab.Navigator>
   );
 }
