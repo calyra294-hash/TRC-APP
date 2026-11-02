@@ -1,3 +1,6 @@
+allowBuilds:
+  '@firebase/util': set this to true or false
+  protobufjs: set this to true or false
 minimumReleaseAgeExclude:
   - '@expo/cli@57.0.28'
   - '@expo/config-plugins@57.0.10'
