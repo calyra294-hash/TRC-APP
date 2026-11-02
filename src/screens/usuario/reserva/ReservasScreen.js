@@ -1,5 +1,5 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,21 +8,81 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  Alert,
+  Platform,
 } from 'react-native';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { useReservas } from '../../../hooks/useReservas';
-import { getQRAlquiler } from '../../../services/reservas.service';
+import { useVehiculos } from '../../../hooks/useVehiculos';
+
+import {
+  getQRAlquiler,
+  editarReserva,
+  eliminarReserva,
+} from '../../../services/reservas.service.js';
+
+const formatearFechaEnvio = (fecha) => {
+  const año = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+
+  return `${año}-${mes}-${dia}`;
+};
+
+const convertirFecha = (fecha) => {
+  if (!fecha) return null;
+
+  let fechaReal;
+
+  if (fecha._seconds) {
+    fechaReal = new Date(fecha._seconds * 1000);
+  } else if (fecha.seconds) {
+    fechaReal = new Date(fecha.seconds * 1000);
+  } else {
+    const texto = String(fecha);
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      const [año, mes, dia] = texto.split('-').map(Number);
+      fechaReal = new Date(año, mes - 1, dia);
+    } else {
+      fechaReal = new Date(texto);
+    }
+  }
+
+  if (isNaN(fechaReal.getTime())) return null;
+
+  fechaReal.setHours(0, 0, 0, 0);
+
+  return fechaReal;
+};
+
+const obtenerIdVehiculo = (vehiculo) => {
+  return Number(vehiculo?.id_coche || vehiculo?.id);
+};
 
 export default function ReservasScreen() {
   const { reservas, loading, error, refrescar } = useReservas();
+  const { vehiculos = [] } = useVehiculos();
 
   const [qrToken, setQrToken] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState('');
   const [qrVersion, setQrVersion] = useState(0);
+
+  const [modalEditar, setModalEditar] = useState(false);
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
+  const [fechaInicioEdit, setFechaInicioEdit] = useState(null);
+  const [fechaFinEdit, setFechaFinEdit] = useState(null);
+  const [mostrarFechaInicio, setMostrarFechaInicio] = useState(false);
+  const [mostrarFechaFin, setMostrarFechaFin] = useState(false);
+  const [guardandoCambio, setGuardandoCambio] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   const reserva = reservas?.[0];
 
@@ -31,6 +91,8 @@ export default function ReservasScreen() {
     reserva?.estado ||
     'pendiente'
   ).toLowerCase().trim();
+
+  const esPendiente = estado === 'pendiente';
 
   const esAprobada = [
     'aprobada',
@@ -53,6 +115,50 @@ export default function ReservasScreen() {
   ].includes(estadoAlquiler);
 
   const puedeObtenerQR = esAprobada || esAlquilerActivo;
+
+  const vehiculosDisponibles = useMemo(() => {
+    const lista = Array.isArray(vehiculos) ? [...vehiculos] : [];
+
+    const vehiculoActual = reserva?.coche;
+
+    if (vehiculoActual) {
+      const idActual = obtenerIdVehiculo(vehiculoActual);
+
+      const yaExiste = lista.some(
+        item => obtenerIdVehiculo(item) === idActual
+      );
+
+      if (idActual && !yaExiste) {
+        lista.unshift(vehiculoActual);
+      }
+    }
+
+    return lista;
+  }, [vehiculos, reserva]);
+
+  const precioDiario = Number(
+    vehiculoSeleccionado?.valor_dia ||
+    vehiculoSeleccionado?.precio ||
+    0
+  );
+
+  const cantidadDias = useMemo(() => {
+    if (!fechaInicioEdit || !fechaFinEdit) return 0;
+
+    const inicio = new Date(fechaInicioEdit);
+    const fin = new Date(fechaFinEdit);
+
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+
+    const diferencia = fin.getTime() - inicio.getTime();
+
+    return Math.round(diferencia / (1000 * 60 * 60 * 24));
+  }, [fechaInicioEdit, fechaFinEdit]);
+
+  const totalEstimado = cantidadDias > 0
+    ? cantidadDias * precioDiario
+    : 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -120,31 +226,182 @@ export default function ReservasScreen() {
   };
 
   const formatearFecha = (fecha) => {
-    if (!fecha) return 'Sin fecha';
+    const fechaReal = convertirFecha(fecha);
 
-    let fechaReal;
-
-    if (fecha._seconds) {
-      fechaReal = new Date(fecha._seconds * 1000);
-    } else if (fecha.seconds) {
-      fechaReal = new Date(fecha.seconds * 1000);
-    } else {
-      const texto = String(fecha);
-
-      fechaReal = new Date(
-        /^\d{4}-\d{2}-\d{2}$/.test(texto)
-          ? `${texto}T00:00:00`
-          : texto
-      );
-    }
-
-    if (isNaN(fechaReal.getTime())) return 'Sin fecha';
+    if (!fechaReal) return 'Sin fecha';
 
     return fechaReal.toLocaleDateString('es-NI', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const abrirEdicion = () => {
+    const vehiculoActual = reserva?.coche || {};
+
+    const idActual = Number(
+      reserva?.id_coche ||
+      vehiculoActual.id_coche ||
+      vehiculoActual.id
+    );
+
+    const vehiculoEncontrado = vehiculosDisponibles.find(
+      item => obtenerIdVehiculo(item) === idActual
+    );
+
+    setVehiculoSeleccionado(
+      vehiculoEncontrado || vehiculoActual
+    );
+
+    setFechaInicioEdit(convertirFecha(reserva?.fecha_inicio));
+    setFechaFinEdit(convertirFecha(reserva?.fecha_fin));
+
+    setMostrarFechaInicio(false);
+    setMostrarFechaFin(false);
+    setModalEditar(true);
+  };
+
+  const cerrarEdicion = () => {
+    if (guardandoCambio) return;
+
+    setModalEditar(false);
+    setMostrarFechaInicio(false);
+    setMostrarFechaFin(false);
+  };
+
+  const guardarEdicion = async () => {
+    const idReserva = reserva?.id ?? reserva?.id_reserva;
+
+    if (!idReserva) {
+      Alert.alert(
+        'Error',
+        'No se pudo identificar la reserva que deseas editar.'
+      );
+      return;
+    }
+
+    if (!vehiculoSeleccionado) {
+      Alert.alert(
+        'Vehículo requerido',
+        'Seleccioná el vehículo que deseas reservar.'
+      );
+      return;
+    }
+
+    if (!fechaInicioEdit || !fechaFinEdit) {
+      Alert.alert(
+        'Fechas requeridas',
+        'Seleccioná la fecha de inicio y la fecha de finalización.'
+      );
+      return;
+    }
+
+    const inicio = new Date(fechaInicioEdit);
+    const fin = new Date(fechaFinEdit);
+
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+
+    if (fin <= inicio) {
+      Alert.alert(
+        'Fechas incorrectas',
+        'La fecha de finalización debe ser posterior a la fecha de inicio.'
+      );
+      return;
+    }
+
+    const idCoche = obtenerIdVehiculo(vehiculoSeleccionado);
+
+    if (!Number.isFinite(idCoche) || idCoche <= 0) {
+      Alert.alert(
+        'Error',
+        'No se pudo identificar el vehículo seleccionado.'
+      );
+      return;
+    }
+
+    try {
+      setGuardandoCambio(true);
+
+      await editarReserva(idReserva, {
+        id_coche: idCoche,
+        fecha_inicio: formatearFechaEnvio(inicio),
+        fecha_fin: formatearFechaEnvio(fin),
+      });
+
+      setModalEditar(false);
+
+      await refrescar();
+      actualizarQR();
+
+      Alert.alert(
+        'Reserva actualizada',
+        'Los cambios de tu reserva se guardaron correctamente.'
+      );
+    } catch (err) {
+      console.error('Error al editar reserva:', err);
+
+      Alert.alert(
+        'No se pudo actualizar',
+        err.message || 'Ocurrió un error al modificar tu reserva.'
+      );
+    } finally {
+      setGuardandoCambio(false);
+    }
+  };
+
+  const confirmarEliminar = () => {
+    const idReserva = reserva?.id ?? reserva?.id_reserva;
+
+    if (!idReserva) {
+      Alert.alert(
+        'Error',
+        'No se pudo identificar la reserva que deseas eliminar.'
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Eliminar reserva',
+      '¿Estás segura de que deseas eliminar esta reserva? Esta acción no se puede deshacer.',
+      [
+        {
+          text: 'No, conservar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sí, eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setEliminando(true);
+
+              await eliminarReserva(idReserva);
+
+              setQrToken(null);
+              setQrError('');
+
+              await refrescar();
+
+              Alert.alert(
+                'Reserva eliminada',
+                'Tu reserva se eliminó correctamente.'
+              );
+            } catch (err) {
+              console.error('Error al eliminar reserva:', err);
+
+              Alert.alert(
+                'No se pudo eliminar',
+                err.message || 'Ocurrió un error al eliminar tu reserva.'
+              );
+            } finally {
+              setEliminando(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const obtenerEstado = () => {
@@ -648,6 +905,62 @@ export default function ReservasScreen() {
             )}
           </View>
 
+          {esPendiente && (
+            <View style={styles.pendingActions}>
+              <Text style={styles.pendingActionsTitle}>
+                Administrar reserva
+              </Text>
+
+              <Text style={styles.pendingActionsDescription}>
+                Mientras esté pendiente, puedes modificar los datos o eliminarla.
+              </Text>
+
+              <View style={styles.pendingButtonsRow}>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={abrirEdicion}
+                  disabled={eliminando || guardandoCambio}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    size={18}
+                    color="#FFFFFF"
+                  />
+
+                  <Text style={styles.editButtonText}>
+                    Editar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.deleteButton,
+                    eliminando && styles.disabledButton,
+                  ]}
+                  onPress={confirmarEliminar}
+                  disabled={eliminando || guardandoCambio}
+                >
+                  {eliminando ? (
+                    <ActivityIndicator
+                      size="small"
+                      color="#D31A24"
+                    />
+                  ) : (
+                    <Ionicons
+                      name="trash-outline"
+                      size={18}
+                      color="#D31A24"
+                    />
+                  )}
+
+                  <Text style={styles.deleteButtonText}>
+                    {eliminando ? 'Eliminando...' : 'Eliminar'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           <View style={styles.buttonsRow}>
             <TouchableOpacity
               style={styles.outlineButton}
@@ -691,6 +1004,325 @@ export default function ReservasScreen() {
           Gracias por elegir Tito's Rent a Car.
         </Text>
       </ScrollView>
+
+      <Modal
+        visible={modalEditar}
+        animationType="slide"
+        transparent
+        onRequestClose={cerrarEdicion}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.editModal}>
+            <View style={styles.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>
+                  Editar reserva
+                </Text>
+
+                <Text style={styles.modalSubtitle}>
+                  Modifica el vehículo y las fechas.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={cerrarEdicion}
+                disabled={guardandoCambio}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={29}
+                  color="#777777"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.editSectionTitle}>
+                Selecciona un vehículo
+              </Text>
+
+              {vehiculosDisponibles.length === 0 ? (
+                <Text style={styles.noVehiclesText}>
+                  No se encontraron vehículos disponibles en el catálogo.
+                </Text>
+              ) : (
+                <View style={styles.vehicleOptions}>
+                  {vehiculosDisponibles.map((item, index) => {
+                    const idItem = obtenerIdVehiculo(item);
+                    const idSeleccionado = obtenerIdVehiculo(
+                      vehiculoSeleccionado
+                    );
+
+                    const seleccionado =
+                      idItem === idSeleccionado;
+
+                    const nombre =
+                      item.nombre ||
+                      `${item.marca || ''} ${item.modelo || ''}`.trim();
+
+                    const imagen =
+                      item.url_imagen || item.imagen;
+
+                    return (
+                      <TouchableOpacity
+                        key={String(idItem || index)}
+                        style={[
+                          styles.vehicleOption,
+                          seleccionado && styles.vehicleOptionSelected,
+                        ]}
+                        onPress={() => setVehiculoSeleccionado(item)}
+                        disabled={guardandoCambio}
+                      >
+                        {imagen ? (
+                          <Image
+                            source={{ uri: imagen }}
+                            style={styles.vehicleOptionImage}
+                            resizeMode="contain"
+                          />
+                        ) : (
+                          <View style={styles.vehicleOptionImagePlaceholder}>
+                            <Ionicons
+                              name="car-sport-outline"
+                              size={28}
+                              color="#999999"
+                            />
+                          </View>
+                        )}
+
+                        <View style={styles.vehicleOptionInfo}>
+                          <Text
+                            style={styles.vehicleOptionName}
+                            numberOfLines={1}
+                          >
+                            {nombre || 'Vehículo'}
+                          </Text>
+
+                          <Text style={styles.vehicleOptionPrice}>
+                            ${Number(
+                              item.valor_dia || item.precio || 0
+                            ).toFixed(2)} / día
+                          </Text>
+                        </View>
+
+                        <Ionicons
+                          name={
+                            seleccionado
+                              ? 'radio-button-on'
+                              : 'radio-button-off'
+                          }
+                          size={22}
+                          color={seleccionado ? '#D31A24' : '#AAAAAA'}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              <View style={styles.modalDivider} />
+
+              <Text style={styles.editSectionTitle}>
+                Fecha de inicio
+              </Text>
+
+              <TouchableOpacity
+                style={styles.datePickerButton}
+                onPress={() => {
+                  setMostrarFechaFin(false);
+                  setMostrarFechaInicio(true);
+                }}
+                disabled={guardandoCambio}
+              >
+                <Text style={styles.datePickerButtonText}>
+                  {fechaInicioEdit
+                    ? formatearFechaEnvio(fechaInicioEdit)
+                    : 'Seleccionar fecha'}
+                </Text>
+
+                <Ionicons
+                  name="calendar-outline"
+                  size={21}
+                  color="#D31A24"
+                />
+              </TouchableOpacity>
+
+              {mostrarFechaInicio && (
+                <DateTimePicker
+                  value={fechaInicioEdit || new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    setMostrarFechaInicio(false);
+
+                    if (
+                      event?.type === 'dismissed' ||
+                      !selectedDate
+                    ) {
+                      return;
+                    }
+
+                    const nuevaFecha = new Date(selectedDate);
+                    nuevaFecha.setHours(0, 0, 0, 0);
+
+                    setFechaInicioEdit(nuevaFecha);
+
+                    if (fechaFinEdit && nuevaFecha >= fechaFinEdit) {
+                      const nuevaFinal = new Date(nuevaFecha);
+                      nuevaFinal.setDate(nuevaFinal.getDate() + 1);
+                      setFechaFinEdit(nuevaFinal);
+                    }
+                  }}
+                />
+              )}
+
+              <Text style={styles.editSectionTitle}>
+                Fecha de finalización
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.datePickerButton,
+                  !fechaInicioEdit && styles.datePickerDisabled,
+                ]}
+                onPress={() => {
+                  if (!fechaInicioEdit) {
+                    Alert.alert(
+                      'Selecciona primero la fecha inicial',
+                      'Después podrás elegir la fecha de finalización.'
+                    );
+                    return;
+                  }
+
+                  setMostrarFechaInicio(false);
+                  setMostrarFechaFin(true);
+                }}
+                disabled={guardandoCambio || !fechaInicioEdit}
+              >
+                <Text
+                  style={[
+                    styles.datePickerButtonText,
+                    !fechaInicioEdit && styles.datePickerPlaceholder,
+                  ]}
+                >
+                  {fechaFinEdit
+                    ? formatearFechaEnvio(fechaFinEdit)
+                    : 'Seleccionar fecha'}
+                </Text>
+
+                <Ionicons
+                  name="calendar-outline"
+                  size={21}
+                  color="#D31A24"
+                />
+              </TouchableOpacity>
+
+              {mostrarFechaFin && fechaInicioEdit && (
+                <DateTimePicker
+                  value={
+                    fechaFinEdit ||
+                    new Date(
+                      fechaInicioEdit.getTime() +
+                      24 * 60 * 60 * 1000
+                    )
+                  }
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  minimumDate={
+                    new Date(
+                      fechaInicioEdit.getTime() +
+                      24 * 60 * 60 * 1000
+                    )
+                  }
+                  onChange={(event, selectedDate) => {
+                    setMostrarFechaFin(false);
+
+                    if (
+                      event?.type === 'dismissed' ||
+                      !selectedDate
+                    ) {
+                      return;
+                    }
+
+                    const nuevaFecha = new Date(selectedDate);
+                    nuevaFecha.setHours(0, 0, 0, 0);
+
+                    setFechaFinEdit(nuevaFecha);
+                  }}
+                />
+              )}
+
+              <View style={styles.estimatedTotal}>
+                <View>
+                  <Text style={styles.estimatedTotalLabel}>
+                    TOTAL ESTIMADO
+                  </Text>
+
+                  <Text style={styles.estimatedTotalDays}>
+                    {cantidadDias > 0
+                      ? `${cantidadDias} día${cantidadDias === 1 ? '' : 's'}`
+                      : 'Selecciona las fechas'}
+                  </Text>
+                </View>
+
+                <Text style={styles.estimatedTotalAmount}>
+                  ${totalEstimado.toFixed(2)}
+                </Text>
+              </View>
+
+              <Text style={styles.editNote}>
+                El total definitivo será calculado nuevamente por el servidor
+                según el precio vigente del vehículo.
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.saveEditButton,
+                  (guardandoCambio || vehiculosDisponibles.length === 0) &&
+                  styles.disabledButton,
+                ]}
+                onPress={guardarEdicion}
+                disabled={
+                  guardandoCambio ||
+                  vehiculosDisponibles.length === 0
+                }
+              >
+                {guardandoCambio ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FFFFFF"
+                  />
+                ) : (
+                  <Ionicons
+                    name="save-outline"
+                    size={19}
+                    color="#FFFFFF"
+                  />
+                )}
+
+                <Text style={styles.saveEditButtonText}>
+                  {guardandoCambio
+                    ? 'GUARDANDO CAMBIOS...'
+                    : 'GUARDAR CAMBIOS'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelEditButton}
+                onPress={cerrarEdicion}
+                disabled={guardandoCambio}
+              >
+                <Text style={styles.cancelEditButtonText}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1151,5 +1783,236 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 12,
+  },
+  pendingActions: {
+    marginTop: 19,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: '#FFF8F0',
+    borderWidth: 1,
+    borderColor: '#F4E4D2',
+  },
+  pendingActionsTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#292929',
+  },
+  pendingActionsDescription: {
+    fontSize: 11,
+    color: '#777777',
+    lineHeight: 17,
+    marginTop: 5,
+    marginBottom: 13,
+  },
+  pendingButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  editButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: '#D31A24',
+    borderRadius: 11,
+    paddingVertical: 12,
+  },
+  editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  deleteButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E8BFC1',
+    borderRadius: 11,
+    paddingVertical: 12,
+  },
+  deleteButtonText: {
+    color: '#D31A24',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.50)',
+    justifyContent: 'flex-end',
+  },
+  editModal: {
+    maxHeight: '92%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 30,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#202020',
+  },
+  modalSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#777777',
+  },
+  editSectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#292929',
+    marginBottom: 10,
+    marginTop: 5,
+  },
+  vehicleOptions: {
+    gap: 9,
+  },
+  vehicleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 9,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    borderRadius: 12,
+    backgroundColor: '#FAFAFA',
+  },
+  vehicleOptionSelected: {
+    borderColor: '#D31A24',
+    backgroundColor: '#FFF5F5',
+  },
+  vehicleOptionImage: {
+    width: 72,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: '#EEEEEE',
+  },
+  vehicleOptionImagePlaceholder: {
+    width: 72,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: '#EEEEEE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vehicleOptionInfo: {
+    flex: 1,
+    marginLeft: 10,
+    marginRight: 8,
+  },
+  vehicleOptionName: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#222222',
+  },
+  vehicleOptionPrice: {
+    fontSize: 11,
+    color: '#D31A24',
+    fontWeight: '700',
+    marginTop: 5,
+  },
+  noVehiclesText: {
+    fontSize: 12,
+    color: '#777777',
+    padding: 12,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 10,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: '#EEEEEE',
+    marginVertical: 17,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    borderRadius: 11,
+    padding: 14,
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  datePickerButtonText: {
+    fontSize: 14,
+    color: '#222222',
+    fontWeight: '600',
+  },
+  datePickerPlaceholder: {
+    color: '#999999',
+  },
+  datePickerDisabled: {
+    backgroundColor: '#F3F3F3',
+    borderColor: '#EEEEEE',
+  },
+  estimatedTotal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#F5DCDD',
+    borderRadius: 13,
+    padding: 15,
+    marginTop: 5,
+  },
+  estimatedTotalLabel: {
+    fontSize: 10,
+    color: '#777777',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  estimatedTotalDays: {
+    fontSize: 11,
+    color: '#777777',
+    marginTop: 5,
+  },
+  estimatedTotalAmount: {
+    fontSize: 21,
+    color: '#D31A24',
+    fontWeight: '900',
+  },
+  editNote: {
+    fontSize: 10,
+    color: '#888888',
+    lineHeight: 15,
+    marginTop: 9,
+    marginBottom: 15,
+  },
+  saveEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    backgroundColor: '#D31A24',
+    paddingVertical: 15,
+    borderRadius: 12,
+  },
+  saveEditButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  cancelEditButton: {
+    alignItems: 'center',
+    paddingVertical: 13,
+  },
+  cancelEditButtonText: {
+    color: '#777777',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

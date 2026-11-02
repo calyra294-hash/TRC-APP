@@ -1,4 +1,3 @@
-
 import { auth } from "../config/firebase";
 
 const API_URL =
@@ -87,6 +86,45 @@ export const crearReserva = async (datos) => {
             json.mensaje ||
             json.error ||
             `Error al crear reserva: ${response.status}`
+        );
+    }
+
+    return json.data;
+};
+
+// EDITAR RESERVA PENDIENTE
+export const editarReserva = async (id, datos) => {
+    const usuario = auth.currentUser;
+
+    if (!usuario) {
+        throw new Error("Debes iniciar sesión nuevamente.");
+    }
+
+    const token = await usuario.getIdToken();
+
+    const response = await fetch(
+        `${API_URL}/reserva/${encodeURIComponent(id)}`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                id_coche: datos.id_coche,
+                fecha_inicio: datos.fecha_inicio,
+                fecha_fin: datos.fecha_fin,
+            }),
+        }
+    );
+
+    const json = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            json.mensaje ||
+            json.error ||
+            `Error al editar reserva: ${response.status}`
         );
     }
 
