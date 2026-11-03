@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import {
   View,
@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -17,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DetalleVehiculoScreen.styles.js';
 
 import { crearReserva } from '../../../services/reservas.service.js';
+import { getResenasVehiculo } from '../../../services/resenas.service.js';
 
 const e = React.createElement;
 
@@ -24,6 +26,11 @@ const ID_USUARIO_TEMPORAL = 1;
 
 export default function DetalleVehiculoScreen({ route, navigation }) {
   const { vehiculo } = route.params || {};
+
+  // COMPROBAR IDENTIFICADOR DEL VEHÍCULO
+  console.log('VEHÍCULO SELECCIONADO:', vehiculo);
+  console.log('ID COCHE:', vehiculo?.id_coche);
+  console.log('ID:', vehiculo?.id);
 
   const [modalReserva, setModalReserva] = useState(false);
   const [fechaInicio, setFechaInicio] = useState(null);
@@ -36,6 +43,15 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
     useState(false);
 
   const [guardando, setGuardando] = useState(false);
+
+  const [datosResenas, setDatosResenas] = useState({
+    promedio: 0,
+    total: 0,
+    resenas: [],
+  });
+
+  const [cargandoResenas, setCargandoResenas] = useState(true);
+  const [errorResenas, setErrorResenas] = useState(false);
 
   const detalles = useMemo(() => {
     if (!vehiculo) return {};
@@ -54,6 +70,61 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
       maletero: vehiculo.maletero || '850L',
     };
   }, [vehiculo]);
+
+  useEffect(() => {
+    let activo = true;
+
+    const cargarResenas = async () => {
+      const idVehiculo = vehiculo?.id_coche || vehiculo?.id;
+
+      console.log('ID ENVIADO A RESEÑAS:', idVehiculo);
+
+      if (!idVehiculo) {
+        setCargandoResenas(false);
+        return;
+      }
+
+      try {
+        setCargandoResenas(true);
+        setErrorResenas(false);
+
+        const resultado = await getResenasVehiculo(idVehiculo);
+
+        console.log('RESULTADO DE RESEÑAS:', resultado);
+
+        if (activo) {
+          setDatosResenas({
+            promedio: Number(resultado?.promedio || 0),
+            total: Number(resultado?.total || 0),
+            resenas: Array.isArray(resultado?.resenas)
+              ? resultado.resenas
+              : [],
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar reseñas del vehículo:', error);
+
+        if (activo) {
+          setErrorResenas(true);
+          setDatosResenas({
+            promedio: 0,
+            total: 0,
+            resenas: [],
+          });
+        }
+      } finally {
+        if (activo) {
+          setCargandoResenas(false);
+        }
+      }
+    };
+
+    cargarResenas();
+
+    return () => {
+      activo = false;
+    };
+  }, [vehiculo?.id_coche, vehiculo?.id]);
 
   if (!vehiculo) {
     return e(
@@ -91,6 +162,38 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
     const dia = String(fecha.getDate()).padStart(2, '0');
 
     return `${año}-${mes}-${dia}`;
+  };
+
+  const formatearFechaResena = (fecha) => {
+    if (!fecha) return 'Fecha no disponible';
+
+    const fechaDate = new Date(fecha);
+
+    if (Number.isNaN(fechaDate.getTime())) {
+      return 'Fecha no disponible';
+    }
+
+    return fechaDate.toLocaleDateString('es-NI', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const renderEstrellas = (calificacion, tamano = 16) => {
+    const valor = Math.max(
+      0,
+      Math.min(5, Number(calificacion) || 0)
+    );
+
+    return Array.from({ length: 5 }, (_, index) =>
+      e(Ionicons, {
+        key: `estrella-${index}`,
+        name: index < Math.round(valor) ? 'star' : 'star-outline',
+        size: tamano,
+        color: '#FFB800',
+      })
+    );
   };
 
   const procesarReserva = async () => {
@@ -152,7 +255,6 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
 
       console.log('Datos de la reserva:', datosReserva);
 
-      // El backend comprueba las reservas y alquileres de todos los usuarios.
       await crearReserva(datosReserva);
 
       setModalReserva(false);
@@ -301,41 +403,16 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
               View,
               { style: styles.ratingRow },
 
-              e(Ionicons, {
-                name: 'star',
-                size: 16,
-                color: '#FFC107',
-              }),
-              e(Ionicons, {
-                name: 'star',
-                size: 16,
-                color: '#FFC107',
-              }),
-              e(Ionicons, {
-                name: 'star',
-                size: 16,
-                color: '#FFC107',
-              }),
-              e(Ionicons, {
-                name: 'star',
-                size: 16,
-                color: '#FFC107',
-              }),
-              e(Ionicons, {
-                name: 'star',
-                size: 16,
-                color: '#FFC107',
-              }),
+              ...renderEstrellas(datosResenas.promedio, 16),
 
               e(
                 Text,
                 { style: styles.ratingText },
-                '4.8 ',
-                e(
-                  Text,
-                  { style: styles.reviewsText },
-                  '(124 reseñas)'
-                )
+                cargandoResenas
+                  ? 'Cargando...'
+                  : datosResenas.total > 0
+                    ? `${datosResenas.promedio.toFixed(1)} (${datosResenas.total} ${datosResenas.total === 1 ? 'reseña' : 'reseñas'})`
+                    : 'Sin reseñas'
               )
             )
           ),
@@ -372,7 +449,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             e(Ionicons, {
               name: 'people',
               size: 24,
-              color: '#4C1D95',
+              color: '#D31A24',
             }),
             e(
               View,
@@ -396,7 +473,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             e(Ionicons, {
               name: 'cog',
               size: 24,
-              color: '#4C1D95',
+              color: '#D31A24',
             }),
             e(
               View,
@@ -422,7 +499,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             e(Ionicons, {
               name: 'color-fill',
               size: 24,
-              color: '#E53935',
+              color: '#D31A24',
             }),
             e(
               View,
@@ -448,7 +525,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
             e(Ionicons, {
               name: 'briefcase',
               size: 24,
-              color: '#0284C7',
+              color: '#D31A24',
             }),
             e(
               View,
@@ -478,7 +555,265 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
         e(
           Text,
           { style: styles.descriptionText },
-          vehiculo.descripcion
+          vehiculo.descripcion || 'Sin descripción disponible.'
+        ),
+
+        // SECCIÓN DE RESEÑAS
+        e(
+          View,
+          {
+            style: {
+              marginTop: 25,
+              paddingTop: 20,
+              borderTopWidth: 1,
+              borderTopColor: '#EEEEEE',
+            },
+          },
+
+          e(
+            View,
+            {
+              style: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 15,
+              },
+            },
+
+            e(
+              Text,
+              {
+                style: {
+                  fontSize: 19,
+                  fontWeight: 'bold',
+                  color: '#222222',
+                },
+              },
+              'Opiniones de clientes'
+            ),
+
+            e(
+              Text,
+              {
+                style: {
+                  fontSize: 13,
+                  color: '#777777',
+                },
+              },
+              `${datosResenas.total} ${datosResenas.total === 1 ? 'opinión' : 'opiniones'}`
+            )
+          ),
+
+          cargandoResenas
+            ? e(
+              View,
+              {
+                style: {
+                  paddingVertical: 25,
+                  alignItems: 'center',
+                },
+              },
+              e(ActivityIndicator, {
+                size: 'large',
+                color: '#D31A24',
+              }),
+              e(
+                Text,
+                {
+                  style: {
+                    color: '#777777',
+                    marginTop: 10,
+                    fontSize: 13,
+                  },
+                },
+                'Cargando opiniones...'
+              )
+            )
+            : errorResenas
+              ? e(
+                View,
+                {
+                  style: {
+                    backgroundColor: '#FFF4F4',
+                    borderRadius: 12,
+                    padding: 15,
+                    alignItems: 'center',
+                  },
+                },
+                e(Ionicons, {
+                  name: 'alert-circle-outline',
+                  size: 25,
+                  color: '#D31A24',
+                }),
+                e(
+                  Text,
+                  {
+                    style: {
+                      color: '#8B2525',
+                      marginTop: 7,
+                      textAlign: 'center',
+                      fontSize: 13,
+                    },
+                  },
+                  'No se pudieron cargar las opiniones. Intenta nuevamente más tarde.'
+                )
+              )
+              : datosResenas.resenas.length === 0
+                ? e(
+                  View,
+                  {
+                    style: {
+                      backgroundColor: '#F7F7F7',
+                      borderRadius: 12,
+                      padding: 22,
+                      alignItems: 'center',
+                    },
+                  },
+                  e(Ionicons, {
+                    name: 'chatbubble-ellipses-outline',
+                    size: 32,
+                    color: '#999999',
+                  }),
+                  e(
+                    Text,
+                    {
+                      style: {
+                        fontSize: 14,
+                        fontWeight: '600',
+                        color: '#555555',
+                        marginTop: 10,
+                      },
+                    },
+                    'Aún no hay reseñas para este vehículo.'
+                  ),
+                  e(
+                    Text,
+                    {
+                      style: {
+                        fontSize: 12,
+                        color: '#888888',
+                        marginTop: 5,
+                        textAlign: 'center',
+                      },
+                    },
+                    'Las opiniones de los clientes aparecerán aquí.'
+                  )
+                )
+                : e(
+                  View,
+                  null,
+
+                  ...datosResenas.resenas.map((resena, index) =>
+                    e(
+                      View,
+                      {
+                        key: resena.id || `resena-${index}`,
+                        style: {
+                          backgroundColor: '#F8F8F8',
+                          borderRadius: 13,
+                          padding: 15,
+                          marginBottom: 12,
+                          borderWidth: 1,
+                          borderColor: '#EEEEEE',
+                        },
+                      },
+
+                      e(
+                        View,
+                        {
+                          style: {
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          },
+                        },
+
+                        e(
+                          View,
+                          {
+                            style: {
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              flex: 1,
+                            },
+                          },
+
+                          e(
+                            View,
+                            {
+                              style: {
+                                width: 38,
+                                height: 38,
+                                borderRadius: 19,
+                                backgroundColor: '#FCE8E9',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 10,
+                              },
+                            },
+                            e(Ionicons, {
+                              name: 'person',
+                              size: 19,
+                              color: '#D31A24',
+                            })
+                          ),
+
+                          e(
+                            View,
+                            { style: { flex: 1 } },
+                            e(
+                              Text,
+                              {
+                                style: {
+                                  fontSize: 14,
+                                  fontWeight: 'bold',
+                                  color: '#222222',
+                                },
+                              },
+                              resena.cliente?.nombre || 'Cliente'
+                            ),
+                            e(
+                              Text,
+                              {
+                                style: {
+                                  fontSize: 11,
+                                  color: '#888888',
+                                  marginTop: 3,
+                                },
+                              },
+                              formatearFechaResena(resena.fecha_creacion)
+                            )
+                          )
+                        ),
+
+                        e(
+                          View,
+                          {
+                            style: {
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                            },
+                          },
+                          ...renderEstrellas(resena.calificacion, 13)
+                        )
+                      ),
+
+                      e(
+                        Text,
+                        {
+                          style: {
+                            fontSize: 13,
+                            color: '#444444',
+                            lineHeight: 20,
+                            marginTop: 13,
+                          },
+                        },
+                        resena.comentario || 'Sin comentario.'
+                      )
+                    )
+                  )
+                )
         )
       )
     ),
@@ -649,7 +984,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
               e(Ionicons, {
                 name: 'calendar-outline',
                 size: 23,
-                color: '#4C1D95',
+                color: '#D31A24',
               })
             ),
 
@@ -752,7 +1087,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
                 e(Ionicons, {
                   name: 'calendar-outline',
                   size: 23,
-                  color: '#4C1D95',
+                  color: '#D31A24',
                 })
               ),
 
@@ -799,7 +1134,7 @@ export default function DetalleVehiculoScreen({ route, navigation }) {
               onPress: procesarReserva,
               disabled: guardando,
               style: {
-                backgroundColor: guardando ? '#999' : '#4C1D95',
+                backgroundColor: guardando ? '#999' : '#D31A24',
                 padding: 16,
                 borderRadius: 12,
                 alignItems: 'center',

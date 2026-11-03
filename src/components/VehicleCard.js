@@ -35,18 +35,20 @@ export default function VehicleCard({
   vehiculo,
   onSelect,
   disponibilidad,
+  resumenResenas,
 }) {
   const {
     nombre,
     categoria,
-    rating = 5.0,
-    resenas = 0,
     precio,
     imagen,
     pasajeros = 5,
     transmision = 'Manual',
     combustible = 'Gasolina',
   } = vehiculo;
+
+  const promedio = Number(resumenResenas?.promedio || 0);
+  const totalResenas = Number(resumenResenas?.total || 0);
 
   const estaReservado = disponibilidad?.ocupado_actualmente || false;
   const reservadoHasta = disponibilidad?.reservado_hasta || null;
@@ -68,11 +70,23 @@ export default function VehicleCard({
         </View>
 
         <View style={styles.ratingBadge}>
-          <Ionicons name="star" size={14} color="#FFB800" />
-          <Text style={styles.ratingText}>
-            {Number(rating).toFixed(1)}
-          </Text>
-          <Text style={styles.reviewsText}>({resenas})</Text>
+          {totalResenas > 0 ? (
+            <>
+              <Ionicons name="star" size={14} color="#FFB800" />
+
+              <Text style={styles.ratingText}>
+                {promedio.toFixed(1)}
+              </Text>
+
+              <Text style={styles.reviewsText}>
+                ({totalResenas})
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.reviewsText}>
+              Sin reseñas
+            </Text>
+          )}
         </View>
       </View>
 
@@ -83,7 +97,7 @@ export default function VehicleCard({
           </Text>
 
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>${precio}</Text>
+            <Text style={styles.price}>C$ {precio}</Text>
             <Text style={styles.pricePeriod}>/día</Text>
           </View>
         </View>

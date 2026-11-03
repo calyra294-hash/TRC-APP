@@ -17,6 +17,7 @@ import VehicleCard from '../../../components/VehicleCard.js';
 import DetalleVehiculoScreen from './DetalleVehiculoScreen.js';
 import { useVehiculos, useCategorias } from '../../../hooks/index.js';
 import { getDisponibilidadVehiculos } from '../../../services/alquileres.service.js';
+import { getResenasVehiculo } from '../../../services/resenas.service.js';
 import { styles } from './VehiculosScreen.styles.js';
 
 const FILTROS_INICIALES = {
@@ -43,6 +44,7 @@ export default function VehiculosScreen({ navigation }) {
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
   const [disponibilidades, setDisponibilidades] = useState([]);
   const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(true);
+  const [resenasPorVehiculo, setResenasPorVehiculo] = useState({});
 
   const [modalFiltrosVisible, setModalFiltrosVisible] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState(FILTROS_INICIALES);
@@ -66,6 +68,72 @@ export default function VehiculosScreen({ navigation }) {
   useEffect(() => {
     cargarDisponibilidad();
   }, [cargarDisponibilidad]);
+
+  // CARGAR PROMEDIO Y CANTIDAD REAL DE RESEÑAS POR VEHÍCULO
+  useEffect(() => {
+    let cancelado = false;
+
+    const cargarResenas = async () => {
+      if (!Array.isArray(vehiculos) || vehiculos.length === 0) {
+        setResenasPorVehiculo({});
+        return;
+      }
+
+      const resultados = await Promise.all(
+        vehiculos.map(async (vehiculo) => {
+          const idCoche = String(
+            vehiculo.id_coche || vehiculo.id || ''
+          );
+
+          if (!idCoche) return null;
+
+          try {
+            const resultado = await getResenasVehiculo(idCoche);
+
+            return {
+              id: idCoche,
+              promedio: Number(resultado?.promedio || 0),
+              total: Number(resultado?.total || 0),
+            };
+          } catch (error) {
+            console.error(
+              `Error cargando reseñas del vehículo ${idCoche}:`,
+              error
+            );
+
+            return {
+              id: idCoche,
+              promedio: 0,
+              total: 0,
+            };
+          }
+        })
+      );
+
+      if (cancelado) return;
+
+      const mapa = {};
+
+      resultados.forEach((resultado) => {
+        if (resultado) {
+          mapa[resultado.id] = {
+            promedio: resultado.promedio,
+            total: resultado.total,
+          };
+        }
+      });
+
+      setResenasPorVehiculo(mapa);
+
+      console.log('RESEÑAS DEL CATÁLOGO:', mapa);
+    };
+
+    cargarResenas();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [vehiculos]);
 
   const disponibilidadesPorVehiculo = useMemo(() => {
     const mapa = {};
@@ -359,6 +427,7 @@ export default function VehiculosScreen({ navigation }) {
               return (
                 <VehicleCard
                   vehiculo={item}
+                  resumenResenas={resenasPorVehiculo[idCoche] || null}
                   disponibilidad={
                     disponibilidadesPorVehiculo[idCoche] || null
                   }
