@@ -97,27 +97,27 @@ export const crearEstilos = (theme = {}, isDark = false) => {
       marginBottom: 18,
     },
 
-    // Cuadro negro para que el logo blanco y el contenido resalten.
     locationInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#121212',
+      backgroundColor: colores.surface,
       borderRadius: 14,
       paddingVertical: 12,
       paddingHorizontal: 14,
       gap: 8,
       marginBottom: 16,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: colores.border,
     },
 
     locationInputValue: {
       fontSize: 14,
       fontWeight: '600',
-      color: '#FFFFFF',
+      color: colores.text,
     },
 
-    // Botón negro con texto blanco.
     searchButton: {
-      backgroundColor: '#121212',
+      backgroundColor: colores.surface,
       borderRadius: 14,
       paddingVertical: 14,
       alignItems: 'center',
@@ -127,10 +127,12 @@ export const crearEstilos = (theme = {}, isDark = false) => {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 2,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: colores.border,
     },
 
     searchButtonText: {
-      color: '#FFFFFF',
+      color: colores.text,
       fontSize: 15,
       fontWeight: '900',
       letterSpacing: 0.8,
@@ -212,6 +214,5 @@ export const crearEstilos = (theme = {}, isDark = false) => {
     },
   });
 };
-
 
 export const styles = crearEstilos();

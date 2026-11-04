@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "TRC-APP",
-    "slug": "TRC-APP",
+    "name": "TRC App",
+    "slug": "trc-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,6 +16,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.titosrentacar.trcapp",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -27,6 +29,12 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a72f959b-e7a1-4647-a61a-3595219d540e"
+      }
+    },
+    "owner": "yaleska19"
   }
 }
