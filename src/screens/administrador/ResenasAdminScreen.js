@@ -11,8 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { getTodasResenasAdmin } from '../../services/resenas.service';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ResenasAdminScreen({ navigation }) {
+    const { theme, isDark } = useTheme();
+
     const [datos, setDatos] = useState({
         total: 0,
         promedio: 0,
@@ -61,7 +64,13 @@ export default function ResenasAdminScreen({ navigation }) {
                     key={numero}
                     name={numero <= Number(cantidad) ? 'star' : 'star-outline'}
                     size={size}
-                    color={numero <= Number(cantidad) ? '#F5A623' : '#D8D8D8'}
+                    color={
+                        numero <= Number(cantidad)
+                            ? '#F5A623'
+                            : isDark
+                                ? '#555555'
+                                : '#D8D8D8'
+                    }
                 />
             ))}
         </View>
@@ -89,7 +98,7 @@ export default function ResenasAdminScreen({ navigation }) {
     const distribucion = datos.distribucion || {};
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             {/* ENCABEZADO */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -118,7 +127,7 @@ export default function ResenasAdminScreen({ navigation }) {
             {loading ? (
                 <View style={styles.cargando}>
                     <ActivityIndicator size="large" color="#D31A24" />
-                    <Text style={styles.textoCargando}>
+                    <Text style={[styles.textoCargando, { color: theme.secondaryText }]}>
                         Cargando reseñas...
                     </Text>
                 </View>
@@ -131,12 +140,16 @@ export default function ResenasAdminScreen({ navigation }) {
                             refreshing={refreshing}
                             onRefresh={actualizar}
                             colors={['#D31A24']}
+                            tintColor={theme.primary}
                         />
                     }
                 >
                     {error ? (
-                        <View style={styles.errorCard}>
-                            <View style={styles.errorIcono}>
+                        <View style={[styles.errorCard, { backgroundColor: theme.card }]}>
+                            <View style={[
+                                styles.errorIcono,
+                                { backgroundColor: isDark ? '#3A2022' : '#FCE8E9' },
+                            ]}>
                                 <Ionicons
                                     name="alert-circle-outline"
                                     size={30}
@@ -144,11 +157,11 @@ export default function ResenasAdminScreen({ navigation }) {
                                 />
                             </View>
 
-                            <Text style={styles.errorTitulo}>
+                            <Text style={[styles.errorTitulo, { color: theme.text }]}>
                                 Algo salió mal
                             </Text>
 
-                            <Text style={styles.errorTexto}>
+                            <Text style={[styles.errorTexto, { color: theme.secondaryText }]}>
                                 {error}
                             </Text>
 
@@ -170,18 +183,21 @@ export default function ResenasAdminScreen({ navigation }) {
                     ) : (
                         <>
                             {/* RESUMEN GENERAL */}
-                            <View style={styles.resumenCard}>
+                            <View style={[styles.resumenCard, { backgroundColor: theme.card }]}>
                                 <View style={styles.resumenEncabezado}>
                                     <View>
                                         <Text style={styles.resumenEtiqueta}>
                                             RESUMEN GENERAL
                                         </Text>
-                                        <Text style={styles.resumenTitulo}>
+                                        <Text style={[styles.resumenTitulo, { color: theme.text }]}>
                                             Satisfacción de clientes
                                         </Text>
                                     </View>
 
-                                    <View style={styles.resumenIcono}>
+                                    <View style={[
+                                        styles.resumenIcono,
+                                        { backgroundColor: isDark ? '#3A2022' : '#FCE8E9' },
+                                    ]}>
                                         <Ionicons
                                             name="stats-chart"
                                             size={22}
@@ -192,10 +208,10 @@ export default function ResenasAdminScreen({ navigation }) {
 
                                 <View style={styles.promedioContenedor}>
                                     <View style={styles.promedioNumeroBox}>
-                                        <Text style={styles.promedioNumero}>
+                                        <Text style={[styles.promedioNumero, { color: theme.text }]}>
                                             {promedio.toFixed(1)}
                                         </Text>
-                                        <Text style={styles.promedioDe}>
+                                        <Text style={[styles.promedioDe, { color: theme.secondaryText }]}>
                                             de 5.0
                                         </Text>
                                     </View>
@@ -203,7 +219,7 @@ export default function ResenasAdminScreen({ navigation }) {
                                     <View style={styles.promedioDetalle}>
                                         {renderEstrellas(Math.round(promedio), 21)}
 
-                                        <Text style={styles.totalTexto}>
+                                        <Text style={[styles.totalTexto, { color: theme.secondaryText }]}>
                                             Basado en {datos.total || 0}{' '}
                                             {(datos.total || 0) === 1
                                                 ? 'reseña'
@@ -212,9 +228,9 @@ export default function ResenasAdminScreen({ navigation }) {
                                     </View>
                                 </View>
 
-                                <View style={styles.divisor} />
+                                <View style={[styles.divisor, { backgroundColor: theme.border }]} />
 
-                                <Text style={styles.distribucionTitulo}>
+                                <Text style={[styles.distribucionTitulo, { color: theme.text }]}>
                                     Distribución de calificaciones
                                 </Text>
 
@@ -233,7 +249,7 @@ export default function ResenasAdminScreen({ navigation }) {
                                             style={styles.distribucionFila}
                                         >
                                             <View style={styles.numeroEstrellaBox}>
-                                                <Text style={styles.numeroEstrella}>
+                                                <Text style={[styles.numeroEstrella, { color: theme.text }]}>
                                                     {numero}
                                                 </Text>
                                                 <Ionicons
@@ -243,18 +259,16 @@ export default function ResenasAdminScreen({ navigation }) {
                                                 />
                                             </View>
 
-                                            <View style={styles.barraFondo}>
+                                            <View style={[styles.barraFondo, { backgroundColor: theme.border }]}>
                                                 <View
                                                     style={[
                                                         styles.barraProgreso,
-                                                        {
-                                                            width: `${porcentaje}%`,
-                                                        },
+                                                        { width: `${porcentaje}%` },
                                                     ]}
                                                 />
                                             </View>
 
-                                            <Text style={styles.cantidadTexto}>
+                                            <Text style={[styles.cantidadTexto, { color: theme.secondaryText }]}>
                                                 {cantidad}
                                             </Text>
                                         </View>
@@ -265,15 +279,18 @@ export default function ResenasAdminScreen({ navigation }) {
                             {/* TÍTULO DE OPINIONES */}
                             <View style={styles.tituloSeccion}>
                                 <View>
-                                    <Text style={styles.titulo}>
+                                    <Text style={[styles.titulo, { color: theme.text }]}>
                                         Opiniones de clientes
                                     </Text>
-                                    <Text style={styles.subtituloSeccion}>
+                                    <Text style={[styles.subtituloSeccion, { color: theme.secondaryText }]}>
                                         Lo que dicen sobre sus alquileres
                                     </Text>
                                 </View>
 
-                                <View style={styles.contador}>
+                                <View style={[
+                                    styles.contador,
+                                    { backgroundColor: isDark ? '#3A2022' : '#FCE8E9' },
+                                ]}>
                                     <Text style={styles.contadorTexto}>
                                         {datos.resenas?.length || 0}
                                     </Text>
@@ -282,8 +299,11 @@ export default function ResenasAdminScreen({ navigation }) {
 
                             {/* LISTA DE RESEÑAS */}
                             {!datos.resenas?.length ? (
-                                <View style={styles.vacio}>
-                                    <View style={styles.vacioIcono}>
+                                <View style={[styles.vacio, { backgroundColor: theme.card }]}>
+                                    <View style={[
+                                        styles.vacioIcono,
+                                        { backgroundColor: isDark ? '#3A2022' : '#FCE8E9' },
+                                    ]}>
                                         <Ionicons
                                             name="chatbubbles-outline"
                                             size={37}
@@ -291,11 +311,11 @@ export default function ResenasAdminScreen({ navigation }) {
                                         />
                                     </View>
 
-                                    <Text style={styles.vacioTitulo}>
+                                    <Text style={[styles.vacioTitulo, { color: theme.text }]}>
                                         Todavía no hay reseñas
                                     </Text>
 
-                                    <Text style={styles.vacioTexto}>
+                                    <Text style={[styles.vacioTexto, { color: theme.secondaryText }]}>
                                         Cuando los clientes califiquen sus
                                         alquileres, sus opiniones aparecerán aquí.
                                     </Text>
@@ -304,11 +324,20 @@ export default function ResenasAdminScreen({ navigation }) {
                                 datos.resenas.map((item, index) => (
                                     <View
                                         key={item.id || item.id_alquiler || index}
-                                        style={styles.resenaCard}
+                                        style={[
+                                            styles.resenaCard,
+                                            {
+                                                backgroundColor: theme.card,
+                                                borderColor: theme.border,
+                                            },
+                                        ]}
                                     >
                                         <View style={styles.resenaSuperior}>
                                             <View style={styles.clienteFila}>
-                                                <View style={styles.avatar}>
+                                                <View style={[
+                                                    styles.avatar,
+                                                    { backgroundColor: isDark ? '#3A2022' : '#FCE8E9' },
+                                                ]}>
                                                     <Ionicons
                                                         name="person"
                                                         size={21}
@@ -318,14 +347,14 @@ export default function ResenasAdminScreen({ navigation }) {
 
                                                 <View style={styles.clienteInfo}>
                                                     <Text
-                                                        style={styles.clienteNombre}
+                                                        style={[styles.clienteNombre, { color: theme.text }]}
                                                         numberOfLines={1}
                                                     >
                                                         {item.cliente?.nombre || 'Cliente'}
                                                     </Text>
 
                                                     <Text
-                                                        style={styles.clienteEmail}
+                                                        style={[styles.clienteEmail, { color: theme.secondaryText }]}
                                                         numberOfLines={1}
                                                     >
                                                         {item.cliente?.email || 'Sin correo'}
@@ -333,7 +362,10 @@ export default function ResenasAdminScreen({ navigation }) {
                                                 </View>
                                             </View>
 
-                                            <View style={styles.etiquetaResena}>
+                                            <View style={[
+                                                styles.etiquetaResena,
+                                                { backgroundColor: isDark ? '#203729' : '#EAF5ED' },
+                                            ]}>
                                                 <Ionicons
                                                     name="checkmark-circle"
                                                     size={13}
@@ -345,10 +377,13 @@ export default function ResenasAdminScreen({ navigation }) {
                                             </View>
                                         </View>
 
-                                        <View style={styles.lineaSuave} />
+                                        <View style={[styles.lineaSuave, { backgroundColor: theme.border }]} />
 
                                         <View style={styles.vehiculoFila}>
-                                            <View style={styles.vehiculoIcono}>
+                                            <View style={[
+                                                styles.vehiculoIcono,
+                                                { backgroundColor: isDark ? '#3A2022' : '#FFF0F0' },
+                                            ]}>
                                                 <Ionicons
                                                     name="car-sport-outline"
                                                     size={19}
@@ -357,10 +392,10 @@ export default function ResenasAdminScreen({ navigation }) {
                                             </View>
 
                                             <View style={styles.vehiculoInfo}>
-                                                <Text style={styles.vehiculoEtiqueta}>
+                                                <Text style={[styles.vehiculoEtiqueta, { color: theme.secondaryText }]}>
                                                     VEHÍCULO ALQUILADO
                                                 </Text>
-                                                <Text style={styles.vehiculoNombre}>
+                                                <Text style={[styles.vehiculoNombre, { color: theme.text }]}>
                                                     {item.vehiculo?.nombre ||
                                                         item.vehiculo?.marca ||
                                                         'Vehículo'}
@@ -368,7 +403,10 @@ export default function ResenasAdminScreen({ navigation }) {
                                             </View>
                                         </View>
 
-                                        <View style={styles.calificacionFila}>
+                                        <View style={[
+                                            styles.calificacionFila,
+                                            { backgroundColor: isDark ? '#30291F' : '#FFF9EF' },
+                                        ]}>
                                             {renderEstrellas(item.calificacion, 20)}
 
                                             <Text style={styles.calificacionTexto}>
@@ -376,14 +414,14 @@ export default function ResenasAdminScreen({ navigation }) {
                                             </Text>
                                         </View>
 
-                                        <View style={styles.comentarioCaja}>
+                                        <View style={[styles.comentarioCaja, { backgroundColor: theme.input }]}>
                                             <Ionicons
                                                 name="chatbox-ellipses-outline"
                                                 size={18}
                                                 color="#D31A24"
                                             />
 
-                                            <Text style={styles.comentario}>
+                                            <Text style={[styles.comentario, { color: theme.text }]}>
                                                 {item.comentario || 'Sin comentario.'}
                                             </Text>
                                         </View>
@@ -392,10 +430,10 @@ export default function ResenasAdminScreen({ navigation }) {
                                             <Ionicons
                                                 name="calendar-outline"
                                                 size={15}
-                                                color="#888888"
+                                                color={theme.secondaryText}
                                             />
 
-                                            <Text style={styles.fecha}>
+                                            <Text style={[styles.fecha, { color: theme.secondaryText }]}>
                                                 {formatearFecha(item.fecha_creacion)}
                                             </Text>
                                         </View>
@@ -413,7 +451,6 @@ export default function ResenasAdminScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
     },
 
     header: {
@@ -476,12 +513,10 @@ const styles = StyleSheet.create({
 
     textoCargando: {
         marginTop: 12,
-        color: '#777777',
         fontSize: 13,
     },
 
     resumenCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 21,
         padding: 19,
         marginBottom: 27,
@@ -506,7 +541,6 @@ const styles = StyleSheet.create({
     },
 
     resumenTitulo: {
-        color: '#222222',
         fontSize: 17,
         fontWeight: 'bold',
         marginTop: 5,
@@ -516,7 +550,6 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 13,
-        backgroundColor: '#FCE8E9',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -534,14 +567,12 @@ const styles = StyleSheet.create({
     },
 
     promedioNumero: {
-        color: '#121212',
         fontSize: 49,
         fontWeight: 'bold',
         letterSpacing: -2,
     },
 
     promedioDe: {
-        color: '#888888',
         fontSize: 12,
         marginLeft: 4,
     },
@@ -558,19 +589,16 @@ const styles = StyleSheet.create({
     },
 
     totalTexto: {
-        color: '#777777',
         fontSize: 11,
         marginTop: 7,
     },
 
     divisor: {
         height: 1,
-        backgroundColor: '#EEEEEE',
         marginVertical: 19,
     },
 
     distribucionTitulo: {
-        color: '#333333',
         fontSize: 12,
         fontWeight: 'bold',
         marginBottom: 14,
@@ -591,7 +619,6 @@ const styles = StyleSheet.create({
     },
 
     numeroEstrella: {
-        color: '#444444',
         fontSize: 12,
         fontWeight: 'bold',
     },
@@ -599,7 +626,6 @@ const styles = StyleSheet.create({
     barraFondo: {
         flex: 1,
         height: 8,
-        backgroundColor: '#EEEEEE',
         borderRadius: 10,
         overflow: 'hidden',
     },
@@ -613,7 +639,6 @@ const styles = StyleSheet.create({
     cantidadTexto: {
         width: 25,
         textAlign: 'right',
-        color: '#777777',
         fontSize: 11,
         fontWeight: '600',
     },
@@ -628,12 +653,10 @@ const styles = StyleSheet.create({
     titulo: {
         fontSize: 19,
         fontWeight: 'bold',
-        color: '#171717',
     },
 
     subtituloSeccion: {
         fontSize: 11,
-        color: '#888888',
         marginTop: 4,
     },
 
@@ -642,7 +665,6 @@ const styles = StyleSheet.create({
         height: 35,
         paddingHorizontal: 9,
         borderRadius: 12,
-        backgroundColor: '#FCE8E9',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -654,12 +676,10 @@ const styles = StyleSheet.create({
     },
 
     resenaCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 19,
         padding: 17,
         marginBottom: 15,
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 2,
         shadowColor: '#000000',
         shadowOpacity: 0.05,
@@ -684,7 +704,6 @@ const styles = StyleSheet.create({
         width: 45,
         height: 45,
         borderRadius: 15,
-        backgroundColor: '#FCE8E9',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 11,
@@ -695,13 +714,11 @@ const styles = StyleSheet.create({
     },
 
     clienteNombre: {
-        color: '#202020',
         fontWeight: 'bold',
         fontSize: 13,
     },
 
     clienteEmail: {
-        color: '#999999',
         fontSize: 10,
         marginTop: 4,
     },
@@ -709,7 +726,6 @@ const styles = StyleSheet.create({
     etiquetaResena: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#EAF5ED',
         paddingHorizontal: 9,
         paddingVertical: 6,
         borderRadius: 20,
@@ -724,7 +740,6 @@ const styles = StyleSheet.create({
 
     lineaSuave: {
         height: 1,
-        backgroundColor: '#F0F0F0',
         marginVertical: 15,
     },
 
@@ -738,7 +753,6 @@ const styles = StyleSheet.create({
         width: 37,
         height: 37,
         borderRadius: 12,
-        backgroundColor: '#FFF0F0',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 10,
@@ -749,14 +763,12 @@ const styles = StyleSheet.create({
     },
 
     vehiculoEtiqueta: {
-        color: '#999999',
         fontSize: 9,
         fontWeight: 'bold',
         letterSpacing: 0.8,
     },
 
     vehiculoNombre: {
-        color: '#333333',
         fontSize: 13,
         fontWeight: 'bold',
         marginTop: 3,
@@ -766,7 +778,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFF9EF',
         paddingHorizontal: 11,
         paddingVertical: 9,
         borderRadius: 11,
@@ -774,7 +785,7 @@ const styles = StyleSheet.create({
     },
 
     calificacionTexto: {
-        color: '#9A6714',
+        color: '#D6A04B',
         fontSize: 11,
         fontWeight: 'bold',
     },
@@ -782,7 +793,6 @@ const styles = StyleSheet.create({
     comentarioCaja: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        backgroundColor: '#F7F7F7',
         padding: 13,
         borderRadius: 12,
         gap: 9,
@@ -790,7 +800,6 @@ const styles = StyleSheet.create({
 
     comentario: {
         flex: 1,
-        color: '#4B4B4B',
         fontSize: 12,
         lineHeight: 20,
     },
@@ -804,11 +813,9 @@ const styles = StyleSheet.create({
 
     fecha: {
         fontSize: 10,
-        color: '#888888',
     },
 
     vacio: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 20,
         padding: 30,
         alignItems: 'center',
@@ -819,7 +826,6 @@ const styles = StyleSheet.create({
         width: 70,
         height: 70,
         borderRadius: 23,
-        backgroundColor: '#FCE8E9',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -827,20 +833,17 @@ const styles = StyleSheet.create({
     vacioTitulo: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#252525',
         marginTop: 15,
     },
 
     vacioTexto: {
         fontSize: 12,
-        color: '#888888',
         textAlign: 'center',
         lineHeight: 19,
         marginTop: 7,
     },
 
     errorCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 19,
         padding: 25,
         alignItems: 'center',
@@ -850,20 +853,17 @@ const styles = StyleSheet.create({
         width: 58,
         height: 58,
         borderRadius: 18,
-        backgroundColor: '#FCE8E9',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     errorTitulo: {
-        color: '#252525',
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 13,
     },
 
     errorTexto: {
-        color: '#777777',
         textAlign: 'center',
         marginTop: 8,
         fontSize: 12,

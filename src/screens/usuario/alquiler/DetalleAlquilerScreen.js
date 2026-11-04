@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
     View,
     Text,
@@ -6,10 +7,12 @@ import {
     TouchableOpacity,
     Image,
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { styles } from './DetalleAlquilerScreen.styles';
+import { useTheme } from '../../../context/ThemeContext';
+import { crearEstilos } from './DetalleAlquilerScreen.styles';
 
 const formatearFecha = (fecha) => {
     if (!fecha) return 'Sin fecha';
@@ -39,7 +42,7 @@ const formatearFecha = (fecha) => {
     }
 };
 
-const obtenerEstado = (estado) => {
+const obtenerEstado = (estado, isDark) => {
     const estadoNormalizado = String(estado || '').toLowerCase();
 
     if (
@@ -48,27 +51,30 @@ const obtenerEstado = (estado) => {
     ) {
         return {
             nombre: 'Completado',
-            fondo: '#E6F4EA',
-            texto: '#0F9D58',
+            fondo: isDark ? '#173526' : '#E6F4EA',
+            texto: isDark ? '#7DE2A8' : '#0F9D58',
         };
     }
 
     if (estadoNormalizado.includes('cancelado')) {
         return {
             nombre: 'Cancelado',
-            fondo: '#F2F4F7',
-            texto: '#667085',
+            fondo: isDark ? '#2A2A2A' : '#F2F4F7',
+            texto: isDark ? '#A1A1AA' : '#667085',
         };
     }
 
     return {
         nombre: 'En curso',
-        fondo: '#FEE4E2',
-        texto: '#D92D20',
+        fondo: isDark ? '#3B2023' : '#FEE4E2',
+        texto: isDark ? '#FF999F' : '#D92D20',
     };
 };
 
 export default function DetalleAlquilerScreen({ route, navigation }) {
+    const { theme, isDark } = useTheme();
+    const styles = crearEstilos(theme, isDark);
+
     const alquiler = route?.params?.alquiler;
 
     if (!alquiler) {
@@ -89,14 +95,16 @@ export default function DetalleAlquilerScreen({ route, navigation }) {
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
-                        <Text style={styles.backButtonText}>Volver</Text>
+                        <Text style={styles.backButtonText}>
+                            Volver
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
         );
     }
 
-    const estado = obtenerEstado(alquiler.estado_alquiler);
+    const estado = obtenerEstado(alquiler.estado_alquiler, isDark);
 
     const nombreVehiculo = `${alquiler.vehiculo?.marca || 'Vehículo'} ${alquiler.vehiculo?.modelo || ''
         }`.trim();
@@ -114,7 +122,7 @@ export default function DetalleAlquilerScreen({ route, navigation }) {
                         <Ionicons
                             name="arrow-back"
                             size={24}
-                            color="#101828"
+                            color={theme.text}
                         />
                     </TouchableOpacity>
 
@@ -164,7 +172,7 @@ export default function DetalleAlquilerScreen({ route, navigation }) {
                                     <Ionicons
                                         name="car-outline"
                                         size={60}
-                                        color="#D1D5DB"
+                                        color={theme.secondaryText}
                                     />
                                 </View>
                             )}
@@ -187,7 +195,11 @@ export default function DetalleAlquilerScreen({ route, navigation }) {
                                 </Text>
 
                                 <Text style={styles.amount}>
-                                    ${esCancelado ? '0.00' : Number(alquiler.monto_final || 0).toFixed(2)}
+                                    ${esCancelado
+                                        ? '0.00'
+                                        : Number(
+                                            alquiler.monto_final || 0
+                                        ).toFixed(2)}
                                 </Text>
                             </View>
                         </View>

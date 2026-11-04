@@ -1,5 +1,5 @@
-
 import React from 'react';
+
 import {
   View,
   Text,
@@ -10,11 +10,15 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function OtraScreenAdmin() {
   const { user, logout } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
 
   const handleCerrarSesion = async () => {
     const confirmar = async () => {
@@ -52,97 +56,277 @@ export default function OtraScreenAdmin() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ENCABEZADO */}
+
         <View style={styles.header}>
           <Text style={styles.headerTitulo}>Mi perfil</Text>
+
           <Text style={styles.headerSubtitulo}>
             Administración TRC App
           </Text>
         </View>
 
-        <View style={styles.perfilCard}>
+        {/* PERFIL */}
+
+        <View
+          style={[
+            styles.perfilCard,
+            { backgroundColor: theme.card },
+          ]}
+        >
           <View style={styles.avatar}>
             <Ionicons name="person" size={45} color="#FFFFFF" />
           </View>
 
-          <Text style={styles.nombre}>
+          <Text style={[styles.nombre, { color: theme.text }]}>
             {user?.nombre || user?.nombre1 || 'Administrador'}
           </Text>
 
-          <Text style={styles.correo}>
+          <Text style={[styles.correo, { color: theme.secondaryText }]}>
             {user?.email || 'Admin'}
           </Text>
 
           <View style={styles.rolBadge}>
-            <Ionicons name="shield-checkmark" size={15} color="#D31A24" />
-            <Text style={styles.rolTexto}>ADMINISTRADOR</Text>
+            <Ionicons
+              name="shield-checkmark"
+              size={15}
+              color="#D31A24"
+            />
+
+            <Text style={styles.rolTexto}>
+              ADMINISTRADOR
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.seccionTitulo}>Información de la cuenta</Text>
+        {/* INFORMACIÓN DE LA CUENTA */}
 
-        <View style={styles.infoCard}>
+        <Text
+          style={[
+            styles.seccionTitulo,
+            { color: theme.text },
+          ]}
+        >
+          Información de la cuenta
+        </Text>
+
+        <View
+          style={[
+            styles.infoCard,
+            { backgroundColor: theme.card },
+          ]}
+        >
           <View style={styles.infoFila}>
             <View style={styles.iconoInfo}>
-              <Ionicons name="mail-outline" size={21} color="#D31A24" />
+              <Ionicons
+                name="mail-outline"
+                size={21}
+                color="#D31A24"
+              />
             </View>
 
             <View style={styles.infoContenido}>
-              <Text style={styles.infoEtiqueta}>Correo electrónico</Text>
-              <Text style={styles.infoValor}>
+              <Text
+                style={[
+                  styles.infoEtiqueta,
+                  { color: theme.secondaryText },
+                ]}
+              >
+                Correo electrónico
+              </Text>
+
+              <Text
+                style={[
+                  styles.infoValor,
+                  { color: theme.text },
+                ]}
+              >
                 {user?.email || 'No disponible'}
               </Text>
             </View>
           </View>
 
-          <View style={styles.divisor} />
+          <View
+            style={[
+              styles.divisor,
+              { backgroundColor: theme.border },
+            ]}
+          />
 
           <View style={styles.infoFila}>
             <View style={styles.iconoInfo}>
-              <Ionicons name="person-circle-outline" size={21} color="#D31A24" />
+              <Ionicons
+                name="person-circle-outline"
+                size={21}
+                color="#D31A24"
+              />
             </View>
 
             <View style={styles.infoContenido}>
-              <Text style={styles.infoEtiqueta}>Tipo de cuenta</Text>
-              <Text style={styles.infoValor}>Administrador</Text>
+              <Text
+                style={[
+                  styles.infoEtiqueta,
+                  { color: theme.secondaryText },
+                ]}
+              >
+                Tipo de cuenta
+              </Text>
+
+              <Text
+                style={[
+                  styles.infoValor,
+                  { color: theme.text },
+                ]}
+              >
+                Administrador
+              </Text>
             </View>
           </View>
 
-          <View style={styles.divisor} />
+          <View
+            style={[
+              styles.divisor,
+              { backgroundColor: theme.border },
+            ]}
+          />
 
           <View style={styles.infoFila}>
             <View style={styles.iconoInfo}>
-              <Ionicons name="checkmark-circle-outline" size={21} color="#D31A24" />
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={21}
+                color="#D31A24"
+              />
             </View>
 
             <View style={styles.infoContenido}>
-              <Text style={styles.infoEtiqueta}>Estado</Text>
-              <Text style={styles.estadoActivo}>Cuenta activa</Text>
+              <Text
+                style={[
+                  styles.infoEtiqueta,
+                  { color: theme.secondaryText },
+                ]}
+              >
+                Estado
+              </Text>
+
+              <Text style={styles.estadoActivo}>
+                Cuenta activa
+              </Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.versionCard}>
-          <Ionicons name="car-sport-outline" size={25} color="#D31A24" />
+        {/* MODO OSCURO */}
+
+        <TouchableOpacity
+          style={[
+            styles.temaCard,
+            { backgroundColor: theme.card },
+          ]}
+          onPress={toggleTheme}
+          activeOpacity={0.8}
+        >
+          <View style={styles.iconoInfo}>
+            <Ionicons
+              name={isDark ? 'moon' : 'sunny-outline'}
+              size={21}
+              color="#D31A24"
+            />
+          </View>
+
+          <View style={styles.infoContenido}>
+            <Text
+              style={[
+                styles.infoValor,
+                { color: theme.text },
+              ]}
+            >
+              Modo oscuro
+            </Text>
+
+            <Text
+              style={[
+                styles.infoEtiqueta,
+                { color: theme.secondaryText },
+              ]}
+            >
+              {isDark ? 'Activado' : 'Desactivado'}
+            </Text>
+          </View>
+
+          <Ionicons
+            name="chevron-forward-outline"
+            size={20}
+            color={theme.secondaryText}
+          />
+        </TouchableOpacity>
+
+        {/* VERSIÓN */}
+
+        <View
+          style={[
+            styles.versionCard,
+            { backgroundColor: theme.card },
+          ]}
+        >
+          <Ionicons
+            name="car-sport-outline"
+            size={25}
+            color="#D31A24"
+          />
+
           <View>
-            <Text style={styles.versionTitulo}>TRC App</Text>
-            <Text style={styles.versionTexto}>
+            <Text
+              style={[
+                styles.versionTitulo,
+                { color: theme.text },
+              ]}
+            >
+              TRC App
+            </Text>
+
+            <Text
+              style={[
+                styles.versionTexto,
+                { color: theme.secondaryText },
+              ]}
+            >
               Panel de administración
             </Text>
           </View>
         </View>
+
+        {/* CERRAR SESIÓN */}
 
         <TouchableOpacity
           style={styles.botonLogout}
           onPress={handleCerrarSesion}
           activeOpacity={0.8}
         >
-          <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
-          <Text style={styles.textoBoton}>Cerrar sesión</Text>
+          <Ionicons
+            name="log-out-outline"
+            size={22}
+            color="#FFFFFF"
+          />
+
+          <Text style={styles.textoBoton}>
+            Cerrar sesión
+          </Text>
         </TouchableOpacity>
 
-        <Text style={styles.pie}>
+        <Text
+          style={[
+            styles.pie,
+            { color: theme.secondaryText },
+          ]}
+        >
           Tito's Rent a Car · TRC App
         </Text>
       </ScrollView>
@@ -153,28 +337,30 @@ export default function OtraScreenAdmin() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
+
   header: {
-    backgroundColor: '#72060c',
+    backgroundColor: '#72060C',
     paddingTop: 40,
     paddingBottom: 75,
     paddingHorizontal: 22,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
   },
+
   headerTitulo: {
     color: '#FFFFFF',
     fontSize: 26,
     fontWeight: 'bold',
   },
+
   headerSubtitulo: {
     color: '#BBBBBB',
     fontSize: 14,
     marginTop: 5,
   },
+
   perfilCard: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: -55,
     borderRadius: 18,
@@ -186,6 +372,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 5,
   },
+
   avatar: {
     width: 85,
     height: 85,
@@ -195,16 +382,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+
   nombre: {
     fontSize: 21,
     fontWeight: 'bold',
-    color: '#121212',
   },
+
   correo: {
     fontSize: 14,
-    color: '#777777',
     marginTop: 5,
   },
+
   rolBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,30 +403,33 @@ const styles = StyleSheet.create({
     marginTop: 14,
     gap: 6,
   },
+
   rolTexto: {
     color: '#D31A24',
     fontWeight: 'bold',
     fontSize: 11,
   },
+
   seccionTitulo: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#121212',
     marginHorizontal: 22,
     marginTop: 28,
     marginBottom: 13,
   },
+
   infoCard: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     borderRadius: 15,
     paddingHorizontal: 16,
   },
+
   infoFila: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 17,
   },
+
   iconoInfo: {
     width: 43,
     height: 43,
@@ -248,48 +439,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 13,
   },
+
   infoContenido: {
     flex: 1,
   },
+
   infoEtiqueta: {
-    color: '#888888',
     fontSize: 12,
     marginBottom: 4,
   },
+
   infoValor: {
-    color: '#222222',
     fontSize: 14,
     fontWeight: '600',
   },
+
   estadoActivo: {
     color: '#D31A24',
     fontWeight: 'bold',
     fontSize: 14,
   },
+
   divisor: {
     height: 1,
-    backgroundColor: '#EEEEEE',
   },
+
+  temaCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginTop: 18,
+    padding: 15,
+    borderRadius: 14,
+  },
+
   versionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 18,
     padding: 17,
     borderRadius: 14,
     gap: 13,
   },
+
   versionTitulo: {
-    color: '#121212',
     fontSize: 15,
     fontWeight: 'bold',
   },
+
   versionTexto: {
-    color: '#888888',
     fontSize: 12,
     marginTop: 3,
   },
+
   botonLogout: {
     backgroundColor: '#D31A24',
     marginHorizontal: 20,
@@ -301,14 +504,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
   },
+
   textoBoton: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: 'bold',
   },
+
   pie: {
     textAlign: 'center',
-    color: '#999999',
     fontSize: 11,
     marginTop: 20,
     marginBottom: 25,

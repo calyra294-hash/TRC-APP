@@ -1,13 +1,20 @@
 
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
+
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+
 import LoginScreen from './src/screens/login/LoginScreen';
 
 import OtraScreenAdmin from './src/screens/administrador/OtraScreenAdmin';
@@ -49,7 +56,6 @@ function AlquileresNavigator() {
   );
 }
 
-// Navegación interna del inicio del cliente
 function InicioNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -65,7 +71,6 @@ function InicioNavigator() {
   );
 }
 
-// Navegación interna del inicio del administrador
 function InicioAdminNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -86,19 +91,21 @@ function InicioAdminNavigator() {
 }
 
 function MainTabs() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#D31A24',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.secondaryText,
         tabBarStyle: {
           height: 65,
           paddingBottom: 10,
           paddingTop: 8,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: theme.tabBar,
           borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
+          borderTopColor: theme.border,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -144,19 +151,21 @@ function MainTabs() {
 }
 
 function AdminTabs() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#D31A24',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.secondaryText,
         tabBarStyle: {
           height: 65,
           paddingBottom: 8,
           paddingTop: 7,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: theme.tabBar,
           borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
+          borderTopColor: theme.border,
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -221,13 +230,19 @@ function AdminTabs() {
 
 function AppNavigatorContent() {
   const { user, session, loading } = useAuth();
+  const { theme, isDark, loadingTheme } = useTheme();
 
   const rolActual = String(user?.rol || '').toLowerCase().trim();
 
-  if (loading) {
+  if (loading || loadingTheme) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#D31A24" />
+      <View
+        style={[
+          styles.centerContainer,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
@@ -276,6 +291,18 @@ function AppNavigatorContent() {
   );
 }
 
+function AppContent() {
+  const { isDark, theme } = useTheme();
+
+  return (
+    <NavigationContainer
+      theme={isDark ? DarkTheme : DefaultTheme}
+    >
+      <AppNavigatorContent />
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   useEffect(() => {
     if (__DEV__) {
@@ -285,11 +312,11 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <NavigationContainer>
-          <AppNavigatorContent />
-        </NavigationContainer>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
@@ -297,7 +324,6 @@ export default function App() {
 const styles = StyleSheet.create({
   centerContainer: {
     flex: 1,
-    backgroundColor: '#121824',
     justifyContent: 'center',
     alignItems: 'center',
   },

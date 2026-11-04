@@ -1,25 +1,26 @@
+
 import { StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
+export const crearEstilos = (theme, isDark) => StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 20,
     marginBottom: 22,
     overflow: 'hidden',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.07,
+    shadowOpacity: isDark ? 0.25 : 0.07,
     shadowRadius: 12,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#EEEEF0',
+    borderColor: theme.border,
   },
 
   imageContainer: {
     height: 205,
     width: '100%',
     position: 'relative',
-    backgroundColor: '#F1F1F1',
+    backgroundColor: isDark ? '#252525' : '#F1F1F1',
   },
 
   image: {
@@ -31,7 +32,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     top: 14,
     left: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: isDark ? '#252525' : '#FFFFFF',
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
@@ -45,7 +46,7 @@ export const styles = StyleSheet.create({
   categoryText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
@@ -90,7 +91,7 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#171717',
+    color: theme.text,
     flex: 1,
     marginRight: 8,
     letterSpacing: -0.3,
@@ -109,7 +110,7 @@ export const styles = StyleSheet.create({
 
   pricePeriod: {
     fontSize: 12,
-    color: '#858585',
+    color: theme.secondaryText,
     fontWeight: '500',
   },
 
@@ -123,18 +124,18 @@ export const styles = StyleSheet.create({
   specTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F6',
+    backgroundColor: theme.input,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#EEEEEF',
+    borderColor: theme.border,
   },
 
   specText: {
     fontSize: 11,
-    color: '#505050',
+    color: theme.secondaryText,
     fontWeight: '600',
   },
 
@@ -143,9 +144,9 @@ export const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 14,
     borderRadius: 15,
-    backgroundColor: '#FFF8ED',
+    backgroundColor: isDark ? '#38291A' : '#FFF8ED',
     borderWidth: 1,
-    borderColor: '#FDE5C3',
+    borderColor: isDark ? '#63431F' : '#FDE5C3',
   },
 
   availabilityAvailable: {
@@ -153,132 +154,33 @@ export const styles = StyleSheet.create({
     marginBottom: 15,
     padding: 14,
     borderRadius: 15,
-    backgroundColor: '#F0F9F2',
+    backgroundColor: isDark ? '#1D3025' : '#F0F9F2',
     borderWidth: 1,
-    borderColor: '#D4EED9',
-  },
-
-  availabilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-
-  availabilityIconReserved: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#FCE8CB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 11,
-  },
-
-  availabilityIconAvailable: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#DDF2E2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 11,
-  },
-
-  availabilityTitleContainer: {
-    flex: 1,
+    borderColor: isDark ? '#31533B' : '#D4EED9',
   },
 
   availabilityTitleReserved: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#A45108',
+    color: isDark ? '#FBBF75' : '#A45108',
   },
 
   availabilitySubtitleReserved: {
     fontSize: 11,
-    color: '#98632D',
-    marginTop: 3,
+    color: isDark ? '#E7B77F' : '#98632D',
+    marginTop: 4,
   },
 
   availabilityTitleAvailable: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#166534',
+    color: isDark ? '#86D69B' : '#166534',
   },
 
   availabilitySubtitleAvailable: {
     fontSize: 11,
-    color: '#4B7655',
-    marginTop: 3,
-  },
-
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 9,
-    marginTop: 7,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.07)',
-    gap: 8,
-  },
-
-  dateLabelReserved: {
-    fontSize: 11,
-    color: '#98632D',
-    flex: 1,
-  },
-
-  dateValueReserved: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400E',
-    textAlign: 'right',
-    flex: 1,
-  },
-
-  availableDateBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E2F3E6',
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 10,
-    gap: 9,
-  },
-
-  availableDateTextContainer: {
-    flex: 1,
-  },
-
-  availableDateLabel: {
-    fontSize: 10,
-    color: '#387449',
-  },
-
-  availableDateValue: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#166534',
-    marginTop: 2,
-  },
-
-  nextReservationBox: {
-    paddingTop: 3,
-  },
-
-  dateLabelAvailable: {
-    fontSize: 11,
-    color: '#387449',
-    flex: 1,
-  },
-
-  dateValueAvailable: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#166534',
-    textAlign: 'right',
-    flex: 1,
+    color: isDark ? '#A5D9B1' : '#4B7655',
+    marginTop: 4,
   },
 
   selectButton: {

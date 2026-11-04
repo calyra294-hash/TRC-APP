@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import {
     View,
@@ -18,6 +17,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAlquileres } from '../../hooks/useAlquileres';
+import { useTheme } from '../../context/ThemeContext';
 
 import {
     registrarEntregaAlquiler,
@@ -85,10 +85,7 @@ function obtenerEstado(estado) {
         };
     }
 
-    if (
-        valor.includes('completado') ||
-        valor.includes('finalizado')
-    ) {
+    if (valor.includes('completado') || valor.includes('finalizado')) {
         return {
             texto: 'COMPLETADO',
             color: '#247A48',
@@ -115,12 +112,9 @@ function obtenerEstado(estado) {
 }
 
 export default function AlquileresAdminScreen() {
-    const {
-        alquileres,
-        loading,
-        error,
-        refrescar,
-    } = useAlquileres();
+    const { theme, isDark } = useTheme();
+
+    const { alquileres, loading, error, refrescar } = useAlquileres();
 
     const [procesandoId, setProcesandoId] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -132,6 +126,22 @@ export default function AlquileresAdminScreen() {
 
     const [guardandoDevolucion, setGuardandoDevolucion] = useState(false);
     const [filtro, setFiltro] = useState('Todos');
+
+    const colores = {
+        fondo: theme.background,
+        tarjeta: theme.card,
+        texto: theme.text,
+        secundario: theme.secondaryText,
+        borde: theme.border,
+        superficie: isDark ? '#292929' : '#F4F4F4',
+        superficieSuave: isDark ? '#242424' : '#F7F7F7',
+        fondoRojo: isDark ? '#3A1C20' : '#FDEBEC',
+        fondoAmarillo: isDark ? '#3B3020' : '#FFF5DF',
+        fondoVerde: isDark ? '#193528' : '#E8F5EC',
+        fondoModal: isDark ? '#1C1C1E' : '#FFFFFF',
+        textoModal: isDark ? '#FFFFFF' : '#333333',
+        input: isDark ? '#2A2A2A' : '#F7F7F7',
+    };
 
     const obtenerId = (item) =>
         String(item?.id || item?.id_alquiler || '');
@@ -151,12 +161,10 @@ export default function AlquileresAdminScreen() {
                     'vigente',
                 ].includes(normalizarEstado(item.estado_alquiler))
             ).length,
-            completados: alquileres.filter(
-                (item) => {
-                    const estado = normalizarEstado(item.estado_alquiler);
-                    return estado.includes('completado') || estado.includes('finalizado');
-                }
-            ).length,
+            completados: alquileres.filter((item) => {
+                const estado = normalizarEstado(item.estado_alquiler);
+                return estado.includes('completado') || estado.includes('finalizado');
+            }).length,
         };
     }, [alquileres]);
 
@@ -188,15 +196,11 @@ export default function AlquileresAdminScreen() {
         });
     }, [alquileres, filtro]);
 
-    // REGISTRAR ENTREGA
     const confirmarEntrega = (item) => {
         const id = obtenerId(item);
 
         if (!id) {
-            Alert.alert(
-                'Error',
-                'No se encontró el identificador del alquiler.'
-            );
+            Alert.alert('Error', 'No se encontró el identificador del alquiler.');
             return;
         }
 
@@ -236,7 +240,6 @@ export default function AlquileresAdminScreen() {
         );
     };
 
-    // ABRIR FORMULARIO DE DEVOLUCIÓN
     const abrirDevolucion = (item) => {
         setAlquilerSeleccionado(item);
         setEstadoGeneral('');
@@ -245,28 +248,18 @@ export default function AlquileresAdminScreen() {
         setModalVisible(true);
     };
 
-    // VALIDAR Y CONFIRMAR DEVOLUCIÓN
     const guardarDevolucion = () => {
         if (!estadoGeneral.trim()) {
-            Alert.alert(
-                'Campo requerido',
-                'Indica el estado general del vehículo.'
-            );
+            Alert.alert('Campo requerido', 'Indica el estado general del vehículo.');
             return;
         }
 
         if (!combustible.trim()) {
-            Alert.alert(
-                'Campo requerido',
-                'Indica el nivel de combustible.'
-            );
+            Alert.alert('Campo requerido', 'Indica el nivel de combustible.');
             return;
         }
 
-        if (
-            kilometraje.trim() &&
-            !/^\d+$/.test(kilometraje.trim())
-        ) {
+        if (kilometraje.trim() && !/^\d+$/.test(kilometraje.trim())) {
             Alert.alert(
                 'Kilometraje inválido',
                 'Ingresa un kilometraje válido usando solo números.'
@@ -290,15 +283,11 @@ export default function AlquileresAdminScreen() {
         );
     };
 
-    // GUARDAR DEVOLUCIÓN
     const ejecutarDevolucion = async () => {
         const id = obtenerId(alquilerSeleccionado);
 
         if (!id) {
-            Alert.alert(
-                'Error',
-                'No se encontró el identificador del alquiler.'
-            );
+            Alert.alert('Error', 'No se encontró el identificador del alquiler.');
             return;
         }
 
@@ -343,18 +332,26 @@ export default function AlquileresAdminScreen() {
         const monto = Number(item.monto_final || 0);
 
         return (
-            <View style={styles.tarjeta}>
+            <View style={[
+                styles.tarjeta,
+                {
+                    backgroundColor: colores.tarjeta,
+                    borderColor: colores.borde,
+                },
+            ]}>
                 <View style={styles.tarjetaSuperior}>
-                    <View style={styles.iconoVehiculo}>
-                        <Ionicons
-                            name="car-sport"
-                            size={26}
-                            color={ROJO}
-                        />
+                    <View style={[
+                        styles.iconoVehiculo,
+                        { backgroundColor: colores.fondoRojo },
+                    ]}>
+                        <Ionicons name="car-sport" size={26} color={ROJO} />
                     </View>
 
                     <View style={styles.infoVehiculo}>
-                        <Text style={styles.nombreVehiculo} numberOfLines={1}>
+                        <Text
+                            style={[styles.nombreVehiculo, { color: colores.texto }]}
+                            numberOfLines={1}
+                        >
                             {vehiculo.marca || 'Vehículo'} {vehiculo.modelo || ''}
                         </Text>
 
@@ -362,79 +359,88 @@ export default function AlquileresAdminScreen() {
                             <Ionicons
                                 name="card-outline"
                                 size={13}
-                                color="#888888"
+                                color={colores.secundario}
                             />
-                            <Text style={styles.placa}>
+                            <Text style={[styles.placa, { color: colores.secundario }]}>
                                 {vehiculo.placa || 'Placa no disponible'}
                             </Text>
                         </View>
                     </View>
 
-                    <View style={[styles.estadoEtiqueta, { backgroundColor: estado.fondo }]}>
-                        <View style={[styles.puntoEstado, { backgroundColor: estado.color }]} />
+                    <View style={[
+                        styles.estadoEtiqueta,
+                        { backgroundColor: isDark ? `${estado.color}25` : estado.fondo },
+                    ]}>
+                        <View style={[
+                            styles.puntoEstado,
+                            { backgroundColor: estado.color },
+                        ]} />
                         <Text style={[styles.estadoTexto, { color: estado.color }]}>
                             {estado.texto}
                         </Text>
                     </View>
                 </View>
 
-                <View style={styles.separador} />
+                <View style={[styles.separador, { backgroundColor: colores.borde }]} />
 
                 <View style={styles.idAlquiler}>
                     <Ionicons
                         name="document-text-outline"
                         size={15}
-                        color="#888888"
+                        color={colores.secundario}
                     />
-                    <Text style={styles.idTexto}>
+                    <Text style={[styles.idTexto, { color: colores.secundario }]}>
                         Alquiler: {id || 'Sin ID'}
                     </Text>
                 </View>
 
                 <View style={styles.datosGrid}>
                     <View style={styles.dato}>
-                        <View style={styles.datoIcono}>
-                            <Ionicons
-                                name="calendar-outline"
-                                size={16}
-                                color="#777777"
-                            />
+                        <View style={[
+                            styles.datoIcono,
+                            { backgroundColor: colores.superficie },
+                        ]}>
+                            <Ionicons name="calendar-outline" size={16} color={colores.secundario} />
                         </View>
                         <View style={styles.datoContenido}>
-                            <Text style={styles.datoEtiqueta}>Fecha de inicio</Text>
-                            <Text style={styles.datoValor}>
+                            <Text style={[styles.datoEtiqueta, { color: colores.secundario }]}>
+                                Fecha de inicio
+                            </Text>
+                            <Text style={[styles.datoValor, { color: colores.texto }]}>
                                 {formatearFecha(item.fecha_inicio)}
                             </Text>
                         </View>
                     </View>
 
                     <View style={styles.dato}>
-                        <View style={styles.datoIcono}>
-                            <Ionicons
-                                name="calendar"
-                                size={16}
-                                color="#777777"
-                            />
+                        <View style={[
+                            styles.datoIcono,
+                            { backgroundColor: colores.superficie },
+                        ]}>
+                            <Ionicons name="calendar" size={16} color={colores.secundario} />
                         </View>
                         <View style={styles.datoContenido}>
-                            <Text style={styles.datoEtiqueta}>Fecha de finalización</Text>
-                            <Text style={styles.datoValor}>
+                            <Text style={[styles.datoEtiqueta, { color: colores.secundario }]}>
+                                Fecha de finalización
+                            </Text>
+                            <Text style={[styles.datoValor, { color: colores.texto }]}>
                                 {formatearFecha(item.fecha_fin)}
                             </Text>
                         </View>
                     </View>
 
                     <View style={styles.dato}>
-                        <View style={styles.datoIcono}>
-                            <Ionicons
-                                name="time-outline"
-                                size={16}
-                                color="#777777"
-                            />
+                        <View style={[
+                            styles.datoIcono,
+                            { backgroundColor: colores.superficie },
+                        ]}>
+                            <Ionicons name="time-outline" size={16} color={colores.secundario} />
                         </View>
                         <View style={styles.datoContenido}>
-                            <Text style={styles.datoEtiqueta}>Duración</Text>
-                            <Text style={styles.datoValor}>
+                            <Text style={[styles.datoEtiqueta, { color: colores.secundario }]}>
+                                Duración
+                            </Text>
+                            <Text style={[styles.datoValor, { color: colores.texto }]}>
                                 {item.cantidad_dias || 'No disponible'} días
                             </Text>
                         </View>
@@ -442,7 +448,10 @@ export default function AlquileresAdminScreen() {
 
                     {item.fecha_entrega ? (
                         <View style={styles.dato}>
-                            <View style={styles.datoIcono}>
+                            <View style={[
+                                styles.datoIcono,
+                                { backgroundColor: colores.fondoVerde },
+                            ]}>
                                 <Ionicons
                                     name="key-outline"
                                     size={16}
@@ -450,8 +459,10 @@ export default function AlquileresAdminScreen() {
                                 />
                             </View>
                             <View style={styles.datoContenido}>
-                                <Text style={styles.datoEtiqueta}>Vehículo entregado</Text>
-                                <Text style={styles.datoValor}>
+                                <Text style={[styles.datoEtiqueta, { color: colores.secundario }]}>
+                                    Vehículo entregado
+                                </Text>
+                                <Text style={[styles.datoValor, { color: colores.texto }]}>
                                     {formatearFecha(item.fecha_entrega)}
                                 </Text>
                             </View>
@@ -460,7 +471,10 @@ export default function AlquileresAdminScreen() {
 
                     {item.fecha_devolucion ? (
                         <View style={styles.dato}>
-                            <View style={styles.datoIcono}>
+                            <View style={[
+                                styles.datoIcono,
+                                { backgroundColor: colores.fondoVerde },
+                            ]}>
                                 <Ionicons
                                     name="checkmark-circle-outline"
                                     size={16}
@@ -468,8 +482,10 @@ export default function AlquileresAdminScreen() {
                                 />
                             </View>
                             <View style={styles.datoContenido}>
-                                <Text style={styles.datoEtiqueta}>Vehículo devuelto</Text>
-                                <Text style={styles.datoValor}>
+                                <Text style={[styles.datoEtiqueta, { color: colores.secundario }]}>
+                                    Vehículo devuelto
+                                </Text>
+                                <Text style={[styles.datoValor, { color: colores.texto }]}>
                                     {formatearFecha(item.fecha_devolucion)}
                                 </Text>
                             </View>
@@ -477,10 +493,15 @@ export default function AlquileresAdminScreen() {
                     ) : null}
                 </View>
 
-                <View style={styles.totalContenedor}>
+                <View style={[
+                    styles.totalContenedor,
+                    { borderTopColor: colores.borde },
+                ]}>
                     <View>
-                        <Text style={styles.totalEtiqueta}>MONTO FINAL</Text>
-                        <Text style={styles.totalDescripcion}>
+                        <Text style={[styles.totalEtiqueta, { color: colores.secundario }]}>
+                            MONTO FINAL
+                        </Text>
+                        <Text style={[styles.totalDescripcion, { color: colores.secundario }]}>
                             Importe del alquiler
                         </Text>
                     </View>
@@ -504,19 +525,11 @@ export default function AlquileresAdminScreen() {
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             <>
-                                <Ionicons
-                                    name="key-outline"
-                                    size={19}
-                                    color="#FFFFFF"
-                                />
+                                <Ionicons name="key-outline" size={19} color="#FFFFFF" />
                                 <Text style={styles.textoBoton}>
                                     Registrar entrega del vehículo
                                 </Text>
-                                <Ionicons
-                                    name="arrow-forward"
-                                    size={17}
-                                    color="#FFFFFF"
-                                />
+                                <Ionicons name="arrow-forward" size={17} color="#FFFFFF" />
                             </>
                         )}
                     </TouchableOpacity>
@@ -541,11 +554,7 @@ export default function AlquileresAdminScreen() {
                         <Text style={styles.textoBoton}>
                             Registrar devolución
                         </Text>
-                        <Ionicons
-                            name="arrow-forward"
-                            size={17}
-                            color="#FFFFFF"
-                        />
+                        <Ionicons name="arrow-forward" size={17} color="#FFFFFF" />
                     </TouchableOpacity>
                 ) : null}
             </View>
@@ -556,11 +565,7 @@ export default function AlquileresAdminScreen() {
         <View>
             <View style={styles.encabezado}>
                 <View style={styles.etiquetaAdmin}>
-                    <Ionicons
-                        name="shield-checkmark"
-                        size={12}
-                        color="#FFFFFF"
-                    />
+                    <Ionicons name="shield-checkmark" size={12} color="#FFFFFF" />
                     <Text style={styles.etiquetaAdminTexto}>
                         PANEL ADMINISTRATIVO
                     </Text>
@@ -568,20 +573,14 @@ export default function AlquileresAdminScreen() {
 
                 <View style={styles.encabezadoFila}>
                     <View style={styles.encabezadoInfo}>
-                        <Text style={styles.titulo}>
-                            Gestión de alquileres
-                        </Text>
+                        <Text style={styles.titulo}>Gestión de alquileres</Text>
                         <Text style={styles.subtitulo}>
                             Supervisa entregas y devoluciones
                         </Text>
                     </View>
 
                     <View style={styles.iconoEncabezado}>
-                        <Ionicons
-                            name="document-text"
-                            size={27}
-                            color="#FFFFFF"
-                        />
+                        <Ionicons name="document-text" size={27} color="#FFFFFF" />
                     </View>
                 </View>
 
@@ -594,61 +593,106 @@ export default function AlquileresAdminScreen() {
             </View>
 
             <View style={styles.seccionResumen}>
-                <Text style={styles.tituloSeccion}>Resumen general</Text>
-                <Text style={styles.subtituloSeccion}>
+                <Text style={[styles.tituloSeccion, { color: colores.texto }]}>
+                    Resumen general
+                </Text>
+                <Text style={[styles.subtituloSeccion, { color: colores.secundario }]}>
                     Estado de los alquileres registrados
                 </Text>
 
                 <View style={styles.resumen}>
-                    <View style={styles.tarjetaResumen}>
-                        <View style={[styles.iconoResumen, { backgroundColor: '#F1F1F1' }]}>
-                            <Ionicons name="documents-outline" size={18} color="#333333" />
+                    <View style={[
+                        styles.tarjetaResumen,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.iconoResumen,
+                            { backgroundColor: colores.superficie },
+                        ]}>
+                            <Ionicons name="documents-outline" size={18} color={colores.texto} />
                         </View>
-                        <Text style={styles.numeroResumen}>{conteos.total}</Text>
-                        <Text style={styles.textoResumen}>Total</Text>
+                        <Text style={[styles.numeroResumen, { color: colores.texto }]}>
+                            {conteos.total}
+                        </Text>
+                        <Text style={[styles.textoResumen, { color: colores.secundario }]}>
+                            Total
+                        </Text>
                     </View>
 
-                    <View style={styles.tarjetaResumen}>
-                        <View style={[styles.iconoResumen, { backgroundColor: '#FFF5DF' }]}>
+                    <View style={[
+                        styles.tarjetaResumen,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.iconoResumen,
+                            { backgroundColor: colores.fondoAmarillo },
+                        ]}>
                             <Ionicons name="time-outline" size={18} color="#B7791F" />
                         </View>
                         <Text style={[styles.numeroResumen, { color: '#B7791F' }]}>
                             {conteos.pendientes}
                         </Text>
-                        <Text style={styles.textoResumen}>Pendientes</Text>
+                        <Text style={[styles.textoResumen, { color: colores.secundario }]}>
+                            Pendientes
+                        </Text>
                     </View>
 
-                    <View style={styles.tarjetaResumen}>
-                        <View style={[styles.iconoResumen, { backgroundColor: '#FDECEC' }]}>
+                    <View style={[
+                        styles.tarjetaResumen,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.iconoResumen,
+                            { backgroundColor: colores.fondoRojo },
+                        ]}>
                             <Ionicons name="car-sport-outline" size={18} color={ROJO} />
                         </View>
                         <Text style={[styles.numeroResumen, { color: ROJO }]}>
                             {conteos.activos}
                         </Text>
-                        <Text style={styles.textoResumen}>En curso</Text>
+                        <Text style={[styles.textoResumen, { color: colores.secundario }]}>
+                            En curso
+                        </Text>
                     </View>
 
-                    <View style={styles.tarjetaResumen}>
-                        <View style={[styles.iconoResumen, { backgroundColor: '#E8F5EC' }]}>
-                            <Ionicons name="checkmark-circle-outline" size={18} color="#247A48" />
+                    <View style={[
+                        styles.tarjetaResumen,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.iconoResumen,
+                            { backgroundColor: colores.fondoVerde },
+                        ]}>
+                            <Ionicons
+                                name="checkmark-circle-outline"
+                                size={18}
+                                color="#247A48"
+                            />
                         </View>
                         <Text style={[styles.numeroResumen, { color: '#247A48' }]}>
                             {conteos.completados}
                         </Text>
-                        <Text style={styles.textoResumen}>Finalizados</Text>
+                        <Text style={[styles.textoResumen, { color: colores.secundario }]}>
+                            Finalizados
+                        </Text>
                     </View>
                 </View>
             </View>
 
             <View style={styles.seccionListaTitulo}>
                 <View>
-                    <Text style={styles.tituloSeccion}>Registro de alquileres</Text>
-                    <Text style={styles.subtituloSeccion}>
+                    <Text style={[styles.tituloSeccion, { color: colores.texto }]}>
+                        Registro de alquileres
+                    </Text>
+                    <Text style={[styles.subtituloSeccion, { color: colores.secundario }]}>
                         Consulta y administra cada operación
                     </Text>
                 </View>
 
-                <View style={styles.contadorLista}>
+                <View style={[
+                    styles.contadorLista,
+                    { backgroundColor: colores.fondoRojo },
+                ]}>
                     <Text style={styles.contadorListaTexto}>
                         {alquileresFiltrados.length}
                     </Text>
@@ -668,17 +712,18 @@ export default function AlquileresAdminScreen() {
                             key={item}
                             style={[
                                 styles.filtroBoton,
-                                activo && styles.filtroActivo,
+                                {
+                                    backgroundColor: activo ? ROJO : colores.tarjeta,
+                                    borderColor: activo ? ROJO : colores.borde,
+                                },
                             ]}
                             onPress={() => setFiltro(item)}
                             activeOpacity={0.8}
                         >
-                            <Text
-                                style={[
-                                    styles.filtroTexto,
-                                    activo && styles.filtroTextoActivo,
-                                ]}
-                            >
+                            <Text style={[
+                                styles.filtroTexto,
+                                { color: activo ? '#FFFFFF' : colores.secundario },
+                            ]}>
                                 {item}
                             </Text>
                         </TouchableOpacity>
@@ -687,12 +732,11 @@ export default function AlquileresAdminScreen() {
             </ScrollView>
 
             {error ? (
-                <View style={styles.errorContenedor}>
-                    <Ionicons
-                        name="alert-circle-outline"
-                        size={19}
-                        color="#B42318"
-                    />
+                <View style={[
+                    styles.errorContenedor,
+                    { backgroundColor: isDark ? '#3A1C20' : '#FDECEC' },
+                ]}>
+                    <Ionicons name="alert-circle-outline" size={19} color="#B42318" />
                     <Text style={styles.errorTexto}>{error}</Text>
                 </View>
             ) : null}
@@ -701,9 +745,12 @@ export default function AlquileresAdminScreen() {
 
     if (loading && alquileres.length === 0) {
         return (
-            <View style={styles.centrado}>
+            <View style={[
+                styles.centrado,
+                { backgroundColor: colores.fondo },
+            ]}>
                 <ActivityIndicator size="large" color={ROJO} />
-                <Text style={styles.cargandoTexto}>
+                <Text style={[styles.cargandoTexto, { color: colores.secundario }]}>
                     Cargando alquileres...
                 </Text>
             </View>
@@ -711,7 +758,10 @@ export default function AlquileresAdminScreen() {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            { backgroundColor: colores.fondo },
+        ]}>
             <FlatList
                 data={alquileresFiltrados}
                 keyExtractor={(item, index) =>
@@ -735,22 +785,26 @@ export default function AlquileresAdminScreen() {
                 contentContainerStyle={styles.lista}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View style={styles.vacio}>
-                        <View style={styles.iconoVacio}>
-                            <Ionicons
-                                name="car-outline"
-                                size={42}
-                                color="#AAAAAA"
-                            />
+                    <View style={[
+                        styles.vacio,
+                        {
+                            backgroundColor: colores.tarjeta,
+                            borderColor: colores.borde,
+                        },
+                    ]}>
+                        <View style={[
+                            styles.iconoVacio,
+                            { backgroundColor: colores.superficie },
+                        ]}>
+                            <Ionicons name="car-outline" size={42} color="#AAAAAA" />
                         </View>
 
-                        <Text style={styles.vacioTitulo}>
+                        <Text style={[styles.vacioTitulo, { color: colores.texto }]}>
                             No hay alquileres para mostrar
                         </Text>
 
-                        <Text style={styles.vacioTexto}>
-                            Cuando existan alquileres registrados,
-                            aparecerán aquí.
+                        <Text style={[styles.vacioTexto, { color: colores.secundario }]}>
+                            Cuando existan alquileres registrados, aparecerán aquí.
                         </Text>
 
                         {filtro !== 'Todos' ? (
@@ -781,25 +835,33 @@ export default function AlquileresAdminScreen() {
                     style={styles.modalFondo}
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 >
-                    <View style={styles.modalContenido}>
+                    <View style={[
+                        styles.modalContenido,
+                        { backgroundColor: colores.fondoModal },
+                    ]}>
                         <ScrollView
                             keyboardShouldPersistTaps="handled"
                             showsVerticalScrollIndicator={false}
                         >
                             <View style={styles.modalEncabezado}>
-                                <View style={styles.modalIcono}>
-                                    <Ionicons
-                                        name="car-outline"
-                                        size={23}
-                                        color={ROJO}
-                                    />
+                                <View style={[
+                                    styles.modalIcono,
+                                    { backgroundColor: colores.fondoRojo },
+                                ]}>
+                                    <Ionicons name="car-outline" size={23} color={ROJO} />
                                 </View>
 
                                 <View style={styles.modalTituloContenido}>
-                                    <Text style={styles.modalTitulo}>
+                                    <Text style={[
+                                        styles.modalTitulo,
+                                        { color: colores.texto },
+                                    ]}>
                                         Registrar devolución
                                     </Text>
-                                    <Text style={styles.modalSubtitulo}>
+                                    <Text style={[
+                                        styles.modalSubtitulo,
+                                        { color: colores.secundario },
+                                    ]}>
                                         Inspección del vehículo recibido
                                     </Text>
                                 </View>
@@ -811,56 +873,71 @@ export default function AlquileresAdminScreen() {
                                     <Ionicons
                                         name="close-circle"
                                         size={27}
-                                        color="#888888"
+                                        color={colores.secundario}
                                     />
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={styles.avisoModal}>
+                            <View style={[
+                                styles.avisoModal,
+                                { backgroundColor: colores.fondoAmarillo },
+                            ]}>
                                 <Ionicons
                                     name="information-circle-outline"
                                     size={19}
-                                    color="#8A641D"
+                                    color="#B7791F"
                                 />
                                 <Text style={styles.avisoModalTexto}>
                                     Completa la información para registrar la devolución.
                                 </Text>
                             </View>
 
-                            <Text style={styles.label}>
+                            <Text style={[styles.label, { color: colores.texto }]}>
                                 Estado general del vehículo *
                             </Text>
 
-                            <View style={styles.inputContenedor}>
+                            <View style={[
+                                styles.inputContenedor,
+                                {
+                                    backgroundColor: colores.input,
+                                    borderColor: colores.borde,
+                                },
+                            ]}>
                                 <Ionicons
                                     name="clipboard-outline"
                                     size={18}
-                                    color="#888888"
+                                    color={colores.secundario}
                                 />
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { color: colores.texto }]}
                                     placeholder="Ej. Buen estado, con daños..."
-                                    placeholderTextColor="#999999"
+                                    placeholderTextColor={colores.secundario}
                                     value={estadoGeneral}
                                     onChangeText={setEstadoGeneral}
                                     editable={!guardandoDevolucion}
                                 />
                             </View>
 
-                            <Text style={styles.label}>
+                            <Text style={[styles.label, { color: colores.texto }]}>
                                 Kilometraje de devolución
                             </Text>
 
-                            <View style={styles.inputContenedor}>
+                            <View style={[
+                                styles.inputContenedor,
+                                {
+                                    backgroundColor: colores.input,
+                                    borderColor: colores.borde,
+                                },
+                            ]}>
                                 <Ionicons
                                     name="speedometer-outline"
                                     size={18}
-                                    color="#888888"
+                                    color={colores.secundario}
                                 />
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { color: colores.texto }]}
                                     placeholder="Ej. 45000"
-                                    placeholderTextColor="#999999"
+                                    placeholderTextColor={colores.secundario}
                                     keyboardType="numeric"
                                     value={kilometraje}
                                     onChangeText={setKilometraje}
@@ -868,20 +945,26 @@ export default function AlquileresAdminScreen() {
                                 />
                             </View>
 
-                            <Text style={styles.label}>
+                            <Text style={[styles.label, { color: colores.texto }]}>
                                 Nivel de combustible *
                             </Text>
 
-                            <View style={styles.inputContenedor}>
+                            <View style={[
+                                styles.inputContenedor,
+                                {
+                                    backgroundColor: colores.input,
+                                    borderColor: colores.borde,
+                                },
+                            ]}>
                                 <Ionicons
                                     name="water-outline"
                                     size={18}
-                                    color="#888888"
+                                    color={colores.secundario}
                                 />
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { color: colores.texto }]}
                                     placeholder="Ej. Lleno, medio tanque, bajo..."
-                                    placeholderTextColor="#999999"
+                                    placeholderTextColor={colores.secundario}
                                     value={combustible}
                                     onChangeText={setCombustible}
                                     editable={!guardandoDevolucion}
@@ -902,11 +985,7 @@ export default function AlquileresAdminScreen() {
                                     <ActivityIndicator color="#FFFFFF" />
                                 ) : (
                                     <>
-                                        <Ionicons
-                                            name="save-outline"
-                                            size={19}
-                                            color="#FFFFFF"
-                                        />
+                                        <Ionicons name="save-outline" size={19} color="#FFFFFF" />
                                         <Text style={styles.textoBoton}>
                                             Guardar devolución
                                         </Text>
@@ -919,7 +998,10 @@ export default function AlquileresAdminScreen() {
                                 onPress={() => setModalVisible(false)}
                                 disabled={guardandoDevolucion}
                             >
-                                <Text style={styles.textoCancelar}>
+                                <Text style={[
+                                    styles.textoCancelar,
+                                    { color: colores.secundario },
+                                ]}>
                                     Cancelar
                                 </Text>
                             </TouchableOpacity>
@@ -1032,13 +1114,11 @@ const styles = StyleSheet.create({
     },
 
     tituloSeccion: {
-        color: '#202020',
         fontSize: 17,
         fontWeight: 'bold',
     },
 
     subtituloSeccion: {
-        color: '#888888',
         fontSize: 11,
         marginTop: 4,
     },
@@ -1052,11 +1132,12 @@ const styles = StyleSheet.create({
     tarjetaResumen: {
         flex: 1,
         minWidth: 0,
-        backgroundColor: '#FFFFFF',
         borderRadius: 13,
         paddingVertical: 12,
         paddingHorizontal: 4,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'transparent',
         elevation: 2,
         shadowColor: '#000000',
         shadowOpacity: 0.05,
@@ -1074,13 +1155,11 @@ const styles = StyleSheet.create({
     },
 
     numeroResumen: {
-        color: '#222222',
         fontSize: 20,
         fontWeight: 'bold',
     },
 
     textoResumen: {
-        color: '#777777',
         fontSize: 9,
         marginTop: 4,
         textAlign: 'center',
@@ -1100,7 +1179,6 @@ const styles = StyleSheet.create({
         height: 32,
         paddingHorizontal: 8,
         borderRadius: 10,
-        backgroundColor: '#FDEBEC',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1121,34 +1199,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 9,
         borderRadius: 10,
-        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: '#E8E8E8',
-    },
-
-    filtroActivo: {
-        backgroundColor: ROJO,
-        borderColor: ROJO,
     },
 
     filtroTexto: {
-        color: '#666666',
         fontSize: 11,
         fontWeight: '600',
     },
 
-    filtroTextoActivo: {
-        color: '#FFFFFF',
-    },
-
     tarjeta: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 15,
         marginHorizontal: 15,
         marginBottom: 14,
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 2,
         shadowColor: '#000000',
         shadowOpacity: 0.05,
@@ -1165,7 +1229,6 @@ const styles = StyleSheet.create({
         width: 47,
         height: 47,
         borderRadius: 13,
-        backgroundColor: '#FDEBEC',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1179,7 +1242,6 @@ const styles = StyleSheet.create({
     nombreVehiculo: {
         fontSize: 15,
         fontWeight: 'bold',
-        color: '#222222',
     },
 
     placaFila: {
@@ -1191,7 +1253,6 @@ const styles = StyleSheet.create({
 
     placa: {
         fontSize: 11,
-        color: '#777777',
     },
 
     estadoEtiqueta: {
@@ -1216,7 +1277,6 @@ const styles = StyleSheet.create({
 
     separador: {
         height: 1,
-        backgroundColor: '#EEEEEE',
         marginVertical: 14,
     },
 
@@ -1228,7 +1288,6 @@ const styles = StyleSheet.create({
     },
 
     idTexto: {
-        color: '#777777',
         fontSize: 11,
     },
 
@@ -1246,7 +1305,6 @@ const styles = StyleSheet.create({
         width: 31,
         height: 31,
         borderRadius: 9,
-        backgroundColor: '#F4F4F4',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1257,19 +1315,16 @@ const styles = StyleSheet.create({
 
     datoEtiqueta: {
         fontSize: 10,
-        color: '#999999',
         marginBottom: 2,
     },
 
     datoValor: {
         fontSize: 12,
-        color: '#444444',
         fontWeight: '600',
     },
 
     totalContenedor: {
         borderTopWidth: 1,
-        borderTopColor: '#EEEEEE',
         marginTop: 16,
         paddingTop: 13,
         flexDirection: 'row',
@@ -1279,13 +1334,11 @@ const styles = StyleSheet.create({
 
     totalEtiqueta: {
         fontSize: 10,
-        color: '#999999',
         fontWeight: 'bold',
         letterSpacing: 0.7,
     },
 
     totalDescripcion: {
-        color: '#888888',
         fontSize: 10,
         marginTop: 3,
     },
@@ -1332,11 +1385,9 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F5F6F8',
     },
 
     cargandoTexto: {
-        color: '#777777',
         marginTop: 12,
         fontSize: 12,
     },
@@ -1347,28 +1398,25 @@ const styles = StyleSheet.create({
         paddingVertical: 35,
         marginHorizontal: 15,
         marginBottom: 20,
-        backgroundColor: '#FFFFFF',
         borderRadius: 16,
+        borderWidth: 1,
     },
 
     iconoVacio: {
         width: 72,
         height: 72,
         borderRadius: 23,
-        backgroundColor: '#F2F2F2',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     vacioTitulo: {
-        color: '#333333',
         fontSize: 15,
         fontWeight: 'bold',
         marginTop: 14,
     },
 
     vacioTexto: {
-        color: '#888888',
         fontSize: 11,
         textAlign: 'center',
         marginTop: 7,
@@ -1393,7 +1441,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#FDECEC',
         padding: 12,
         marginHorizontal: 15,
         marginBottom: 12,
@@ -1414,7 +1461,6 @@ const styles = StyleSheet.create({
     },
 
     modalContenido: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 19,
         padding: 20,
         maxHeight: '88%',
@@ -1430,7 +1476,6 @@ const styles = StyleSheet.create({
         width: 43,
         height: 43,
         borderRadius: 13,
-        backgroundColor: '#FDEBEC',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 11,
@@ -1441,13 +1486,11 @@ const styles = StyleSheet.create({
     },
 
     modalTitulo: {
-        color: '#171717',
         fontSize: 17,
         fontWeight: 'bold',
     },
 
     modalSubtitulo: {
-        color: '#888888',
         fontSize: 11,
         marginTop: 4,
     },
@@ -1456,7 +1499,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#FFF5DF',
         borderRadius: 10,
         padding: 11,
         marginBottom: 13,
@@ -1464,13 +1506,12 @@ const styles = StyleSheet.create({
 
     avisoModalTexto: {
         flex: 1,
-        color: '#8A641D',
+        color: '#B7791F',
         fontSize: 11,
         lineHeight: 16,
     },
 
     label: {
-        color: '#333333',
         fontSize: 12,
         fontWeight: 'bold',
         marginBottom: 8,
@@ -1481,9 +1522,7 @@ const styles = StyleSheet.create({
         minHeight: 47,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F7F7F7',
         borderWidth: 1,
-        borderColor: '#E8E8E8',
         borderRadius: 10,
         paddingHorizontal: 12,
     },
@@ -1493,7 +1532,6 @@ const styles = StyleSheet.create({
         paddingVertical: 11,
         paddingHorizontal: 9,
         fontSize: 12,
-        color: '#222222',
     },
 
     botonCancelar: {
@@ -1503,7 +1541,6 @@ const styles = StyleSheet.create({
     },
 
     textoCancelar: {
-        color: '#777777',
         fontSize: 13,
         fontWeight: '600',
     },

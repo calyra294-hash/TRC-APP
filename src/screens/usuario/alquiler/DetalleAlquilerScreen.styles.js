@@ -1,14 +1,14 @@
 import { StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
+export const crearEstilos = (theme, isDark) => StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: theme.background,
     },
 
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: theme.background,
     },
 
     header: {
@@ -16,9 +16,9 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.surface,
         borderBottomWidth: 1,
-        borderBottomColor: '#EAECF0',
+        borderBottomColor: theme.border,
     },
 
     headerButton: {
@@ -37,12 +37,12 @@ export const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#101828',
+        color: theme.text,
     },
 
     headerId: {
         fontSize: 10,
-        color: '#8C8C8C',
+        color: theme.secondaryText,
         marginTop: 2,
     },
 
@@ -63,26 +63,26 @@ export const styles = StyleSheet.create({
     },
 
     vehicleCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.card,
         borderRadius: 16,
         overflow: 'hidden',
         marginBottom: 24,
-
+        borderWidth: 1,
+        borderColor: theme.border,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 3,
         },
-        shadowOpacity: 0.08,
+        shadowOpacity: isDark ? 0.2 : 0.08,
         shadowRadius: 8,
-
         elevation: 3,
     },
 
     vehicleImageContainer: {
         width: '100%',
         height: 210,
-        backgroundColor: '#F2F4F7',
+        backgroundColor: isDark ? '#292929' : '#F2F4F7',
     },
 
     vehicleImage: {
@@ -94,6 +94,7 @@ export const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: isDark ? '#292929' : '#F2F4F7',
     },
 
     vehicleInfo: {
@@ -111,12 +112,12 @@ export const styles = StyleSheet.create({
     vehicleName: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#101828',
+        color: theme.text,
     },
 
     vehicleLabel: {
         fontSize: 13,
-        color: '#667085',
+        color: theme.secondaryText,
         marginTop: 4,
     },
 
@@ -127,7 +128,7 @@ export const styles = StyleSheet.create({
     amountLabel: {
         fontSize: 9,
         fontWeight: '700',
-        color: '#8C8C8C',
+        color: theme.secondaryText,
         marginBottom: 3,
     },
 
@@ -140,7 +141,7 @@ export const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#667085',
+        color: theme.secondaryText,
         letterSpacing: 0.6,
         marginBottom: 10,
     },
@@ -153,15 +154,17 @@ export const styles = StyleSheet.create({
 
     dateBox: {
         flex: 1,
-        backgroundColor: '#F2F4F7',
+        backgroundColor: theme.input,
         borderRadius: 12,
         padding: 14,
+        borderWidth: 1,
+        borderColor: theme.border,
     },
 
     dateLabel: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#8C8C8C',
+        color: theme.secondaryText,
         marginTop: 8,
         marginBottom: 5,
     },
@@ -169,23 +172,23 @@ export const styles = StyleSheet.create({
     dateValue: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#101828',
+        color: theme.text,
     },
 
     specificationsCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.card,
         borderRadius: 16,
         paddingHorizontal: 16,
         marginBottom: 20,
-
+        borderWidth: 1,
+        borderColor: theme.border,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.06,
+        shadowOpacity: isDark ? 0.18 : 0.06,
         shadowRadius: 6,
-
         elevation: 2,
     },
 
@@ -199,7 +202,7 @@ export const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 21,
-        backgroundColor: '#FEE4E2',
+        backgroundColor: isDark ? '#3B2023' : '#FEE4E2',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -211,38 +214,40 @@ export const styles = StyleSheet.create({
 
     specificationLabel: {
         fontSize: 12,
-        color: '#667085',
+        color: theme.secondaryText,
         marginBottom: 4,
     },
 
     specificationValue: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#101828',
+        color: theme.text,
     },
 
     separator: {
         height: 1,
-        backgroundColor: '#EAECF0',
+        backgroundColor: theme.border,
     },
 
     reservationContainer: {
-        backgroundColor: '#F2F4F7',
+        backgroundColor: theme.input,
         borderRadius: 12,
         padding: 14,
+        borderWidth: 1,
+        borderColor: theme.border,
     },
 
     reservationLabel: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#8C8C8C',
+        color: theme.secondaryText,
         marginBottom: 5,
     },
 
     reservationId: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#101828',
+        color: theme.text,
     },
 
     errorContainer: {
@@ -250,12 +255,13 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 30,
+        backgroundColor: theme.background,
     },
 
     errorTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#101828',
+        color: theme.text,
         marginTop: 15,
         marginBottom: 20,
         textAlign: 'center',

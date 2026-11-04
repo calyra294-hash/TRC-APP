@@ -1,5 +1,5 @@
-
 import React, { useCallback, useMemo, useState } from 'react';
+
 import {
     View,
     Text,
@@ -11,14 +11,18 @@ import {
     ActivityIndicator,
     RefreshControl,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { useVehiculos } from '../../hooks/useVehiculos';
+
 import {
     getDisponibilidadVehiculos,
     getAlquileres,
 } from '../../services/alquileres.service';
+
+import { useTheme } from '../../context/ThemeContext';
 
 const COLOR_ROJO = '#D31A24';
 
@@ -46,6 +50,8 @@ const formatearFecha = (fecha) => {
 };
 
 const VehiculosAdminScreen = () => {
+    const { theme, isDark } = useTheme();
+
     const {
         vehiculos,
         loading,
@@ -71,16 +77,25 @@ const VehiculosAdminScreen = () => {
             ]);
 
             setDisponibilidad(
-                Array.isArray(datosDisponibilidad) ? datosDisponibilidad : []
+                Array.isArray(datosDisponibilidad)
+                    ? datosDisponibilidad
+                    : []
             );
 
             setAlquileres(
-                Array.isArray(datosAlquileres) ? datosAlquileres : []
+                Array.isArray(datosAlquileres)
+                    ? datosAlquileres
+                    : []
             );
         } catch (err) {
-            console.error('Error consultando estados de vehículos:', err);
+            console.error(
+                'Error consultando estados de vehículos:',
+                err
+            );
+
             setErrorEstados(
-                err.message || 'No se pudo consultar la disponibilidad.'
+                err.message ||
+                'No se pudo consultar la disponibilidad.'
             );
         } finally {
             setCargandoEstados(false);
@@ -107,10 +122,13 @@ const VehiculosAdminScreen = () => {
     );
 
     const obtenerEstadoVehiculo = (vehiculo) => {
-        const id = String(vehiculo.id_coche ?? vehiculo.id);
+        const id = String(
+            vehiculo.id_coche ?? vehiculo.id
+        );
 
         const alquilerActivo = alquileres.find((alquiler) => {
             const mismoVehiculo = obtenerIdCoche(alquiler) === id;
+
             const estado = normalizarEstado(
                 alquiler.estado_alquiler || alquiler.estado
             );
@@ -131,10 +149,12 @@ const VehiculosAdminScreen = () => {
             return {
                 nombre: 'Alquilado',
                 color: '#C62828',
-                fondo: '#FDECEC',
+                fondo: isDark ? '#482323' : '#FDECEC',
                 icono: 'car-sport',
                 detalle: alquilerActivo.fecha_fin
-                    ? `Devolución prevista: ${formatearFecha(alquilerActivo.fecha_fin)}`
+                    ? `Devolución prevista: ${formatearFecha(
+                        alquilerActivo.fecha_fin
+                    )}`
                     : 'Vehículo actualmente en alquiler',
             };
         }
@@ -157,8 +177,8 @@ const VehiculosAdminScreen = () => {
 
             return {
                 nombre: 'Reservado',
-                color: '#B7791F',
-                fondo: '#FFF5DF',
+                color: isDark ? '#F2BD59' : '#B7791F',
+                fondo: isDark ? '#44351D' : '#FFF5DF',
                 icono: 'calendar',
                 detalle: alquilerPendiente
                     ? `Entrega pendiente. Hasta: ${formatearFecha(
@@ -173,8 +193,8 @@ const VehiculosAdminScreen = () => {
         if (estadoDisponibilidad?.proxima_reserva_inicio) {
             return {
                 nombre: 'Disponible',
-                color: '#247A48',
-                fondo: '#E8F5EC',
+                color: isDark ? '#65C98B' : '#247A48',
+                fondo: isDark ? '#1D3B2A' : '#E8F5EC',
                 icono: 'checkmark-circle',
                 detalle: `Disponible hasta: ${formatearFecha(
                     estadoDisponibilidad.disponible_hasta
@@ -184,8 +204,8 @@ const VehiculosAdminScreen = () => {
 
         return {
             nombre: 'Disponible',
-            color: '#247A48',
-            fondo: '#E8F5EC',
+            color: isDark ? '#65C98B' : '#247A48',
+            fondo: isDark ? '#1D3B2A' : '#E8F5EC',
             icono: 'checkmark-circle',
             detalle: 'Sin reservas ni alquileres vigentes',
         };
@@ -207,11 +227,19 @@ const VehiculosAdminScreen = () => {
 
             return obtenerEstadoVehiculo(vehiculo).nombre === filtro;
         });
-    }, [vehiculos, busqueda, filtro, disponibilidad, alquileres]);
+    }, [
+        vehiculos,
+        busqueda,
+        filtro,
+        disponibilidad,
+        alquileres,
+        isDark,
+    ]);
 
     const contarEstado = (estado) =>
         vehiculos.filter(
-            (vehiculo) => obtenerEstadoVehiculo(vehiculo).nombre === estado
+            (vehiculo) =>
+                obtenerEstadoVehiculo(vehiculo).nombre === estado
         ).length;
 
     const filtros = [
@@ -223,8 +251,18 @@ const VehiculosAdminScreen = () => {
 
     const mostrarCargando = loading || cargandoEstados;
 
+    const fondoIconos = isDark ? '#3A2426' : '#FDEBEC';
+    const fondoGris = isDark ? '#292929' : '#F1F1F1';
+
     return (
-        <View style={styles.contenedor}>
+        <View
+            style={[
+                styles.contenedor,
+                { backgroundColor: theme.background },
+            ]}
+        >
+            {/* ENCABEZADO */}
+
             <View style={styles.encabezado}>
                 <View style={styles.encabezadoSuperior}>
                     <View>
@@ -234,14 +272,17 @@ const VehiculosAdminScreen = () => {
                                 size={12}
                                 color="#FFFFFF"
                             />
+
                             <Text style={styles.etiquetaAdminTexto}>
                                 PANEL ADMINISTRATIVO
                             </Text>
                         </View>
 
-                        <Text style={styles.titulo}>Control de vehículos</Text>
+                        <Text style={styles.tituloEncabezado}>
+                            Control de vehículos
+                        </Text>
 
-                        <Text style={styles.subtitulo}>
+                        <Text style={styles.subtituloEncabezado}>
                             Consulta y supervisa tu flota
                         </Text>
                     </View>
@@ -257,6 +298,7 @@ const VehiculosAdminScreen = () => {
 
                 <View style={styles.indicadorEncabezado}>
                     <View style={styles.puntoActivo} />
+
                     <Text style={styles.textoIndicador}>
                         Información de disponibilidad
                     </Text>
@@ -275,18 +317,31 @@ const VehiculosAdminScreen = () => {
                     />
                 }
             >
+                {/* RESUMEN DE LA FLOTA */}
+
                 <View style={styles.seccionResumen}>
                     <View style={styles.tituloSeccion}>
                         <View>
-                            <Text style={styles.tituloBloque}>
+                            <Text
+                                style={[
+                                    styles.tituloBloque,
+                                    { color: theme.text },
+                                ]}
+                            >
                                 Resumen de la flota
                             </Text>
+
                             <Text style={styles.subtituloBloque}>
                                 Estado actual de los vehículos
                             </Text>
                         </View>
 
-                        <View style={styles.iconoResumen}>
+                        <View
+                            style={[
+                                styles.iconoResumen,
+                                { backgroundColor: fondoIconos },
+                            ]}
+                        >
                             <Ionicons
                                 name="stats-chart"
                                 size={18}
@@ -296,67 +351,202 @@ const VehiculosAdminScreen = () => {
                     </View>
 
                     <View style={styles.resumen}>
-                        <View style={styles.tarjetaResumen}>
-                            <View style={[styles.iconoResumenTarjeta, { backgroundColor: '#F1F1F1' }]}>
-                                <Ionicons name="car-outline" size={19} color="#333333" />
+                        <View
+                            style={[
+                                styles.tarjetaResumen,
+                                { backgroundColor: theme.card },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.iconoResumenTarjeta,
+                                    { backgroundColor: fondoGris },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="car-outline"
+                                    size={19}
+                                    color={theme.text}
+                                />
                             </View>
-                            <Text style={styles.numeroTotal}>
+
+                            <Text
+                                style={[
+                                    styles.numeroTotal,
+                                    { color: theme.text },
+                                ]}
+                            >
                                 {vehiculos.length}
                             </Text>
-                            <Text style={styles.textoResumen}>Total</Text>
+
+                            <Text
+                                style={[
+                                    styles.textoResumen,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
+                                Total
+                            </Text>
                         </View>
 
-                        <View style={styles.tarjetaResumen}>
-                            <View style={[styles.iconoResumenTarjeta, { backgroundColor: '#E8F5EC' }]}>
-                                <Ionicons name="checkmark-circle-outline" size={19} color="#247A48" />
+                        <View
+                            style={[
+                                styles.tarjetaResumen,
+                                { backgroundColor: theme.card },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.iconoResumenTarjeta,
+                                    { backgroundColor: isDark ? '#1D3B2A' : '#E8F5EC' },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="checkmark-circle-outline"
+                                    size={19}
+                                    color={isDark ? '#65C98B' : '#247A48'}
+                                />
                             </View>
-                            <Text style={[styles.numeroResumen, { color: '#247A48' }]}>
+
+                            <Text
+                                style={[
+                                    styles.numeroResumen,
+                                    { color: isDark ? '#65C98B' : '#247A48' },
+                                ]}
+                            >
                                 {contarEstado('Disponible')}
                             </Text>
-                            <Text style={styles.textoResumen}>Disponibles</Text>
+
+                            <Text
+                                style={[
+                                    styles.textoResumen,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
+                                Disponibles
+                            </Text>
                         </View>
 
-                        <View style={styles.tarjetaResumen}>
-                            <View style={[styles.iconoResumenTarjeta, { backgroundColor: '#FFF5DF' }]}>
-                                <Ionicons name="calendar-outline" size={19} color="#B7791F" />
+                        <View
+                            style={[
+                                styles.tarjetaResumen,
+                                { backgroundColor: theme.card },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.iconoResumenTarjeta,
+                                    { backgroundColor: isDark ? '#44351D' : '#FFF5DF' },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="calendar-outline"
+                                    size={19}
+                                    color={isDark ? '#F2BD59' : '#B7791F'}
+                                />
                             </View>
-                            <Text style={[styles.numeroResumen, { color: '#B7791F' }]}>
+
+                            <Text
+                                style={[
+                                    styles.numeroResumen,
+                                    { color: isDark ? '#F2BD59' : '#B7791F' },
+                                ]}
+                            >
                                 {contarEstado('Reservado')}
                             </Text>
-                            <Text style={styles.textoResumen}>Reservados</Text>
+
+                            <Text
+                                style={[
+                                    styles.textoResumen,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
+                                Reservados
+                            </Text>
                         </View>
 
-                        <View style={styles.tarjetaResumen}>
-                            <View style={[styles.iconoResumenTarjeta, { backgroundColor: '#FDECEC' }]}>
-                                <Ionicons name="car-sport-outline" size={19} color={COLOR_ROJO} />
+                        <View
+                            style={[
+                                styles.tarjetaResumen,
+                                { backgroundColor: theme.card },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.iconoResumenTarjeta,
+                                    { backgroundColor: isDark ? '#482323' : '#FDECEC' },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="car-sport-outline"
+                                    size={19}
+                                    color={COLOR_ROJO}
+                                />
                             </View>
-                            <Text style={[styles.numeroResumen, { color: COLOR_ROJO }]}>
+
+                            <Text
+                                style={[
+                                    styles.numeroResumen,
+                                    { color: isDark ? '#F17A7A' : COLOR_ROJO },
+                                ]}
+                            >
                                 {contarEstado('Alquilado')}
                             </Text>
-                            <Text style={styles.textoResumen}>Alquilados</Text>
+
+                            <Text
+                                style={[
+                                    styles.textoResumen,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
+                                Alquilados
+                            </Text>
                         </View>
                     </View>
                 </View>
 
+                {/* CATÁLOGO */}
+
                 <View style={styles.seccionVehiculos}>
                     <View style={styles.tituloSeccion}>
                         <View>
-                            <Text style={styles.tituloBloque}>
+                            <Text
+                                style={[
+                                    styles.tituloBloque,
+                                    { color: theme.text },
+                                ]}
+                            >
                                 Catálogo de vehículos
                             </Text>
+
                             <Text style={styles.subtituloBloque}>
                                 Consulta los vehículos registrados
                             </Text>
                         </View>
 
-                        <View style={styles.contadorResultados}>
+                        <View
+                            style={[
+                                styles.contadorResultados,
+                                { backgroundColor: fondoIconos },
+                            ]}
+                        >
                             <Text style={styles.contadorResultadosTexto}>
                                 {vehiculosFiltrados.length}
                             </Text>
                         </View>
                     </View>
 
-                    <View style={styles.buscador}>
+                    {/* BUSCADOR */}
+
+                    <View
+                        style={[
+                            styles.buscador,
+                            {
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                            },
+                        ]}
+                    >
                         <Ionicons
                             name="search-outline"
                             size={21}
@@ -364,9 +554,12 @@ const VehiculosAdminScreen = () => {
                         />
 
                         <TextInput
-                            style={styles.input}
+                            style={[
+                                styles.input,
+                                { color: theme.text },
+                            ]}
                             placeholder="Buscar marca, modelo o placa"
-                            placeholderTextColor="#999999"
+                            placeholderTextColor={theme.secondaryText}
                             value={busqueda}
                             onChangeText={setBusqueda}
                         />
@@ -379,13 +572,20 @@ const VehiculosAdminScreen = () => {
                                 <Ionicons
                                     name="close-circle"
                                     size={20}
-                                    color="#999999"
+                                    color={theme.secondaryText}
                                 />
                             </TouchableOpacity>
                         )}
                     </View>
 
-                    <Text style={styles.textoFiltros}>Filtrar por estado</Text>
+                    <Text
+                        style={[
+                            styles.textoFiltros,
+                            { color: theme.text },
+                        ]}
+                    >
+                        Filtrar por estado
+                    </Text>
 
                     <ScrollView
                         horizontal
@@ -400,6 +600,10 @@ const VehiculosAdminScreen = () => {
                                     key={item.nombre}
                                     style={[
                                         styles.filtroBoton,
+                                        {
+                                            backgroundColor: theme.card,
+                                            borderColor: theme.border,
+                                        },
                                         activo && styles.filtroActivo,
                                     ]}
                                     onPress={() => setFiltro(item.nombre)}
@@ -408,12 +612,17 @@ const VehiculosAdminScreen = () => {
                                     <Ionicons
                                         name={item.icono}
                                         size={15}
-                                        color={activo ? '#FFFFFF' : '#666666'}
+                                        color={
+                                            activo
+                                                ? '#FFFFFF'
+                                                : theme.secondaryText
+                                        }
                                     />
 
                                     <Text
                                         style={[
                                             styles.filtroTexto,
+                                            { color: theme.secondaryText },
                                             activo && styles.filtroTextoActivo,
                                         ]}
                                     >
@@ -424,6 +633,8 @@ const VehiculosAdminScreen = () => {
                         })}
                     </ScrollView>
 
+                    {/* ERRORES */}
+
                     {error && (
                         <View style={styles.errorContenedor}>
                             <Ionicons
@@ -431,7 +642,10 @@ const VehiculosAdminScreen = () => {
                                 size={19}
                                 color="#B42318"
                             />
-                            <Text style={styles.errorTexto}>{error}</Text>
+
+                            <Text style={styles.errorTexto}>
+                                {error}
+                            </Text>
                         </View>
                     )}
 
@@ -442,6 +656,7 @@ const VehiculosAdminScreen = () => {
                                 size={19}
                                 color="#B42318"
                             />
+
                             <View style={styles.errorContenido}>
                                 <Text style={styles.errorTexto}>
                                     {errorEstados}
@@ -459,33 +674,63 @@ const VehiculosAdminScreen = () => {
                         </View>
                     )}
 
+                    {/* CARGANDO */}
+
                     {mostrarCargando && vehiculos.length === 0 ? (
                         <View style={styles.cargando}>
                             <ActivityIndicator
                                 size="large"
                                 color={COLOR_ROJO}
                             />
-                            <Text style={styles.textoCargando}>
+
+                            <Text
+                                style={[
+                                    styles.textoCargando,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
                                 Cargando información de vehículos...
                             </Text>
                         </View>
                     ) : (
                         <>
+                            {/* SIN RESULTADOS */}
+
                             {vehiculosFiltrados.length === 0 ? (
-                                <View style={styles.vacio}>
-                                    <View style={styles.iconoVacio}>
+                                <View
+                                    style={[
+                                        styles.vacio,
+                                        { backgroundColor: theme.card },
+                                    ]}
+                                >
+                                    <View
+                                        style={[
+                                            styles.iconoVacio,
+                                            { backgroundColor: fondoGris },
+                                        ]}
+                                    >
                                         <Ionicons
                                             name="car-outline"
                                             size={42}
-                                            color="#AAAAAA"
+                                            color={theme.secondaryText}
                                         />
                                     </View>
 
-                                    <Text style={styles.vacioTitulo}>
+                                    <Text
+                                        style={[
+                                            styles.vacioTitulo,
+                                            { color: theme.text },
+                                        ]}
+                                    >
                                         No hay vehículos para mostrar
                                     </Text>
 
-                                    <Text style={styles.vacioTexto}>
+                                    <Text
+                                        style={[
+                                            styles.vacioTexto,
+                                            { color: theme.secondaryText },
+                                        ]}
+                                    >
                                         Prueba con otro filtro o término de búsqueda.
                                     </Text>
 
@@ -505,17 +750,33 @@ const VehiculosAdminScreen = () => {
                                     )}
                                 </View>
                             ) : (
+                                /* TARJETAS DE VEHÍCULOS */
+
                                 vehiculosFiltrados.map((vehiculo) => {
                                     const estado = obtenerEstadoVehiculo(vehiculo);
-                                    const imagen = vehiculo.imagen || vehiculo.url_imagen;
+
+                                    const imagen =
+                                        vehiculo.imagen ||
+                                        vehiculo.url_imagen;
+
                                     const precio = Number(
-                                        vehiculo.precio || vehiculo.valor_dia || 0
+                                        vehiculo.precio ||
+                                        vehiculo.valor_dia ||
+                                        0
                                     );
 
                                     return (
                                         <View
-                                            key={String(vehiculo.id_coche ?? vehiculo.id)}
-                                            style={styles.tarjetaVehiculo}
+                                            key={String(
+                                                vehiculo.id_coche ?? vehiculo.id
+                                            )}
+                                            style={[
+                                                styles.tarjetaVehiculo,
+                                                {
+                                                    backgroundColor: theme.card,
+                                                    borderColor: theme.border,
+                                                },
+                                            ]}
                                         >
                                             <View style={styles.contenedorImagen}>
                                                 {imagen ? (
@@ -525,13 +786,26 @@ const VehiculosAdminScreen = () => {
                                                         resizeMode="cover"
                                                     />
                                                 ) : (
-                                                    <View style={styles.imagenVacia}>
+                                                    <View
+                                                        style={[
+                                                            styles.imagenVacia,
+                                                            {
+                                                                backgroundColor: fondoGris,
+                                                            },
+                                                        ]}
+                                                    >
                                                         <Ionicons
                                                             name="car-sport-outline"
                                                             size={55}
-                                                            color="#AAAAAA"
+                                                            color={theme.secondaryText}
                                                         />
-                                                        <Text style={styles.textoImagenVacia}>
+
+                                                        <Text
+                                                            style={[
+                                                                styles.textoImagenVacia,
+                                                                { color: theme.secondaryText },
+                                                            ]}
+                                                        >
                                                             Sin imagen disponible
                                                         </Text>
                                                     </View>
@@ -549,6 +823,7 @@ const VehiculosAdminScreen = () => {
                                                             { backgroundColor: estado.color },
                                                         ]}
                                                     />
+
                                                     <Text
                                                         style={[
                                                             styles.estadoTexto,
@@ -563,6 +838,7 @@ const VehiculosAdminScreen = () => {
                                                     <Text style={styles.precioEtiquetaTexto}>
                                                         C$ {precio.toLocaleString('es-NI')}
                                                     </Text>
+
                                                     <Text style={styles.precioEtiquetaUnidad}>
                                                         / día
                                                     </Text>
@@ -572,16 +848,31 @@ const VehiculosAdminScreen = () => {
                                             <View style={styles.contenidoTarjeta}>
                                                 <View style={styles.filaTitulo}>
                                                     <View style={styles.datosVehiculo}>
-                                                        <Text style={styles.nombreVehiculo}>
+                                                        <Text
+                                                            style={[
+                                                                styles.nombreVehiculo,
+                                                                { color: theme.text },
+                                                            ]}
+                                                        >
                                                             {vehiculo.marca} {vehiculo.modelo}
                                                         </Text>
 
-                                                        <Text style={styles.anio}>
+                                                        <Text
+                                                            style={[
+                                                                styles.anio,
+                                                                { color: theme.secondaryText },
+                                                            ]}
+                                                        >
                                                             {vehiculo.anio || 'Año no especificado'}
                                                         </Text>
                                                     </View>
 
-                                                    <View style={styles.iconoVehiculo}>
+                                                    <View
+                                                        style={[
+                                                            styles.iconoVehiculo,
+                                                            { backgroundColor: fondoIconos },
+                                                        ]}
+                                                    >
                                                         <Ionicons
                                                             name="car-outline"
                                                             size={21}
@@ -590,16 +881,33 @@ const VehiculosAdminScreen = () => {
                                                     </View>
                                                 </View>
 
-                                                <View style={styles.placaContenedor}>
+                                                <View
+                                                    style={[
+                                                        styles.placaContenedor,
+                                                        { backgroundColor: fondoGris },
+                                                    ]}
+                                                >
                                                     <Ionicons
                                                         name="card-outline"
                                                         size={16}
-                                                        color="#777777"
+                                                        color={theme.secondaryText}
                                                     />
-                                                    <Text style={styles.placaTexto}>
+
+                                                    <Text
+                                                        style={[
+                                                            styles.placaTexto,
+                                                            { color: theme.secondaryText },
+                                                        ]}
+                                                    >
                                                         PLACA
                                                     </Text>
-                                                    <Text style={styles.placaValor}>
+
+                                                    <Text
+                                                        style={[
+                                                            styles.placaValor,
+                                                            { color: theme.text },
+                                                        ]}
+                                                    >
                                                         {vehiculo.placa || 'No registrada'}
                                                     </Text>
                                                 </View>
@@ -641,7 +949,6 @@ const VehiculosAdminScreen = () => {
 const styles = StyleSheet.create({
     contenedor: {
         flex: 1,
-        backgroundColor: '#F5F6F8',
     },
 
     encabezado: {
@@ -678,14 +985,14 @@ const styles = StyleSheet.create({
         letterSpacing: 0.8,
     },
 
-    titulo: {
+    tituloEncabezado: {
         color: '#FFFFFF',
         fontSize: 24,
         fontWeight: 'bold',
         letterSpacing: 0.2,
     },
 
-    subtitulo: {
+    subtituloEncabezado: {
         color: '#BDBDBD',
         fontSize: 12,
         marginTop: 5,
@@ -708,7 +1015,7 @@ const styles = StyleSheet.create({
         marginTop: 18,
         paddingTop: 13,
         borderTopWidth: 1,
-        borderTopColor: '#2f2c2c',
+        borderTopColor: '#2F2C2C',
         gap: 8,
     },
 
@@ -741,7 +1048,6 @@ const styles = StyleSheet.create({
     },
 
     tituloBloque: {
-        color: '#202020',
         fontSize: 17,
         fontWeight: 'bold',
     },
@@ -756,7 +1062,6 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35,
         borderRadius: 11,
-        backgroundColor: '#FDEBEC',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -769,7 +1074,6 @@ const styles = StyleSheet.create({
     tarjetaResumen: {
         flex: 1,
         minWidth: 0,
-        backgroundColor: '#FFFFFF',
         borderRadius: 13,
         paddingVertical: 12,
         paddingHorizontal: 5,
@@ -791,7 +1095,6 @@ const styles = StyleSheet.create({
     },
 
     numeroTotal: {
-        color: '#222222',
         fontSize: 21,
         fontWeight: 'bold',
     },
@@ -802,7 +1105,6 @@ const styles = StyleSheet.create({
     },
 
     textoResumen: {
-        color: '#777777',
         fontSize: 10,
         marginTop: 4,
         textAlign: 'center',
@@ -819,7 +1121,6 @@ const styles = StyleSheet.create({
         height: 32,
         paddingHorizontal: 8,
         borderRadius: 10,
-        backgroundColor: '#FDEBEC',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -834,10 +1135,8 @@ const styles = StyleSheet.create({
         height: 49,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         paddingHorizontal: 13,
         marginTop: 4,
         elevation: 1,
@@ -846,13 +1145,11 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         marginLeft: 9,
-        color: '#222222',
         fontSize: 12,
         height: '100%',
     },
 
     textoFiltros: {
-        color: '#555555',
         fontSize: 11,
         fontWeight: 'bold',
         marginTop: 17,
@@ -872,9 +1169,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 13,
         paddingVertical: 9,
         borderRadius: 10,
-        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: '#E8E8E8',
     },
 
     filtroActivo: {
@@ -883,7 +1178,6 @@ const styles = StyleSheet.create({
     },
 
     filtroTexto: {
-        color: '#666666',
         fontSize: 11,
         fontWeight: '600',
     },
@@ -893,12 +1187,10 @@ const styles = StyleSheet.create({
     },
 
     tarjetaVehiculo: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 17,
         marginBottom: 16,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 3,
         shadowColor: '#000000',
         shadowOpacity: 0.06,
@@ -921,11 +1213,9 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#ECEDEF',
     },
 
     textoImagenVacia: {
-        color: '#999999',
         fontSize: 11,
         marginTop: 7,
     },
@@ -995,13 +1285,11 @@ const styles = StyleSheet.create({
     },
 
     nombreVehiculo: {
-        color: '#202020',
         fontSize: 17,
         fontWeight: 'bold',
     },
 
     anio: {
-        color: '#888888',
         fontSize: 11,
         marginTop: 4,
     },
@@ -1010,7 +1298,6 @@ const styles = StyleSheet.create({
         width: 37,
         height: 37,
         borderRadius: 11,
-        backgroundColor: '#FDEBEC',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1019,7 +1306,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
-        backgroundColor: '#F5F5F5',
         paddingHorizontal: 10,
         paddingVertical: 8,
         borderRadius: 8,
@@ -1028,14 +1314,12 @@ const styles = StyleSheet.create({
     },
 
     placaTexto: {
-        color: '#999999',
         fontSize: 9,
         fontWeight: 'bold',
         letterSpacing: 0.5,
     },
 
     placaValor: {
-        color: '#333333',
         fontSize: 11,
         fontWeight: 'bold',
     },
@@ -1063,13 +1347,11 @@ const styles = StyleSheet.create({
     },
 
     textoCargando: {
-        color: '#777777',
         fontSize: 12,
         marginTop: 12,
     },
 
     vacio: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 16,
         alignItems: 'center',
         paddingHorizontal: 22,
@@ -1081,20 +1363,17 @@ const styles = StyleSheet.create({
         width: 75,
         height: 75,
         borderRadius: 25,
-        backgroundColor: '#F2F2F2',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     vacioTitulo: {
-        color: '#333333',
         fontSize: 15,
         fontWeight: 'bold',
         marginTop: 14,
     },
 
     vacioTexto: {
-        color: '#888888',
         fontSize: 11,
         marginTop: 7,
         textAlign: 'center',

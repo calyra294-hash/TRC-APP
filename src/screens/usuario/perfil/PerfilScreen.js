@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
   View,
   Text,
@@ -8,40 +9,58 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
+
 import { styles } from './PerfilScreen.styles';
 
 export default function PerfilScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
-  const { user, logout } = useAuth();
 
-  // Cargando usuario
+  const { user, logout } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
+
   if (loading) {
     return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#D71920" />
-      <Text style={styles.loadingText}>Cargando perfil...</Text>
-    </View>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>
+          Cargando perfil...
+        </Text>
+      </View>
     );
   }
 
-  // No hay usuario
   if (!user) {
     return (
-    <View style={styles.loadingContainer}>
-      <Ionicons name="person-circle-outline" size={55} color="#D71920" />
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.background },
+        ]}
+      >
+        <Ionicons
+          name="person-circle-outline"
+          size={55}
+          color={theme.primary}
+        />
 
-      <Text style={styles.loadingText}>
-        No se encontró información del usuario.
-      </Text>
-    </View>
+        <Text style={[styles.loadingText, { color: theme.text }]}>
+          No se encontró información del usuario.
+        </Text>
+      </View>
     );
   }
 
-  // ─────────────────────────────────────
   // DATOS DEL USUARIO
-  // ─────────────────────────────────────
 
   const nombreCompleto = [
     user.nombre1,
@@ -64,27 +83,26 @@ export default function PerfilScreen({ navigation }) {
 
   const estado = user.estado_aprobacion || 'sin estado';
 
-  const estadoTexto = estado.charAt(0).toUpperCase() + estado.slice(1);
+  const estadoTexto =
+    estado.charAt(0).toUpperCase() + estado.slice(1);
 
-  // ─────────────────────────────────────
   // CERRAR SESIÓN
-  // ─────────────────────────────────────
 
   const confirmarCerrarSesion = () => {
     Alert.alert(
-    'Cerrar sesión',
-    '¿Estás seguro de que deseas cerrar tu sesión?',
-    [
-      {
-        text: 'Cancelar',
-        style: 'cancel',
-      },
-      {
-        text: 'Cerrar sesión',
-        style: 'destructive',
-        onPress: ejecutarCierreSesion,
-      },
-    ]
+      'Cerrar sesión',
+      '¿Estás seguro de que deseas cerrar tu sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: ejecutarCierreSesion,
+        },
+      ]
     );
   };
 
@@ -94,15 +112,16 @@ export default function PerfilScreen({ navigation }) {
       await logout();
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'No fue posible cerrar la sesión correctamente.');
+      Alert.alert(
+        'Error',
+        'No fue posible cerrar la sesión correctamente.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // ─────────────────────────────────────
   // NAVEGACIÓN
-  // ─────────────────────────────────────
 
   const irAReservas = () => {
     navigation.navigate('Reservas');
@@ -113,145 +132,409 @@ export default function PerfilScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
     >
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mi Perfil</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* ENCABEZADO */}
 
-        <View style={styles.avatarContainer}>
-          {user.url_avatar ? (
-            <Image source={{ uri: user.url_avatar }} style={styles.avatar} />
-          ) : (
-            <Text style={styles.avatarText}>{iniciales || 'U'}</Text>
-          )}
+        <View
+          style={[
+            styles.header,
+            { backgroundColor: '#D71920' },
+          ]}
+        >
+          <Text style={styles.headerTitle}>
+            Mi Perfil
+          </Text>
+
+          <View style={styles.avatarContainer}>
+            {user.url_avatar ? (
+              <Image
+                source={{ uri: user.url_avatar }}
+                style={styles.avatar}
+              />
+            ) : (
+              <Text style={styles.avatarText}>
+                {iniciales || 'U'}
+              </Text>
+            )}
+          </View>
+
+          <Text style={styles.nombre}>
+            {nombreCompleto || 'Usuario'}
+          </Text>
+
+          <Text style={styles.rol}>
+            {rol}
+          </Text>
+
+          <View style={styles.estado}>
+            <View
+              style={[
+                styles.estadoDot,
+                estado === 'aprobado'
+                  ? styles.estadoAprobado
+                  : styles.estadoPendiente,
+              ]}
+            />
+
+            <Text style={styles.estadoText}>
+              {estadoTexto}
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.nombre}>{nombreCompleto || 'Usuario'}</Text>
+        {/* INFORMACIÓN PERSONAL */}
 
-        <Text style={styles.rol}>{rol}</Text>
-
-        <View style={styles.estado}>
-          <View
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <Text
             style={[
-              styles.estadoDot,
-              estado === 'aprobado' ? styles.estadoAprobado : styles.estadoPendiente,
+              styles.sectionTitle,
+              { color: theme.text },
             ]}
+          >
+            Información personal
+          </Text>
+
+          <InfoRow
+            icon="mail-outline"
+            label="Correo electrónico"
+            value={user.email}
+            theme={theme}
           />
 
-          <Text style={styles.estadoText}>{estadoTexto}</Text>
-        </View>
-      </View>
+          <InfoRow
+            icon="call-outline"
+            label="Teléfono"
+            value={user.telefono}
+            theme={theme}
+          />
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Información personal</Text>
+          <InfoRow
+            icon="location-outline"
+            label="Dirección"
+            value={user.direccion}
+            theme={theme}
+          />
 
-        <InfoRow icon="mail-outline" label="Correo electrónico" value={user.email} />
-        <InfoRow icon="call-outline" label="Teléfono" value={user.telefono} />
-        <InfoRow icon="location-outline" label="Dirección" value={user.direccion} />
-        <InfoRow
-          icon="calendar-outline"
-          label="Fecha de nacimiento"
-          value={user.fecha_nacimiento}
-          last
-        />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Documentación</Text>
-
-        <InfoRow icon="card-outline" label="Cédula" value={user.cedula} />
-        <InfoRow icon="car-outline" label="Licencia" value={user.licencia} />
-        <InfoRow
-          icon="document-text-outline"
-          label="Tipo de licencia"
-          value={user.tipo_licencia}
-          last
-        />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Mi cuenta</Text>
-
-        <OptionRow icon="calendar-outline" text="Mis reservas" onPress={irAReservas} />
-        <OptionRow
-          icon="time-outline"
-          text="Historial de alquileres"
-          onPress={irAAlquileres}
-        />
-        <OptionRow icon="call-outline" text="Métodos de contacto" />
-        <OptionRow icon="notifications-outline" text="Notificaciones" />
-        <OptionRow icon="settings-outline" text="Configuración" last />
-      </View>
-
-      <Pressable 
-        style={[styles.logoutButton, loading && styles.disabledButton]} 
-        onPress={confirmarCerrarSesion}
-        disabled={loading}
-      >
-        <View style={styles.logoutIcon}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#D71920" />
-          ) : (
-            <Ionicons name="log-out-outline" size={20} color="#D71920" />
-          )}
+          <InfoRow
+            icon="calendar-outline"
+            label="Fecha de nacimiento"
+            value={user.fecha_nacimiento}
+            last
+            theme={theme}
+          />
         </View>
 
-        <Text style={styles.logoutText}>
-          {loading ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        {/* DOCUMENTACIÓN */}
+
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: theme.text },
+            ]}
+          >
+            Documentación
+          </Text>
+
+          <InfoRow
+            icon="card-outline"
+            label="Cédula"
+            value={user.cedula}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="car-outline"
+            label="Licencia"
+            value={user.licencia}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="document-text-outline"
+            label="Tipo de licencia"
+            value={user.tipo_licencia}
+            last
+            theme={theme}
+          />
+        </View>
+
+        {/* MI CUENTA */}
+
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: theme.text },
+            ]}
+          >
+            Mi cuenta
+          </Text>
+
+          <OptionRow
+            icon="calendar-outline"
+            text="Mis reservas"
+            onPress={irAReservas}
+            theme={theme}
+          />
+
+          <OptionRow
+            icon="time-outline"
+            text="Historial de alquileres"
+            onPress={irAAlquileres}
+            theme={theme}
+          />
+
+          <OptionRow
+            icon="call-outline"
+            text="Métodos de contacto"
+            theme={theme}
+          />
+
+          <OptionRow
+            icon="notifications-outline"
+            text="Notificaciones"
+            theme={theme}
+          />
+
+          {/* CAMBIAR TEMA */}
+
+          <Pressable
+            style={[
+              styles.optionRow,
+              {
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border,
+              },
+            ]}
+            onPress={toggleTheme}
+          >
+            <View style={styles.optionIcon}>
+              <Ionicons
+                name={isDark ? 'moon' : 'sunny-outline'}
+                size={19}
+                color={theme.primary}
+              />
+            </View>
+
+            <Text
+              style={[
+                styles.optionText,
+                { color: theme.text },
+              ]}
+            >
+              Modo oscuro
+            </Text>
+
+            <View
+              style={{
+                backgroundColor: isDark ? '#333333' : '#F3F4F6',
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 15,
+                marginRight: 8,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.text,
+                  fontSize: 11,
+                  fontWeight: '600',
+                }}
+              >
+                {isDark ? 'Activado' : 'Desactivado'}
+              </Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward-outline"
+              size={16}
+              color={theme.secondaryText}
+            />
+          </Pressable>
+
+          <OptionRow
+            icon="settings-outline"
+            text="Configuración"
+            last
+            theme={theme}
+          />
+        </View>
+
+        {/* CERRAR SESIÓN */}
+
+        <Pressable
+          style={[
+            styles.logoutButton,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+            loading && styles.disabledButton,
+          ]}
+          onPress={confirmarCerrarSesion}
+          disabled={loading}
+        >
+          <View style={styles.logoutIcon}>
+            {loading ? (
+              <ActivityIndicator
+                size="small"
+                color={theme.primary}
+              />
+            ) : (
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={theme.primary}
+              />
+            )}
+          </View>
+
+          <Text
+            style={[
+              styles.logoutText,
+              { color: theme.primary },
+            ]}
+          >
+            {loading ? 'Cerrando sesión...' : 'Cerrar sesión'}
+          </Text>
+        </Pressable>
+
+        <Text
+          style={[
+            styles.footerText,
+            { color: theme.secondaryText },
+          ]}
+        >
+          Tito's Rent a Car
         </Text>
-      </Pressable>
-
-      <Text style={styles.footerText}>Tito's Rent a Car</Text>
-    </ScrollView>
+      </ScrollView>
     </View>
   );
 }
 
-/* ═══════════════════════════════════════
-   COMPONENTE INFORMACIÓN
-═══════════════════════════════════════ */
+// COMPONENTE INFORMACIÓN
 
-function InfoRow({ icon, label, value, last = false }) {
+function InfoRow({ icon, label, value, last = false, theme }) {
   const tieneDato =
-    value !== null && value !== undefined && String(value).trim() !== '';
+    value !== null &&
+    value !== undefined &&
+    String(value).trim() !== '';
 
   return (
-    <View style={[styles.infoRow, last && styles.infoRowLast]}>
-    <View style={styles.iconContainer}>
-      <Ionicons name={icon} size={17} color="#D71920" />
-    </View>
+    <View
+      style={[
+        styles.infoRow,
+        last && styles.infoRowLast,
+        { borderBottomColor: theme.border },
+      ]}
+    >
+      <View style={styles.iconContainer}>
+        <Ionicons
+          name={icon}
+          size={17}
+          color={theme.primary}
+        />
+      </View>
 
-    <View style={styles.infoContent}>
-      <Text style={styles.infoLabel}>{label}</Text>
+      <View style={styles.infoContent}>
+        <Text
+          style={[
+            styles.infoLabel,
+            { color: theme.secondaryText },
+          ]}
+        >
+          {label}
+        </Text>
+
+        <Text
+          style={[
+            styles.infoValue,
+            { color: theme.text },
+            !tieneDato && styles.emptyValue,
+          ]}
+          numberOfLines={2}
+        >
+          {tieneDato ? value : 'No registrado'}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// COMPONENTE OPCIONES
+
+function OptionRow({
+  icon,
+  text,
+  onPress,
+  last = false,
+  theme,
+}) {
+  return (
+    <Pressable
+      style={[
+        styles.optionRow,
+        last && styles.optionRowLast,
+        { borderBottomColor: theme.border },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.optionIcon}>
+        <Ionicons
+          name={icon}
+          size={17}
+          color={theme.primary}
+        />
+      </View>
 
       <Text
-        style={[styles.infoValue, !tieneDato && styles.emptyValue]}
-        numberOfLines={2}
+        style={[
+          styles.optionText,
+          { color: theme.text },
+        ]}
       >
-        {tieneDato ? value : 'No registrado'}
+        {text}
       </Text>
-    </View>
-    </View>
-  );
-}
 
-/* ═══════════════════════════════════════
-   COMPONENTE OPCIONES
-═══════════════════════════════════════ */
-
-function OptionRow({ icon, text, onPress, last = false }) {
-  return (
-    <Pressable style={[styles.optionRow, last && styles.optionRowLast]} onPress={onPress}>
-    <View style={styles.optionIcon}>
-      <Ionicons name={icon} size={17} color="#D71920" />
-    </View>
-
-    <Text style={styles.optionText}>{text}</Text>
-
-    <Ionicons name="chevron-forward-outline" size={16} color="#A5A5A5" />
+      <Ionicons
+        name="chevron-forward-outline"
+        size={16}
+        color={theme.secondaryText}
+      />
     </Pressable>
   );
 }

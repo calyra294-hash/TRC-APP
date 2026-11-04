@@ -1,5 +1,5 @@
-
 import React, { useCallback, useState } from 'react';
+
 import {
     View,
     Text,
@@ -9,15 +9,20 @@ import {
     TouchableOpacity,
     RefreshControl,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+
 import { useReservas } from '../../hooks/useReservas';
 import { useAlquileres } from '../../hooks/useAlquileres';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+
 import { obtenerNotificaciones } from '../../services/notificaciones.service.js';
 
 export default function InicioAdminScreen({ navigation }) {
     const { user } = useAuth();
+    const { theme, isDark } = useTheme();
 
     const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0);
 
@@ -63,15 +68,20 @@ export default function InicioAdminScreen({ navigation }) {
     );
 
     const pendientes = reservas.filter(
-        item => String(item.estado_aprobacion || 'pendiente').toLowerCase() === 'pendiente'
+        item =>
+            String(item.estado_aprobacion || 'pendiente').toLowerCase() ===
+            'pendiente'
     ).length;
 
     const aprobadas = reservas.filter(
-        item => String(item.estado_aprobacion || '').toLowerCase() === 'aprobada'
+        item =>
+            String(item.estado_aprobacion || '').toLowerCase() ===
+            'aprobada'
     ).length;
 
     const alquileresActivos = alquileres.filter(item => {
         const estado = String(item.estado_alquiler || '').toLowerCase();
+
         return [
             'activo',
             'en curso',
@@ -122,7 +132,10 @@ export default function InicioAdminScreen({ navigation }) {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={[
+                styles.container,
+                { backgroundColor: theme.background },
+            ]}
             contentContainerStyle={styles.contenido}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -130,10 +143,12 @@ export default function InicioAdminScreen({ navigation }) {
                     refreshing={false}
                     onRefresh={actualizarDatos}
                     colors={['#D31A24']}
+                    tintColor={theme.primary}
                 />
             }
         >
             {/* ENCABEZADO PRINCIPAL */}
+
             <View style={styles.encabezado}>
                 <View style={styles.encabezadoSuperior}>
                     <View style={styles.marca}>
@@ -146,7 +161,10 @@ export default function InicioAdminScreen({ navigation }) {
                         </View>
 
                         <View>
-                            <Text style={styles.marcaNombre}>TRC APP</Text>
+                            <Text style={styles.marcaNombre}>
+                                TRC APP
+                            </Text>
+
                             <Text style={styles.marcaSubtitulo}>
                                 ADMINISTRACIÓN
                             </Text>
@@ -156,7 +174,9 @@ export default function InicioAdminScreen({ navigation }) {
                     <View style={styles.encabezadoAcciones}>
                         <TouchableOpacity
                             style={styles.botonNotificaciones}
-                            onPress={() => navigation.navigate('Notificaciones')}
+                            onPress={() =>
+                                navigation.navigate('Notificaciones')
+                            }
                             activeOpacity={0.8}
                         >
                             <Ionicons
@@ -178,7 +198,10 @@ export default function InicioAdminScreen({ navigation }) {
 
                         <View style={styles.estadoAdmin}>
                             <View style={styles.puntoEstado} />
-                            <Text style={styles.estadoTexto}>En línea</Text>
+
+                            <Text style={styles.estadoTexto}>
+                                En línea
+                            </Text>
                         </View>
                     </View>
                 </View>
@@ -209,18 +232,28 @@ export default function InicioAdminScreen({ navigation }) {
             </View>
 
             {/* RESUMEN GENERAL */}
+
             <View style={styles.tituloSeccion}>
                 <View>
-                    <Text style={styles.titulo}>
+                    <Text
+                        style={[
+                            styles.titulo,
+                            { color: theme.text },
+                        ]}
+                    >
                         Resumen general
                     </Text>
+
                     <Text style={styles.descripcionSeccion}>
                         Estado actual de tu negocio
                     </Text>
                 </View>
 
                 <TouchableOpacity
-                    style={styles.botonActualizar}
+                    style={[
+                        styles.botonActualizar,
+                        { backgroundColor: theme.card },
+                    ]}
                     onPress={actualizarDatos}
                     activeOpacity={0.8}
                 >
@@ -233,12 +266,23 @@ export default function InicioAdminScreen({ navigation }) {
             </View>
 
             {cargando ? (
-                <View style={styles.cargandoBox}>
+                <View
+                    style={[
+                        styles.cargandoBox,
+                        { backgroundColor: theme.card },
+                    ]}
+                >
                     <ActivityIndicator
                         size="large"
                         color="#D31A24"
                     />
-                    <Text style={styles.textoCargando}>
+
+                    <Text
+                        style={[
+                            styles.textoCargando,
+                            { color: theme.secondaryText },
+                        ]}
+                    >
                         Actualizando información...
                     </Text>
                 </View>
@@ -247,7 +291,13 @@ export default function InicioAdminScreen({ navigation }) {
                     {tarjetas.map((item, index) => (
                         <View
                             key={item.titulo}
-                            style={styles.tarjeta}
+                            style={[
+                                styles.tarjeta,
+                                {
+                                    backgroundColor: theme.card,
+                                    borderColor: theme.border,
+                                },
+                            ]}
                         >
                             <View style={styles.tarjetaSuperior}>
                                 <View style={styles.iconoTarjeta}>
@@ -258,23 +308,39 @@ export default function InicioAdminScreen({ navigation }) {
                                     />
                                 </View>
 
-                                <Text style={styles.numero}>
+                                <Text
+                                    style={[
+                                        styles.numero,
+                                        { color: theme.text },
+                                    ]}
+                                >
                                     {item.numero}
                                 </Text>
                             </View>
 
-                            <Text style={styles.etiqueta}>
+                            <Text
+                                style={[
+                                    styles.etiqueta,
+                                    { color: theme.text },
+                                ]}
+                            >
                                 {item.titulo}
                             </Text>
 
-                            <Text style={styles.detalleTarjeta}>
+                            <Text
+                                style={[
+                                    styles.detalleTarjeta,
+                                    { color: theme.secondaryText },
+                                ]}
+                            >
                                 {item.detalle}
                             </Text>
 
                             <View
                                 style={[
                                     styles.acentoTarjeta,
-                                    index === 1 && styles.acentoPendiente,
+                                    index === 1 &&
+                                    styles.acentoPendiente,
                                 ]}
                             />
                         </View>
@@ -282,15 +348,29 @@ export default function InicioAdminScreen({ navigation }) {
                 </View>
             )}
 
-            {/* ACCESO A RESEÑAS */}
-            <Text style={styles.titulo}>
+            {/* EXPERIENCIA DE CLIENTES */}
+
+            <Text
+                style={[
+                    styles.titulo,
+                    { color: theme.text },
+                ]}
+            >
                 Experiencia de clientes
             </Text>
 
             <TouchableOpacity
-                style={styles.resenasCard}
+                style={[
+                    styles.resenasCard,
+                    {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                    },
+                ]}
                 activeOpacity={0.85}
-                onPress={() => navigation.navigate('ResenasAdmin')}
+                onPress={() =>
+                    navigation.navigate('ResenasAdmin')
+                }
             >
                 <View style={styles.resenasIcono}>
                     <Ionicons
@@ -301,11 +381,21 @@ export default function InicioAdminScreen({ navigation }) {
                 </View>
 
                 <View style={styles.resenasTexto}>
-                    <Text style={styles.resenasTitulo}>
+                    <Text
+                        style={[
+                            styles.resenasTitulo,
+                            { color: theme.text },
+                        ]}
+                    >
                         Reseñas y calificaciones
                     </Text>
 
-                    <Text style={styles.resenasDescripcion}>
+                    <Text
+                        style={[
+                            styles.resenasDescripcion,
+                            { color: theme.secondaryText },
+                        ]}
+                    >
                         Consulta las opiniones de tus clientes y sus experiencias.
                     </Text>
                 </View>
@@ -320,19 +410,30 @@ export default function InicioAdminScreen({ navigation }) {
             </TouchableOpacity>
 
             {/* ACCESOS RÁPIDOS */}
+
             <View style={styles.tituloSeccionAccesos}>
-                <View>
-                    <Text style={styles.titulo}>
-                        Accesos rápidos
-                    </Text>
-                    <Text style={styles.descripcionSeccion}>
-                        Gestiona las principales funciones
-                    </Text>
-                </View>
+                <Text
+                    style={[
+                        styles.titulo,
+                        { color: theme.text },
+                    ]}
+                >
+                    Accesos rápidos
+                </Text>
+
+                <Text style={styles.descripcionSeccion}>
+                    Gestiona las principales funciones
+                </Text>
             </View>
 
             <TouchableOpacity
-                style={styles.acceso}
+                style={[
+                    styles.acceso,
+                    {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                    },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('Reservas')}
             >
@@ -345,10 +446,21 @@ export default function InicioAdminScreen({ navigation }) {
                 </View>
 
                 <View style={styles.accesoTexto}>
-                    <Text style={styles.accesoTitulo}>
+                    <Text
+                        style={[
+                            styles.accesoTitulo,
+                            { color: theme.text },
+                        ]}
+                    >
                         Gestionar reservas
                     </Text>
-                    <Text style={styles.accesoDescripcion}>
+
+                    <Text
+                        style={[
+                            styles.accesoDescripcion,
+                            { color: theme.secondaryText },
+                        ]}
+                    >
                         Revisar, aprobar o rechazar solicitudes
                     </Text>
                 </View>
@@ -356,12 +468,18 @@ export default function InicioAdminScreen({ navigation }) {
                 <Ionicons
                     name="chevron-forward"
                     size={21}
-                    color="#999999"
+                    color={theme.secondaryText}
                 />
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={styles.acceso}
+                style={[
+                    styles.acceso,
+                    {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                    },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('Vehículos')}
             >
@@ -374,10 +492,21 @@ export default function InicioAdminScreen({ navigation }) {
                 </View>
 
                 <View style={styles.accesoTexto}>
-                    <Text style={styles.accesoTitulo}>
+                    <Text
+                        style={[
+                            styles.accesoTitulo,
+                            { color: theme.text },
+                        ]}
+                    >
                         Ver vehículos
                     </Text>
-                    <Text style={styles.accesoDescripcion}>
+
+                    <Text
+                        style={[
+                            styles.accesoDescripcion,
+                            { color: theme.secondaryText },
+                        ]}
+                    >
                         Consultar el catálogo de vehículos
                     </Text>
                 </View>
@@ -385,13 +514,19 @@ export default function InicioAdminScreen({ navigation }) {
                 <Ionicons
                     name="chevron-forward"
                     size={21}
-                    color="#999999"
+                    color={theme.secondaryText}
                 />
             </TouchableOpacity>
 
             {/* PIE DE PANTALLA */}
+
             <View style={styles.pie}>
-                <View style={styles.pieLinea} />
+                <View
+                    style={[
+                        styles.pieLinea,
+                        { backgroundColor: theme.border },
+                    ]}
+                />
 
                 <View style={styles.pieContenido}>
                     <Ionicons
@@ -399,12 +534,23 @@ export default function InicioAdminScreen({ navigation }) {
                         size={17}
                         color="#D31A24"
                     />
-                    <Text style={styles.pieTexto}>
+
+                    <Text
+                        style={[
+                            styles.pieTexto,
+                            { color: theme.secondaryText },
+                        ]}
+                    >
                         TRC App · Panel de administración
                     </Text>
                 </View>
 
-                <Text style={styles.pieVersion}>
+                <Text
+                    style={[
+                        styles.pieVersion,
+                        { color: theme.secondaryText },
+                    ]}
+                >
                     Gestión de alquiler vehicular
                 </Text>
             </View>
@@ -415,7 +561,6 @@ export default function InicioAdminScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
     },
 
     contenido: {
@@ -582,7 +727,6 @@ const styles = StyleSheet.create({
     titulo: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#171717',
     },
 
     descripcionSeccion: {
@@ -594,7 +738,6 @@ const styles = StyleSheet.create({
     botonActualizar: {
         width: 39,
         height: 39,
-        backgroundColor: '#FFFFFF',
         borderRadius: 13,
         alignItems: 'center',
         justifyContent: 'center',
@@ -602,7 +745,6 @@ const styles = StyleSheet.create({
     },
 
     cargandoBox: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 18,
         padding: 30,
         alignItems: 'center',
@@ -611,7 +753,6 @@ const styles = StyleSheet.create({
 
     textoCargando: {
         marginTop: 10,
-        color: '#777777',
         fontSize: 12,
     },
 
@@ -624,13 +765,11 @@ const styles = StyleSheet.create({
 
     tarjeta: {
         width: '48%',
-        backgroundColor: '#FFFFFF',
         borderRadius: 18,
         padding: 15,
         marginBottom: 13,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 2,
     },
 
@@ -652,19 +791,16 @@ const styles = StyleSheet.create({
     numero: {
         fontSize: 27,
         fontWeight: 'bold',
-        color: '#151515',
     },
 
     etiqueta: {
         fontSize: 12,
-        color: '#333333',
         fontWeight: 'bold',
         marginTop: 13,
     },
 
     detalleTarjeta: {
         fontSize: 10,
-        color: '#999999',
         marginTop: 5,
     },
 
@@ -681,7 +817,6 @@ const styles = StyleSheet.create({
     },
 
     resenasCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 19,
         padding: 16,
         flexDirection: 'row',
@@ -689,7 +824,6 @@ const styles = StyleSheet.create({
         marginTop: 14,
         marginBottom: 29,
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 3,
         shadowColor: '#000000',
         shadowOpacity: 0.05,
@@ -713,13 +847,11 @@ const styles = StyleSheet.create({
     },
 
     resenasTitulo: {
-        color: '#222222',
         fontSize: 13,
         fontWeight: 'bold',
     },
 
     resenasDescripcion: {
-        color: '#888888',
         fontSize: 10,
         marginTop: 5,
         lineHeight: 16,
@@ -739,14 +871,12 @@ const styles = StyleSheet.create({
     },
 
     acceso: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 17,
         padding: 15,
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#EEEEEE',
         elevation: 2,
     },
 
@@ -768,12 +898,10 @@ const styles = StyleSheet.create({
     accesoTitulo: {
         fontSize: 13,
         fontWeight: 'bold',
-        color: '#222222',
     },
 
     accesoDescripcion: {
         fontSize: 10,
-        color: '#888888',
         marginTop: 5,
     },
 
@@ -785,7 +913,6 @@ const styles = StyleSheet.create({
     pieLinea: {
         width: '100%',
         height: 1,
-        backgroundColor: '#E2E2E2',
         marginBottom: 17,
     },
 
@@ -796,14 +923,12 @@ const styles = StyleSheet.create({
     },
 
     pieTexto: {
-        color: '#666666',
         fontSize: 11,
         fontWeight: '600',
         marginLeft: 7,
     },
 
     pieVersion: {
-        color: '#AAAAAA',
         fontSize: 10,
         marginTop: 6,
     },

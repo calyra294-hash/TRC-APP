@@ -22,7 +22,8 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { useAlquileres } from '../../../hooks/useAlquileres';
 import { crearResena } from '../../../services/resenas.service';
-import { styles } from './AlquileresScreen.styles';
+import { useTheme } from '../../../context/ThemeContext';
+import { crearEstilos } from './AlquileresScreen.styles';
 
 const formatearFecha = (fecha) => {
     if (!fecha) return 'Sin fecha';
@@ -52,7 +53,7 @@ const formatearFecha = (fecha) => {
     }
 };
 
-const obtenerColorEstado = (estado) => {
+const obtenerColorEstado = (estado, isDark) => {
     const estadoNormalizado = String(estado || '').toLowerCase();
 
     if (
@@ -60,8 +61,8 @@ const obtenerColorEstado = (estado) => {
         estadoNormalizado.includes('finalizado')
     ) {
         return {
-            fondo: '#E8F5EC',
-            texto: '#23834D',
+            fondo: isDark ? '#173D2A' : '#E8F5EC',
+            texto: isDark ? '#75D99A' : '#23834D',
             icono: 'checkmark-circle',
         };
     }
@@ -71,8 +72,8 @@ const obtenerColorEstado = (estado) => {
         estadoNormalizado.includes('cancelada')
     ) {
         return {
-            fondo: '#F1F2F4',
-            texto: '#667085',
+            fondo: isDark ? '#333333' : '#F1F2F4',
+            texto: isDark ? '#B8B8B8' : '#667085',
             icono: 'close-circle',
         };
     }
@@ -83,15 +84,15 @@ const obtenerColorEstado = (estado) => {
         estadoNormalizado.includes('activo')
     ) {
         return {
-            fondo: '#FFF3E0',
-            texto: '#C77700',
+            fondo: isDark ? '#49351A' : '#FFF3E0',
+            texto: isDark ? '#FFC66D' : '#C77700',
             icono: 'time',
         };
     }
 
     return {
-        fondo: '#FEE4E2',
-        texto: '#D92D20',
+        fondo: isDark ? '#4A2020' : '#FEE4E2',
+        texto: isDark ? '#FF9993' : '#D92D20',
         icono: 'alert-circle',
     };
 };
@@ -126,15 +127,15 @@ const formatearEstado = (estado) => {
     return estado;
 };
 
-const modalStyles = {
+const crearModalStyles = (theme) => ({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.55)',
+        backgroundColor: 'rgba(0,0,0,0.65)',
         justifyContent: 'center',
         padding: 20,
     },
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.card,
         borderRadius: 22,
         padding: 22,
         maxHeight: '90%',
@@ -146,13 +147,13 @@ const modalStyles = {
     title: {
         fontSize: 21,
         fontWeight: '900',
-        color: '#171717',
+        color: theme.text,
         textAlign: 'center',
         marginTop: 5,
     },
     subtitle: {
         fontSize: 13,
-        color: '#777777',
+        color: theme.secondaryText,
         textAlign: 'center',
         marginTop: 8,
         lineHeight: 20,
@@ -169,7 +170,7 @@ const modalStyles = {
     },
     ratingText: {
         textAlign: 'center',
-        color: '#555555',
+        color: theme.secondaryText,
         fontSize: 13,
         fontWeight: '700',
         marginTop: 10,
@@ -177,20 +178,20 @@ const modalStyles = {
     inputLabel: {
         fontSize: 12,
         fontWeight: '800',
-        color: '#333333',
+        color: theme.text,
         marginTop: 25,
         marginBottom: 9,
     },
     input: {
         minHeight: 115,
         borderWidth: 1,
-        borderColor: '#E5E5E5',
+        borderColor: theme.border,
         borderRadius: 13,
         padding: 13,
-        color: '#222222',
+        color: theme.text,
         fontSize: 13,
         textAlignVertical: 'top',
-        backgroundColor: '#FAFAFA',
+        backgroundColor: theme.input,
     },
     submitButton: {
         backgroundColor: '#D31A24',
@@ -213,13 +214,18 @@ const modalStyles = {
         marginTop: 5,
     },
     cancelText: {
-        color: '#777777',
+        color: theme.secondaryText,
         fontWeight: '700',
         fontSize: 13,
     },
-};
+});
 
 export default function AlquileresScreen({ navigation }) {
+    const { theme, isDark } = useTheme();
+
+    const styles = crearEstilos(theme, isDark);
+    const modalStyles = crearModalStyles(theme);
+
     const {
         alquileres,
         resenas,
@@ -325,7 +331,7 @@ export default function AlquileresScreen({ navigation }) {
 
     const renderAlquiler = ({ item }) => {
         const estado = formatearEstado(item.estado_alquiler);
-        const coloresEstado = obtenerColorEstado(estado);
+        const coloresEstado = obtenerColorEstado(estado, isDark);
 
         const nombreVehiculo =
             `${item.vehiculo?.marca || ''} ${item.vehiculo?.modelo || ''}`.trim();
@@ -343,7 +349,6 @@ export default function AlquileresScreen({ navigation }) {
                         })
                     }
                 >
-                    {/* IMAGEN DEL VEHÍCULO */}
                     <View style={styles.imageContainer}>
                         {item.vehiculo?.foto_principal ? (
                             <Image
@@ -358,14 +363,13 @@ export default function AlquileresScreen({ navigation }) {
                                 <Ionicons
                                     name="car-sport-outline"
                                     size={58}
-                                    color="#C7C7C7"
+                                    color={isDark ? '#777777' : '#C7C7C7'}
                                 />
                             </View>
                         )}
 
                         <View style={styles.imageDarkOverlay} />
 
-                        {/* ESTADO */}
                         <View
                             style={[
                                 styles.statusBadge,
@@ -392,7 +396,6 @@ export default function AlquileresScreen({ navigation }) {
                             </Text>
                         </View>
 
-                        {/* NOMBRE DEL VEHÍCULO */}
                         <View style={styles.imageOverlay}>
                             <Text style={styles.vehicleBrand}>
                                 TITO'S RENT A CAR
@@ -407,7 +410,6 @@ export default function AlquileresScreen({ navigation }) {
                         </View>
                     </View>
 
-                    {/* INFORMACIÓN DEL ALQUILER */}
                     <View style={styles.cardBody}>
                         <View style={styles.mainInfoRow}>
                             <View style={styles.rentalIdContainer}>
@@ -436,7 +438,6 @@ export default function AlquileresScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* PLACA Y DURACIÓN */}
                         <View style={styles.featuresRow}>
                             {item.vehiculo?.placa ? (
                                 <View style={styles.featureItem}>
@@ -481,7 +482,6 @@ export default function AlquileresScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* FECHAS */}
                         <View style={styles.datesContainer}>
                             <View style={styles.dateItem}>
                                 <View style={styles.dateIconContainer}>
@@ -526,7 +526,6 @@ export default function AlquileresScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* VER DETALLES */}
                         <View style={styles.detailButton}>
                             <Text style={styles.detailText}>
                                 Ver detalles del alquiler
@@ -541,7 +540,6 @@ export default function AlquileresScreen({ navigation }) {
                     </View>
                 </TouchableOpacity>
 
-                {/* BOTÓN DE CALIFICACIÓN */}
                 {completado && !calificado ? (
                     <TouchableOpacity
                         style={styles.reviewButton}
@@ -560,7 +558,6 @@ export default function AlquileresScreen({ navigation }) {
                     </TouchableOpacity>
                 ) : null}
 
-                {/* RESEÑA YA PUBLICADA */}
                 {completado && calificado ? (
                     <View style={styles.reviewedContainer}>
                         <Ionicons
@@ -605,7 +602,7 @@ export default function AlquileresScreen({ navigation }) {
                     <Ionicons
                         name="time-outline"
                         size={15}
-                        color="#98A2B3"
+                        color={theme.secondaryText}
                     />
 
                     <Text style={styles.emptyDecorationText}>
@@ -619,7 +616,6 @@ export default function AlquileresScreen({ navigation }) {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-                {/* ENCABEZADO */}
                 <View style={styles.header}>
                     <View style={styles.headerTop}>
                         <View>
@@ -675,12 +671,12 @@ export default function AlquileresScreen({ navigation }) {
                 )}
             </View>
 
-            {/* MODAL DE CALIFICACIÓN */}
             <Modal
                 visible={modalVisible}
                 transparent
                 animationType="fade"
                 onRequestClose={cerrarFormulario}
+                statusBarTranslucent
             >
                 <KeyboardAvoidingView
                     style={modalStyles.overlay}
@@ -699,7 +695,7 @@ export default function AlquileresScreen({ navigation }) {
                                 <Ionicons
                                     name="close-circle"
                                     size={27}
-                                    color="#999999"
+                                    color={theme.secondaryText}
                                 />
                             </TouchableOpacity>
 
@@ -724,7 +720,6 @@ export default function AlquileresScreen({ navigation }) {
                                 </Text>
                             </Text>
 
-                            {/* ESTRELLAS */}
                             <View style={modalStyles.starsContainer}>
                                 {[1, 2, 3, 4, 5].map((estrella) => (
                                     <TouchableOpacity
@@ -758,7 +753,6 @@ export default function AlquileresScreen({ navigation }) {
                                                 : 'No fue una buena experiencia'}
                             </Text>
 
-                            {/* COMENTARIO */}
                             <Text style={modalStyles.inputLabel}>
                                 TU COMENTARIO
                             </Text>
@@ -766,7 +760,7 @@ export default function AlquileresScreen({ navigation }) {
                             <TextInput
                                 style={modalStyles.input}
                                 placeholder="Escribe aquí tu experiencia con el vehículo..."
-                                placeholderTextColor="#999999"
+                                placeholderTextColor={theme.secondaryText}
                                 multiline
                                 maxLength={1000}
                                 value={comentario}
@@ -777,7 +771,7 @@ export default function AlquileresScreen({ navigation }) {
                             <Text
                                 style={{
                                     textAlign: 'right',
-                                    color: '#999999',
+                                    color: theme.secondaryText,
                                     fontSize: 11,
                                     marginTop: 6,
                                 }}
@@ -785,7 +779,6 @@ export default function AlquileresScreen({ navigation }) {
                                 {comentario.length}/1000
                             </Text>
 
-                            {/* PUBLICAR */}
                             <TouchableOpacity
                                 style={[
                                     modalStyles.submitButton,

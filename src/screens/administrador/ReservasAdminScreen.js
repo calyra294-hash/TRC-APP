@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useReservas } from '../../hooks/useReservas';
 import { actualizarEstadoReserva } from '../../services/reservas.service';
+import { useTheme } from '../../context/ThemeContext';
 
 const formatearFecha = (fecha) => {
     if (!fecha) return 'No disponible';
@@ -84,7 +85,21 @@ const obtenerEstado = (estado) => {
 };
 
 export default function ReservasAdminScreen() {
+    const { theme, isDark } = useTheme();
+
     const { reservas, loading, error, refrescar } = useReservas();
+
+    const colores = {
+        fondo: theme.background,
+        tarjeta: theme.card,
+        texto: theme.text,
+        textoSecundario: theme.secondaryText,
+        borde: theme.border,
+        fondoSuave: isDark ? '#292929' : '#F7F7F8',
+        fondoRojo: isDark ? '#3A1C20' : '#FCE8E9',
+        fondoTotal: isDark ? '#351C20' : '#FFF3F3',
+        fondoIconoVacio: isDark ? '#292929' : '#EEEEEE',
+    };
 
     const pendientes = reservas.filter(
         (item) => String(item.estado_aprobacion || 'pendiente').toLowerCase() === 'pendiente'
@@ -146,9 +161,18 @@ export default function ReservasAdminScreen() {
         const vehiculo = item.vehiculo || {};
 
         return (
-            <View style={styles.card}>
+            <View style={[
+                styles.card,
+                {
+                    backgroundColor: colores.tarjeta,
+                    borderColor: colores.borde,
+                },
+            ]}>
                 <View style={styles.cardSuperior}>
-                    <View style={styles.iconoVehiculo}>
+                    <View style={[
+                        styles.iconoVehiculo,
+                        { backgroundColor: colores.fondoRojo },
+                    ]}>
                         <Ionicons
                             name="car-sport"
                             size={27}
@@ -157,16 +181,25 @@ export default function ReservasAdminScreen() {
                     </View>
 
                     <View style={styles.infoVehiculo}>
-                        <Text style={styles.vehiculo} numberOfLines={1}>
+                        <Text
+                            style={[styles.vehiculo, { color: colores.texto }]}
+                            numberOfLines={1}
+                        >
                             {vehiculo.marca || 'Vehículo'} {vehiculo.modelo || ''}
                         </Text>
 
-                        <Text style={styles.identificador}>
+                        <Text style={[
+                            styles.identificador,
+                            { color: colores.textoSecundario },
+                        ]}>
                             Reserva #{String(id || 'N/D').slice(-8)}
                         </Text>
                     </View>
 
-                    <View style={[styles.estadoBadge, { backgroundColor: estado.fondo }]}>
+                    <View style={[
+                        styles.estadoBadge,
+                        { backgroundColor: estado.fondo },
+                    ]}>
                         <Ionicons
                             name={estado.icono}
                             size={13}
@@ -178,25 +211,51 @@ export default function ReservasAdminScreen() {
                     </View>
                 </View>
 
-                <View style={styles.separador} />
+                <View style={[
+                    styles.separador,
+                    { backgroundColor: colores.borde },
+                ]} />
 
                 <View style={styles.seccion}>
-                    <Text style={styles.seccionTitulo}>INFORMACIÓN DEL CLIENTE</Text>
+                    <Text style={[
+                        styles.seccionTitulo,
+                        { color: colores.textoSecundario },
+                    ]}>
+                        INFORMACIÓN DEL CLIENTE
+                    </Text>
 
                     <View style={styles.filaDetalle}>
-                        <Ionicons name="person-outline" size={17} color="#888888" />
-                        <Text style={styles.detalle} numberOfLines={2}>
+                        <Ionicons
+                            name="person-outline"
+                            size={17}
+                            color={colores.textoSecundario}
+                        />
+                        <Text
+                            style={[styles.detalle, { color: colores.texto }]}
+                            numberOfLines={2}
+                        >
                             {item.email_usuario || item.email || 'No disponible'}
                         </Text>
                     </View>
                 </View>
 
                 <View style={styles.seccion}>
-                    <Text style={styles.seccionTitulo}>PERÍODO DE RESERVA</Text>
+                    <Text style={[
+                        styles.seccionTitulo,
+                        { color: colores.textoSecundario },
+                    ]}>
+                        PERÍODO DE RESERVA
+                    </Text>
 
-                    <View style={styles.fechasContainer}>
+                    <View style={[
+                        styles.fechasContainer,
+                        { backgroundColor: colores.fondoSuave },
+                    ]}>
                         <View style={styles.fechaItem}>
-                            <View style={styles.fechaIcono}>
+                            <View style={[
+                                styles.fechaIcono,
+                                { backgroundColor: colores.fondoRojo },
+                            ]}>
                                 <Ionicons
                                     name="calendar-outline"
                                     size={17}
@@ -205,15 +264,26 @@ export default function ReservasAdminScreen() {
                             </View>
 
                             <View style={styles.fechaInfo}>
-                                <Text style={styles.fechaEtiqueta}>Fecha de inicio</Text>
-                                <Text style={styles.fechaValor}>
+                                <Text style={[
+                                    styles.fechaEtiqueta,
+                                    { color: colores.textoSecundario },
+                                ]}>
+                                    Fecha de inicio
+                                </Text>
+                                <Text style={[
+                                    styles.fechaValor,
+                                    { color: colores.texto },
+                                ]}>
                                     {formatearFecha(item.fecha_inicio)}
                                 </Text>
                             </View>
                         </View>
 
                         <View style={styles.fechaItem}>
-                            <View style={styles.fechaIcono}>
+                            <View style={[
+                                styles.fechaIcono,
+                                { backgroundColor: colores.fondoRojo },
+                            ]}>
                                 <Ionicons
                                     name="calendar"
                                     size={17}
@@ -222,8 +292,16 @@ export default function ReservasAdminScreen() {
                             </View>
 
                             <View style={styles.fechaInfo}>
-                                <Text style={styles.fechaEtiqueta}>Fecha de finalización</Text>
-                                <Text style={styles.fechaValor}>
+                                <Text style={[
+                                    styles.fechaEtiqueta,
+                                    { color: colores.textoSecundario },
+                                ]}>
+                                    Fecha de finalización
+                                </Text>
+                                <Text style={[
+                                    styles.fechaValor,
+                                    { color: colores.texto },
+                                ]}>
                                     {formatearFecha(item.fecha_fin)}
                                 </Text>
                             </View>
@@ -231,9 +309,17 @@ export default function ReservasAdminScreen() {
                     </View>
                 </View>
 
-                <View style={styles.totalContainer}>
+                <View style={[
+                    styles.totalContainer,
+                    { backgroundColor: colores.fondoTotal },
+                ]}>
                     <View>
-                        <Text style={styles.totalEtiqueta}>TOTAL DE LA RESERVA</Text>
+                        <Text style={[
+                            styles.totalEtiqueta,
+                            { color: colores.textoSecundario },
+                        ]}>
+                            TOTAL DE LA RESERVA
+                        </Text>
                         <Text style={styles.totalMonto}>
                             C$ {Number(item.monto_total || 0).toLocaleString('es-NI')}
                         </Text>
@@ -305,50 +391,132 @@ export default function ReservasAdminScreen() {
             </View>
 
             <View style={styles.resumen}>
-                <Text style={styles.resumenTitulo}>Resumen general</Text>
+                <Text style={[
+                    styles.resumenTitulo,
+                    { color: colores.texto },
+                ]}>
+                    Resumen general
+                </Text>
 
                 <View style={styles.resumenGrid}>
-                    <View style={styles.resumenCard}>
-                        <View style={[styles.resumenIcono, { backgroundColor: '#FCE8E9' }]}>
+                    <View style={[
+                        styles.resumenCard,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.resumenIcono,
+                            { backgroundColor: colores.fondoRojo },
+                        ]}>
                             <Ionicons name="documents-outline" size={20} color="#D31A24" />
                         </View>
-                        <Text style={styles.resumenNumero}>{reservas.length}</Text>
-                        <Text style={styles.resumenEtiqueta}>Total</Text>
+                        <Text style={[
+                            styles.resumenNumero,
+                            { color: colores.texto },
+                        ]}>
+                            {reservas.length}
+                        </Text>
+                        <Text style={[
+                            styles.resumenEtiqueta,
+                            { color: colores.textoSecundario },
+                        ]}>
+                            Total
+                        </Text>
                     </View>
 
-                    <View style={styles.resumenCard}>
-                        <View style={[styles.resumenIcono, { backgroundColor: '#FFF3D9' }]}>
+                    <View style={[
+                        styles.resumenCard,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.resumenIcono,
+                            { backgroundColor: isDark ? '#3B3020' : '#FFF3D9' },
+                        ]}>
                             <Ionicons name="time-outline" size={20} color="#B7791F" />
                         </View>
-                        <Text style={styles.resumenNumero}>{pendientes}</Text>
-                        <Text style={styles.resumenEtiqueta}>Pendientes</Text>
+                        <Text style={[
+                            styles.resumenNumero,
+                            { color: colores.texto },
+                        ]}>
+                            {pendientes}
+                        </Text>
+                        <Text style={[
+                            styles.resumenEtiqueta,
+                            { color: colores.textoSecundario },
+                        ]}>
+                            Pendientes
+                        </Text>
                     </View>
 
-                    <View style={styles.resumenCard}>
-                        <View style={[styles.resumenIcono, { backgroundColor: '#E5F5EC' }]}>
+                    <View style={[
+                        styles.resumenCard,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.resumenIcono,
+                            { backgroundColor: isDark ? '#193528' : '#E5F5EC' },
+                        ]}>
                             <Ionicons name="checkmark-circle-outline" size={20} color="#16834A" />
                         </View>
-                        <Text style={styles.resumenNumero}>{aprobadas}</Text>
-                        <Text style={styles.resumenEtiqueta}>Aprobadas</Text>
+                        <Text style={[
+                            styles.resumenNumero,
+                            { color: colores.texto },
+                        ]}>
+                            {aprobadas}
+                        </Text>
+                        <Text style={[
+                            styles.resumenEtiqueta,
+                            { color: colores.textoSecundario },
+                        ]}>
+                            Aprobadas
+                        </Text>
                     </View>
 
-                    <View style={styles.resumenCard}>
-                        <View style={[styles.resumenIcono, { backgroundColor: '#FCE8E9' }]}>
+                    <View style={[
+                        styles.resumenCard,
+                        { backgroundColor: colores.tarjeta, borderColor: colores.borde },
+                    ]}>
+                        <View style={[
+                            styles.resumenIcono,
+                            { backgroundColor: colores.fondoRojo },
+                        ]}>
                             <Ionicons name="close-circle-outline" size={20} color="#D31A24" />
                         </View>
-                        <Text style={styles.resumenNumero}>{rechazadas}</Text>
-                        <Text style={styles.resumenEtiqueta}>Rechazadas</Text>
+                        <Text style={[
+                            styles.resumenNumero,
+                            { color: colores.texto },
+                        ]}>
+                            {rechazadas}
+                        </Text>
+                        <Text style={[
+                            styles.resumenEtiqueta,
+                            { color: colores.textoSecundario },
+                        ]}>
+                            Rechazadas
+                        </Text>
                     </View>
                 </View>
             </View>
 
             <View style={styles.listaEncabezado}>
-                <Text style={styles.listaTitulo}>Reservas registradas</Text>
-                <Text style={styles.listaCantidad}>{reservas.length} en total</Text>
+                <Text style={[
+                    styles.listaTitulo,
+                    { color: colores.texto },
+                ]}>
+                    Reservas registradas
+                </Text>
+                <Text style={[
+                    styles.listaCantidad,
+                    { color: colores.textoSecundario },
+                ]}>
+                    {reservas.length} en total
+                </Text>
             </View>
 
             {error ? (
-                <View style={styles.errorContainer}>
+                <View style={[
+                    styles.errorContainer,
+                    { backgroundColor: colores.fondoRojo },
+                ]}>
                     <Ionicons name="alert-circle-outline" size={19} color="#D31A24" />
                     <Text style={styles.error}>{error}</Text>
                 </View>
@@ -358,15 +526,26 @@ export default function ReservasAdminScreen() {
 
     if (loading && reservas.length === 0) {
         return (
-            <View style={styles.centrado}>
+            <View style={[
+                styles.centrado,
+                { backgroundColor: colores.fondo },
+            ]}>
                 <ActivityIndicator size="large" color="#D31A24" />
-                <Text style={styles.cargando}>Cargando reservas...</Text>
+                <Text style={[
+                    styles.cargando,
+                    { color: colores.textoSecundario },
+                ]}>
+                    Cargando reservas...
+                </Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            { backgroundColor: colores.fondo },
+        ]}>
             <FlatList
                 data={reservas}
                 keyExtractor={(item, index) =>
@@ -384,15 +563,26 @@ export default function ReservasAdminScreen() {
                 }
                 ListEmptyComponent={
                     <View style={styles.vacioContainer}>
-                        <View style={styles.vacioIcono}>
+                        <View style={[
+                            styles.vacioIcono,
+                            { backgroundColor: colores.fondoIconoVacio },
+                        ]}>
                             <Ionicons
                                 name="calendar-outline"
                                 size={38}
                                 color="#AAAAAA"
                             />
                         </View>
-                        <Text style={styles.vacioTitulo}>Sin reservas todavía</Text>
-                        <Text style={styles.vacio}>
+                        <Text style={[
+                            styles.vacioTitulo,
+                            { color: colores.texto },
+                        ]}>
+                            Sin reservas todavía
+                        </Text>
+                        <Text style={[
+                            styles.vacio,
+                            { color: colores.textoSecundario },
+                        ]}>
                             Cuando los clientes registren reservas, aparecerán aquí.
                         </Text>
                     </View>

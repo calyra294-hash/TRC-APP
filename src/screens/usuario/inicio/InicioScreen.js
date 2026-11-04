@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,18 +12,26 @@ import {
   StatusBar,
   Modal,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 
 import { getVehiculos } from '../../../services/vehiculos.service.js';
-import {
-  obtenerNotificaciones,
-} from '../../../services/notificaciones.service.js';
+import { obtenerNotificaciones } from '../../../services/notificaciones.service.js';
 
 import VehicleCard from '../../../components/VehicleCard.js';
 import DetalleVehiculoScreen from '../vehiculo/DetalleVehiculoScreen.js';
-import { styles } from './InicioScreen.styles.js';
+
+import { useTheme } from '../../../context/ThemeContext.js';
+import { crearEstilos } from './InicioScreen.styles.js';
 
 export default function InicioScreen({ navigation }) {
+  const { theme, isDark } = useTheme();
+
+  const styles = useMemo(
+    () => crearEstilos(theme, isDark),
+    [theme, isDark]
+  );
+
   const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,14 +102,21 @@ export default function InicioScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E53935" />
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.background}
+        />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -111,11 +125,11 @@ export default function InicioScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#E53935']}
+            colors={[theme.primary]}
+            tintColor={theme.primary}
           />
         }
       >
-        {/* Encabezado */}
         <View style={styles.headerBar}>
           <View style={styles.logoContainer}>
             <Image
@@ -133,7 +147,7 @@ export default function InicioScreen({ navigation }) {
             <Ionicons
               name="notifications-outline"
               size={27}
-              color="#121212"
+              color={theme.text}
             />
 
             {notificacionesNoLeidas > 0 && (
@@ -148,7 +162,6 @@ export default function InicioScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Tarjeta principal */}
         <View style={styles.heroCard}>
           <Text style={styles.heroSubtitle}>
             TITO'S RENT A CAR
@@ -171,6 +184,7 @@ export default function InicioScreen({ navigation }) {
               size={20}
               color="#E53935"
             />
+
             <Text style={styles.locationInputValue}>
               Juigalpa, Chontales
             </Text>
@@ -187,7 +201,6 @@ export default function InicioScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Vehículos destacados */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
             Vehículos destacados
@@ -203,12 +216,13 @@ export default function InicioScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Carrusel de vehículos */}
         {vehiculos.length > 0 ? (
           <FlatList
             horizontal
             data={vehiculos}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) =>
+              String(item.id || item.id_coche || index)
+            }
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.carouselContainer}
             snapToInterval={280 + 16}
@@ -231,7 +245,6 @@ export default function InicioScreen({ navigation }) {
         )}
       </ScrollView>
 
-      {/* Modal del detalle del vehículo */}
       <Modal
         visible={vehiculoSeleccionado !== null}
         animationType="slide"

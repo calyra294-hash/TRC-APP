@@ -1,22 +1,22 @@
 
 import { StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
+export const crearEstilos = (theme, isDark) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F7F9',
+    backgroundColor: theme.background,
   },
 
   container: {
     flex: 1,
-    backgroundColor: '#F7F7F9',
+    backgroundColor: theme.background,
   },
 
   headerContainer: {
     paddingHorizontal: 18,
     paddingTop: 8,
     paddingBottom: 2,
-    backgroundColor: '#F7F7F9',
+    backgroundColor: theme.background,
   },
 
   headerIntro: {
@@ -34,13 +34,13 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 23,
     fontWeight: '800',
-    color: '#171717',
+    color: theme.text,
     letterSpacing: -0.5,
   },
 
   subtitle: {
     fontSize: 12,
-    color: '#777777',
+    color: theme.secondaryText,
     marginTop: 3,
     lineHeight: 16,
   },
@@ -55,13 +55,13 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 12,
     paddingHorizontal: 11,
     height: 43,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#EEEEF0',
+    borderColor: theme.border,
   },
 
   searchInput: {
@@ -69,14 +69,14 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     marginLeft: 3,
     height: 42,
-    color: '#222222',
+    color: theme.text,
   },
 
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderColor: '#D31A24',
     borderWidth: 1,
     borderRadius: 12,
@@ -86,7 +86,7 @@ export const styles = StyleSheet.create({
   },
 
   filterButtonActive: {
-    backgroundColor: '#FCE8E9',
+    backgroundColor: isDark ? '#482126' : '#FCE8E9',
   },
 
   filterButtonText: {
@@ -113,12 +113,12 @@ export const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#242424',
+    color: theme.text,
   },
 
   categorySubtitle: {
     fontSize: 10,
-    color: '#999999',
+    color: theme.secondaryText,
     fontWeight: '500',
   },
 
@@ -129,12 +129,12 @@ export const styles = StyleSheet.create({
   },
 
   chip: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E9E9EC',
+    borderColor: theme.border,
   },
 
   chipActive: {
@@ -148,7 +148,7 @@ export const styles = StyleSheet.create({
   },
 
   chipText: {
-    color: '#555555',
+    color: theme.text,
     fontWeight: '600',
     fontSize: 13,
   },
@@ -168,12 +168,12 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F7F7F9',
+    backgroundColor: theme.background,
   },
 
   loadingText: {
     marginTop: 10,
-    color: '#6B7280',
+    color: theme.secondaryText,
     fontSize: 13,
   },
 
@@ -188,12 +188,12 @@ export const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 19,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
   },
 
   emptySubtitle: {
     fontSize: 14,
-    color: '#888888',
+    color: theme.secondaryText,
     textAlign: 'center',
     lineHeight: 21,
   },
@@ -203,7 +203,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#FCE8E9',
+    backgroundColor: isDark ? '#482126' : '#FCE8E9',
   },
 
   clearEmptyButtonText: {
@@ -212,15 +212,16 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Modal de filtros
+  // MODAL DE FILTROS
+
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.48)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
 
   filterModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     maxHeight: '88%',
@@ -232,7 +233,7 @@ export const styles = StyleSheet.create({
     width: 42,
     height: 4,
     borderRadius: 3,
-    backgroundColor: '#DADADA',
+    backgroundColor: theme.border,
     alignSelf: 'center',
     marginBottom: 17,
   },
@@ -244,18 +245,18 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 17,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.border,
   },
 
   modalTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#202020',
+    color: theme.text,
   },
 
   modalSubtitle: {
     fontSize: 12,
-    color: '#888888',
+    color: theme.secondaryText,
     marginTop: 4,
   },
 
@@ -263,7 +264,7 @@ export const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 18,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: theme.input,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -277,7 +278,7 @@ export const styles = StyleSheet.create({
   filterSection: {
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: theme.border,
   },
 
   filterSectionTitleRow: {
@@ -290,7 +291,7 @@ export const styles = StyleSheet.create({
   filterSectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
   },
 
   optionsContainer: {
@@ -304,8 +305,8 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E6E6E6',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.border,
+    backgroundColor: theme.input,
   },
 
   optionChipActive: {
@@ -316,7 +317,7 @@ export const styles = StyleSheet.create({
   optionChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#555555',
+    color: theme.text,
   },
 
   optionChipTextActive: {
@@ -335,7 +336,7 @@ export const styles = StyleSheet.create({
 
   priceInputLabel: {
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     marginBottom: 7,
     fontWeight: '600',
   },
@@ -343,12 +344,12 @@ export const styles = StyleSheet.create({
   priceInput: {
     height: 45,
     borderWidth: 1,
-    borderColor: '#E6E6E6',
+    borderColor: theme.border,
     borderRadius: 11,
     paddingHorizontal: 12,
     fontSize: 13,
-    color: '#222222',
-    backgroundColor: '#FAFAFA',
+    color: theme.text,
+    backgroundColor: theme.input,
   },
 
   modalFooter: {
@@ -357,7 +358,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.border,
   },
 
   clearButton: {

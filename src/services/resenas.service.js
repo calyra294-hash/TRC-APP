@@ -1,7 +1,14 @@
 import { auth } from "../config/firebase";
 
-const API_URL =
-    process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL = (
+    process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api"
+).replace(/\/$/, "");
+
+// Caché temporal de reseñas por vehículo
+const cacheResenas = new Map();
+const peticionesEnCurso = new Map();
+
+const TIEMPO_CACHE = 5 * 60 * 1000;
 
 const obtenerToken = async () => {
     const usuario = auth.currentUser;
@@ -74,7 +81,12 @@ export const crearResena = async ({
             }),
         });
 
-        return await procesarRespuesta(response);
+        const resultado = await procesarRespuesta(response);
+
+        cacheResenas.clear();
+        peticionesEnCurso.clear();
+
+        return resultado;
     } catch (error) {
         console.error("Error al registrar reseña:", error);
         throw error;
@@ -83,31 +95,66 @@ export const crearResena = async ({
 
 // Obtener reseñas de un vehículo
 export const getResenasVehiculo = async (idVehiculo) => {
-    try {
-        const token = await obtenerToken();
+    const id = String(idVehiculo || "").trim();
 
-        const response = await fetch(
-            `${API_URL}/resena/vehiculo/${encodeURIComponent(idVehiculo)}`,
-            {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-
-        const json = await procesarRespuesta(response);
-
-        return json.data || {
+    if (!id) {
+        return {
             promedio: 0,
             total: 0,
             resenas: [],
         };
-    } catch (error) {
-        console.error("Error al obtener reseñas del vehículo:", error);
-        throw error;
     }
+
+    const almacenado = cacheResenas.get(id);
+
+    if (
+        almacenado &&
+        Date.now() - almacenado.fecha < TIEMPO_CACHE
+    ) {
+        return almacenado.datos;
+    }
+
+    if (peticionesEnCurso.has(id)) {
+        return peticionesEnCurso.get(id);
+    }
+
+    const peticion = (async () => {
+        try {
+            const token = await obtenerToken();
+
+            const response = await fetch(
+                `${API_URL}/resena/vehiculo/${encodeURIComponent(id)}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const json = await procesarRespuesta(response);
+
+            const datos = json.data || {
+                promedio: 0,
+                total: 0,
+                resenas: [],
+            };
+
+            cacheResenas.set(id, {
+                datos,
+                fecha: Date.now(),
+            });
+
+            return datos;
+        } finally {
+            peticionesEnCurso.delete(id);
+        }
+    })();
+
+    peticionesEnCurso.set(id, peticion);
+
+    return peticion;
 };
 
 // Obtener todas las reseñas para el administrador

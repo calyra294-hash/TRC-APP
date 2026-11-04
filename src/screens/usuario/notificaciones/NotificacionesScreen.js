@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useTheme } from "../../../context/ThemeContext";
+
 import {
     obtenerNotificaciones,
     marcarNotificacionLeida,
@@ -21,6 +23,10 @@ import {
 } from "../../../services/notificaciones.service.js";
 
 export default function NotificacionesScreen({ navigation }) {
+    const { theme, isDark } = useTheme();
+
+    const styles = crearEstilos(theme, isDark);
+
     const [notificaciones, setNotificaciones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -199,7 +205,7 @@ export default function NotificacionesScreen({ navigation }) {
                 <Ionicons
                     name={obtenerIcono(item.tipo)}
                     size={24}
-                    color={item.leido ? "#929292" : "#D31A24"}
+                    color={item.leido ? theme.secondaryText : "#D31A24"}
                 />
             </View>
 
@@ -235,7 +241,7 @@ export default function NotificacionesScreen({ navigation }) {
                     <Ionicons
                         name="time-outline"
                         size={13}
-                        color="#A0A0A0"
+                        color={theme.secondaryText}
                     />
 
                     <Text style={styles.fecha}>
@@ -411,6 +417,7 @@ export default function NotificacionesScreen({ navigation }) {
                             cargarNotificaciones();
                         }}
                         colors={["#D31A24"]}
+                        tintColor="#D31A24"
                     />
                 }
                 ListEmptyComponent={
@@ -447,10 +454,10 @@ export default function NotificacionesScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+const crearEstilos = (theme, isDark) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F4F4F5",
+        backgroundColor: theme.background,
     },
 
     header: {
@@ -565,7 +572,7 @@ const styles = StyleSheet.create({
     },
 
     resumen: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.card,
         marginHorizontal: 17,
         marginTop: 19,
         padding: 15,
@@ -573,15 +580,15 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#EEEEEE",
-        elevation: 2,
+        borderColor: theme.border,
+        elevation: isDark ? 0 : 2,
     },
 
     resumenIcono: {
         width: 45,
         height: 45,
         borderRadius: 14,
-        backgroundColor: "#FCEBEC",
+        backgroundColor: isDark ? "#382124" : "#FCEBEC",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -592,13 +599,13 @@ const styles = StyleSheet.create({
     },
 
     resumenTitulo: {
-        color: "#222222",
+        color: theme.text,
         fontSize: 13,
         fontWeight: "bold",
     },
 
     resumenTexto: {
-        color: "#999999",
+        color: theme.secondaryText,
         fontSize: 11,
         marginTop: 5,
     },
@@ -606,7 +613,7 @@ const styles = StyleSheet.create({
     resumenContador: {
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFF0F0",
+        backgroundColor: isDark ? "#382124" : "#FFF0F0",
         minWidth: 54,
         paddingVertical: 7,
         paddingHorizontal: 9,
@@ -636,13 +643,13 @@ const styles = StyleSheet.create({
     },
 
     listaTitulo: {
-        color: "#191919",
+        color: theme.text,
         fontSize: 16,
         fontWeight: "bold",
     },
 
     listaSubtitulo: {
-        color: "#999999",
+        color: theme.secondaryText,
         fontSize: 11,
         marginTop: 4,
     },
@@ -651,7 +658,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
-        backgroundColor: "#FFF0F0",
+        backgroundColor: isDark ? "#382124" : "#FFF0F0",
         paddingHorizontal: 10,
         paddingVertical: 8,
         borderRadius: 11,
@@ -671,22 +678,22 @@ const styles = StyleSheet.create({
 
     notificacion: {
         flexDirection: "row",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.card,
         borderRadius: 18,
         padding: 15,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: "#EEEEEE",
-        elevation: 2,
+        borderColor: theme.border,
+        elevation: isDark ? 0 : 2,
         shadowColor: "#000000",
-        shadowOpacity: 0.04,
+        shadowOpacity: isDark ? 0 : 0.04,
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
     },
 
     notificacionNoLeida: {
-        backgroundColor: "#FFFAFA",
-        borderColor: "#F2D1D3",
+        backgroundColor: isDark ? "#291D1F" : "#FFFAFA",
+        borderColor: isDark ? "#673137" : "#F2D1D3",
         borderLeftWidth: 4,
         borderLeftColor: "#D31A24",
     },
@@ -695,14 +702,14 @@ const styles = StyleSheet.create({
         width: 47,
         height: 47,
         borderRadius: 15,
-        backgroundColor: "#F1F1F1",
+        backgroundColor: theme.input,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 12,
     },
 
     iconoNoLeido: {
-        backgroundColor: "#FFE8E9",
+        backgroundColor: isDark ? "#48252A" : "#FFE8E9",
     },
 
     contenido: {
@@ -717,7 +724,7 @@ const styles = StyleSheet.create({
     },
 
     etiquetaTipo: {
-        color: "#999999",
+        color: theme.secondaryText,
         fontSize: 9,
         fontWeight: "bold",
         letterSpacing: 0.8,
@@ -747,19 +754,19 @@ const styles = StyleSheet.create({
     },
 
     titulo: {
-        color: "#777777",
+        color: theme.secondaryText,
         fontSize: 14,
         fontWeight: "600",
         lineHeight: 20,
     },
 
     tituloNoLeido: {
-        color: "#191919",
+        color: theme.text,
         fontWeight: "bold",
     },
 
     mensaje: {
-        color: "#777777",
+        color: theme.secondaryText,
         fontSize: 12,
         lineHeight: 19,
         marginTop: 5,
@@ -773,7 +780,7 @@ const styles = StyleSheet.create({
     },
 
     fecha: {
-        color: "#A0A0A0",
+        color: theme.secondaryText,
         fontSize: 10,
     },
 
@@ -784,7 +791,7 @@ const styles = StyleSheet.create({
     },
 
     textoCargando: {
-        color: "#777777",
+        color: theme.secondaryText,
         fontSize: 13,
         marginTop: 12,
     },
@@ -801,7 +808,7 @@ const styles = StyleSheet.create({
         width: 110,
         height: 110,
         borderRadius: 35,
-        backgroundColor: "#FCEBEC",
+        backgroundColor: isDark ? "#382124" : "#FCEBEC",
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 22,
@@ -811,20 +818,20 @@ const styles = StyleSheet.create({
         width: 83,
         height: 83,
         borderRadius: 28,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.card,
         alignItems: "center",
         justifyContent: "center",
     },
 
     vacioTitulo: {
-        color: "#222222",
+        color: theme.text,
         fontSize: 18,
         fontWeight: "bold",
         textAlign: "center",
     },
 
     vacioTexto: {
-        color: "#888888",
+        color: theme.secondaryText,
         fontSize: 12,
         textAlign: "center",
         lineHeight: 21,
@@ -835,10 +842,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginTop: 20,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: theme.card,
         borderRadius: 20,
         paddingHorizontal: 14,
         paddingVertical: 9,
+        borderWidth: 1,
+        borderColor: theme.border,
     },
 
     vacioPunto: {
@@ -850,7 +859,7 @@ const styles = StyleSheet.create({
     },
 
     vacioEstadoTexto: {
-        color: "#777777",
+        color: theme.secondaryText,
         fontSize: 10,
         fontWeight: "600",
     },

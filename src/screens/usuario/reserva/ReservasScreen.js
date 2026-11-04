@@ -20,6 +20,7 @@ import QRCode from 'react-native-qrcode-svg';
 
 import { useReservas } from '../../../hooks/useReservas';
 import { useVehiculos } from '../../../hooks/useVehiculos';
+import { useTheme } from '../../../context/ThemeContext';
 
 import {
   getQRAlquiler,
@@ -67,6 +68,13 @@ const obtenerIdVehiculo = (vehiculo) => {
 };
 
 export default function ReservasScreen() {
+  const { theme, isDark } = useTheme();
+
+  const styles = useMemo(
+    () => crearEstilos(theme, isDark),
+    [theme, isDark]
+  );
+
   const { reservas, loading, error, refrescar } = useReservas();
   const { vehiculos = [] } = useVehiculos();
 
@@ -421,7 +429,7 @@ export default function ReservasScreen() {
         titulo: 'Reserva confirmada',
         subtitulo: 'Tu reserva ha sido aprobada',
         color: '#16834A',
-        fondo: '#EAF7EF',
+        fondo: isDark ? '#173525' : '#EAF7EF',
         icono: 'checkmark-circle',
       };
     }
@@ -431,7 +439,7 @@ export default function ReservasScreen() {
         titulo: 'Reserva rechazada',
         subtitulo: 'La reserva no fue aprobada',
         color: '#D62828',
-        fondo: '#FDECEC',
+        fondo: isDark ? '#3A2022' : '#FDECEC',
         icono: 'close-circle',
       };
     }
@@ -440,8 +448,8 @@ export default function ReservasScreen() {
       return {
         titulo: 'Reserva cancelada',
         subtitulo: 'Esta reserva ya no está activa',
-        color: '#777777',
-        fondo: '#F0F0F0',
+        color: isDark ? '#BBBBBB' : '#777777',
+        fondo: isDark ? '#303030' : '#F0F0F0',
         icono: 'remove-circle',
       };
     }
@@ -450,8 +458,8 @@ export default function ReservasScreen() {
       return {
         titulo: 'Reserva completada',
         subtitulo: 'El proceso ha finalizado',
-        color: '#526477',
-        fondo: '#EEF2F6',
+        color: isDark ? '#A9C4DE' : '#526477',
+        fondo: isDark ? '#25303B' : '#EEF2F6',
         icono: 'checkmark-done-circle',
       };
     }
@@ -460,7 +468,7 @@ export default function ReservasScreen() {
       titulo: 'Reserva pendiente',
       subtitulo: 'Esperando aprobación del administrador',
       color: '#D97706',
-      fondo: '#FFF4E5',
+      fondo: isDark ? '#3A2D1B' : '#FFF4E5',
       icono: 'time',
     };
   };
@@ -661,7 +669,7 @@ export default function ReservasScreen() {
                 <Ionicons
                   name="card-outline"
                   size={14}
-                  color="#888888"
+                  color={theme.secondaryText}
                 />
 
                 <Text style={styles.vehicleDetails}>
@@ -1031,7 +1039,7 @@ export default function ReservasScreen() {
                 <Ionicons
                   name="close-circle"
                   size={29}
-                  color="#777777"
+                  color={theme.secondaryText}
                 />
               </TouchableOpacity>
             </View>
@@ -1087,7 +1095,7 @@ export default function ReservasScreen() {
                             <Ionicons
                               name="car-sport-outline"
                               size={28}
-                              color="#999999"
+                              color={theme.secondaryText}
                             />
                           </View>
                         )}
@@ -1114,7 +1122,7 @@ export default function ReservasScreen() {
                               : 'radio-button-off'
                           }
                           size={22}
-                          color={seleccionado ? '#D31A24' : '#AAAAAA'}
+                          color={seleccionado ? '#D31A24' : theme.secondaryText}
                         />
                       </TouchableOpacity>
                     );
@@ -1327,10 +1335,10 @@ export default function ReservasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const crearEstilos = (theme, isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F6F8',
+    backgroundColor: theme.background,
   },
   scrollContent: {
     paddingHorizontal: 17,
@@ -1342,12 +1350,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 28,
-    backgroundColor: '#F5F6F8',
+    backgroundColor: theme.background,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666666',
+    color: theme.secondaryText,
   },
   header: {
     flexDirection: 'row',
@@ -1369,34 +1377,34 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 25,
     fontWeight: '800',
-    color: '#151515',
+    color: theme.text,
   },
   subtitle: {
     marginTop: 4,
     fontSize: 12,
-    color: '#777777',
+    color: theme.secondaryText,
   },
   headerIcon: {
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 19,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
+    shadowOpacity: isDark ? 0 : 0.06,
     shadowRadius: 9,
-    elevation: 3,
+    elevation: isDark ? 0 : 3,
   },
   statusRow: {
     flexDirection: 'row',
@@ -1424,11 +1432,11 @@ const styles = StyleSheet.create({
   statusTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#202020',
+    color: theme.text,
   },
   statusSubtitle: {
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     marginTop: 4,
   },
   statusBadge: {
@@ -1443,7 +1451,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: theme.border,
     marginVertical: 16,
   },
   sectionHeading: {
@@ -1454,13 +1462,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#242424',
+    color: theme.text,
     marginLeft: 7,
   },
   vehicleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F7F8',
+    backgroundColor: theme.input,
     borderRadius: 14,
     padding: 11,
   },
@@ -1468,7 +1476,7 @@ const styles = StyleSheet.create({
     width: 105,
     height: 78,
     borderRadius: 11,
-    backgroundColor: '#EEEEEF',
+    backgroundColor: isDark ? '#303030' : '#EEEEEF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1485,7 +1493,7 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#202020',
+    color: theme.text,
   },
   plateRow: {
     flexDirection: 'row',
@@ -1494,7 +1502,7 @@ const styles = StyleSheet.create({
   },
   vehicleDetails: {
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     marginLeft: 5,
   },
   vehiclePrice: {
@@ -1506,7 +1514,7 @@ const styles = StyleSheet.create({
   perDay: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#777777',
+    color: theme.secondaryText,
   },
   datesRow: {
     flexDirection: 'row',
@@ -1514,17 +1522,17 @@ const styles = StyleSheet.create({
   },
   dateBox: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: isDark ? '#242424' : '#FAFAFA',
     borderRadius: 13,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
   },
   dateIcon: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#FDEDEE',
+    backgroundColor: isDark ? '#3A2022' : '#FDEDEE',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -1532,33 +1540,33 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#888888',
+    color: theme.secondaryText,
     marginBottom: 6,
   },
   dateValue: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#222222',
+    color: theme.text,
   },
   dateDescription: {
     marginTop: 5,
     fontSize: 10,
-    color: '#888888',
+    color: theme.secondaryText,
   },
   totalBlock: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: isDark ? '#321C1E' : '#FFF5F5',
     borderRadius: 14,
     padding: 15,
     borderWidth: 1,
-    borderColor: '#F7DEDF',
+    borderColor: isDark ? '#51272A' : '#F7DEDF',
   },
   totalLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#777777',
+    color: theme.secondaryText,
     letterSpacing: 0.5,
   },
   totalText: {
@@ -1571,7 +1579,7 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1581,7 +1589,7 @@ const styles = StyleSheet.create({
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7F7F8',
+    backgroundColor: theme.input,
     borderRadius: 13,
     padding: 12,
   },
@@ -1600,12 +1608,12 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
   },
   locationSubtitle: {
     marginTop: 4,
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
   },
   qrBlock: {
     marginTop: 2,
@@ -1618,18 +1626,18 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 1,
-    color: '#999999',
+    color: theme.secondaryText,
     marginTop: -5,
     marginBottom: 12,
   },
   qrSuccess: {
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: isDark ? '#242424' : '#FAFAFA',
     borderRadius: 15,
     padding: 17,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
   },
   qrContainer: {
     width: 205,
@@ -1645,22 +1653,22 @@ const styles = StyleSheet.create({
     marginTop: 13,
     fontSize: 14,
     fontWeight: '800',
-    color: '#222222',
+    color: theme.text,
   },
   qrHint: {
     marginTop: 6,
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     textAlign: 'center',
     lineHeight: 17,
   },
   qrMessage: {
     width: '100%',
     minHeight: 145,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: isDark ? '#242424' : '#FAFAFA',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 18,
@@ -1669,7 +1677,7 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1677,13 +1685,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     fontWeight: '800',
-    color: '#333333',
+    color: theme.text,
     textAlign: 'center',
   },
   qrMessageText: {
     marginTop: 7,
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     textAlign: 'center',
     lineHeight: 17,
   },
@@ -1742,30 +1750,30 @@ const styles = StyleSheet.create({
     marginTop: 17,
     textAlign: 'center',
     fontSize: 11,
-    color: '#999999',
+    color: theme.secondaryText,
   },
   emptyIconContainer: {
     width: 90,
     height: 90,
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
   },
   emptyTitle: {
     marginTop: 5,
     fontSize: 18,
     fontWeight: '800',
-    color: '#252525',
+    color: theme.text,
     textAlign: 'center',
   },
   emptyText: {
     marginTop: 8,
     fontSize: 13,
-    color: '#777777',
+    color: theme.secondaryText,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -1788,18 +1796,18 @@ const styles = StyleSheet.create({
     marginTop: 19,
     padding: 14,
     borderRadius: 14,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: isDark ? '#2D2420' : '#FFF8F0',
     borderWidth: 1,
-    borderColor: '#F4E4D2',
+    borderColor: isDark ? '#49372B' : '#F4E4D2',
   },
   pendingActionsTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
   },
   pendingActionsDescription: {
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     lineHeight: 17,
     marginTop: 5,
     marginBottom: 13,
@@ -1829,9 +1837,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#E8BFC1',
+    borderColor: isDark ? '#653438' : '#E8BFC1',
     borderRadius: 11,
     paddingVertical: 12,
   },
@@ -1842,12 +1850,12 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.50)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
   editModal: {
     maxHeight: '92%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -1863,17 +1871,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 21,
     fontWeight: '900',
-    color: '#202020',
+    color: theme.text,
   },
   modalSubtitle: {
     marginTop: 4,
     fontSize: 12,
-    color: '#777777',
+    color: theme.secondaryText,
   },
   editSectionTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#292929',
+    color: theme.text,
     marginBottom: 10,
     marginTop: 5,
   },
@@ -1885,25 +1893,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 9,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: theme.border,
     borderRadius: 12,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: theme.input,
   },
   vehicleOptionSelected: {
     borderColor: '#D31A24',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: isDark ? '#321C1E' : '#FFF5F5',
   },
   vehicleOptionImage: {
     width: 72,
     height: 54,
     borderRadius: 8,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: isDark ? '#303030' : '#EEEEEE',
   },
   vehicleOptionImagePlaceholder: {
     width: 72,
     height: 54,
     borderRadius: 8,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: isDark ? '#303030' : '#EEEEEE',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1915,7 +1923,7 @@ const styles = StyleSheet.create({
   vehicleOptionName: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#222222',
+    color: theme.text,
   },
   vehicleOptionPrice: {
     fontSize: 11,
@@ -1925,14 +1933,14 @@ const styles = StyleSheet.create({
   },
   noVehiclesText: {
     fontSize: 12,
-    color: '#777777',
+    color: theme.secondaryText,
     padding: 12,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: theme.input,
     borderRadius: 10,
   },
   modalDivider: {
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: theme.border,
     marginVertical: 17,
   },
   datePickerButton: {
@@ -1940,44 +1948,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: theme.border,
     borderRadius: 11,
     padding: 14,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.input,
   },
   datePickerButtonText: {
     fontSize: 14,
-    color: '#222222',
+    color: theme.text,
     fontWeight: '600',
   },
   datePickerPlaceholder: {
-    color: '#999999',
+    color: theme.secondaryText,
   },
   datePickerDisabled: {
-    backgroundColor: '#F3F3F3',
-    borderColor: '#EEEEEE',
+    backgroundColor: isDark ? '#252525' : '#F3F3F3',
+    borderColor: theme.border,
   },
   estimatedTotal: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: isDark ? '#321C1E' : '#FFF5F5',
     borderWidth: 1,
-    borderColor: '#F5DCDD',
+    borderColor: isDark ? '#51272A' : '#F5DCDD',
     borderRadius: 13,
     padding: 15,
     marginTop: 5,
   },
   estimatedTotalLabel: {
     fontSize: 10,
-    color: '#777777',
+    color: theme.secondaryText,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   estimatedTotalDays: {
     fontSize: 11,
-    color: '#777777',
+    color: theme.secondaryText,
     marginTop: 5,
   },
   estimatedTotalAmount: {
@@ -1987,7 +1995,7 @@ const styles = StyleSheet.create({
   },
   editNote: {
     fontSize: 10,
-    color: '#888888',
+    color: theme.secondaryText,
     lineHeight: 15,
     marginTop: 9,
     marginBottom: 15,
@@ -2011,7 +2019,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   cancelEditButtonText: {
-    color: '#777777',
+    color: theme.secondaryText,
     fontSize: 12,
     fontWeight: '700',
   },

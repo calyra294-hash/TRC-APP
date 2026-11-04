@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import { styles } from './VehicleCard.styles.js';
+import { useTheme } from '../context/ThemeContext.js';
+import { crearEstilos } from './VehicleCard.styles.js';
 
 const formatearFecha = (fecha) => {
   if (!fecha) return '';
@@ -37,6 +38,13 @@ export default function VehicleCard({
   disponibilidad,
   resumenResenas,
 }) {
+  const { theme, isDark } = useTheme();
+
+  const styles = useMemo(
+    () => crearEstilos(theme, isDark),
+    [theme, isDark]
+  );
+
   const {
     nombre,
     categoria,
@@ -104,90 +112,59 @@ export default function VehicleCard({
 
         <View style={styles.specsRow}>
           <View style={styles.specTag}>
-            <Ionicons name="people-outline" size={14} color="#6B7280" />
+            <Ionicons name="people-outline" size={14} color={theme.secondaryText} />
             <Text style={styles.specText}>{pasajeros} pasaj.</Text>
           </View>
 
           <View style={styles.specTag}>
-            <Ionicons name="hardware-chip-outline" size={14} color="#6B7280" />
+            <Ionicons name="hardware-chip-outline" size={14} color={theme.secondaryText} />
             <Text style={styles.specText}>{transmision}</Text>
           </View>
 
           <View style={styles.specTag}>
-            <Ionicons name="flame-outline" size={14} color="#6B7280" />
+            <Ionicons name="flame-outline" size={14} color={theme.secondaryText} />
             <Text style={styles.specText}>{combustible}</Text>
           </View>
         </View>
 
         {estaReservado ? (
-          <View
-            style={{
-              marginTop: 10,
-              marginBottom: 8,
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: '#FFF4E5',
-            }}
-          >
-            <Text style={{ color: '#B45309', fontWeight: '700', fontSize: 13 }}>
-              <Ionicons name="time-outline" size={14} />
+          <View style={styles.availabilityReserved}>
+            <Text style={styles.availabilityTitleReserved}>
+              <Ionicons name="time-outline" size={14} color="#D97706" />
               {' '}Reservado actualmente
             </Text>
 
             {reservadoHasta ? (
-              <Text style={{ color: '#92400E', fontSize: 12, marginTop: 4 }}>
+              <Text style={styles.availabilitySubtitleReserved}>
                 Reservado hasta: {formatearFecha(reservadoHasta)}
               </Text>
             ) : null}
 
             {disponibleDesde ? (
-              <Text
-                style={{
-                  color: '#92400E',
-                  fontSize: 12,
-                  marginTop: 3,
-                  fontWeight: '600',
-                }}
-              >
+              <Text style={styles.availabilitySubtitleReserved}>
                 Disponible desde: {formatearFecha(disponibleDesde)}
               </Text>
             ) : null}
           </View>
         ) : disponibilidad && proximaReserva ? (
-          <View
-            style={{
-              marginTop: 10,
-              marginBottom: 8,
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: '#E6F4EA',
-            }}
-          >
-            <Text style={{ color: '#15803D', fontWeight: '700', fontSize: 13 }}>
+          <View style={styles.availabilityAvailable}>
+            <Text style={styles.availabilityTitleAvailable}>
               ✓ Disponible para reservar
             </Text>
 
             {disponibleHasta ? (
-              <Text style={{ color: '#166534', fontSize: 12, marginTop: 4 }}>
+              <Text style={styles.availabilitySubtitleAvailable}>
                 Disponible hasta: {formatearFecha(disponibleHasta)}
               </Text>
             ) : null}
 
-            <Text style={{ color: '#166534', fontSize: 12, marginTop: 3 }}>
+            <Text style={styles.availabilitySubtitleAvailable}>
               Próxima reserva: {formatearFecha(proximaReserva)}
             </Text>
           </View>
         ) : (
-          <View
-            style={{
-              marginTop: 10,
-              marginBottom: 8,
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: '#E6F4EA',
-            }}
-          >
-            <Text style={{ color: '#15803D', fontWeight: '700', fontSize: 13 }}>
+          <View style={styles.availabilityAvailable}>
+            <Text style={styles.availabilityTitleAvailable}>
               ✓ Disponible para reservar
             </Text>
           </View>
